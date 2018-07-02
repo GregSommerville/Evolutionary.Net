@@ -1,0 +1,6 @@
+D:\Code\Genetic Course Demos\Spaceship Docking\GeneticProgramming.Net\obj\Debug\GeneticProgramming.Net.csprojResolveAssemblyReference.cache
+D:\Code\Genetic Course Demos\Spaceship Docking\GeneticProgramming.Net\obj\Debug\GeneticProgramming.Net.csproj.CoreCompileInputs.cache
+D:\Code\Genetic Course Demos\Spaceship Docking\GeneticProgramming.Net\bin\Debug\GeneticProgramming.Net.dll
+D:\Code\Genetic Course Demos\Spaceship Docking\GeneticProgramming.Net\bin\Debug\GeneticProgramming.Net.pdb
+D:\Code\Genetic Course Demos\Spaceship Docking\GeneticProgramming.Net\obj\Debug\GeneticProgramming.Net.dll
+D:\Code\Genetic Course Demos\Spaceship Docking\GeneticProgramming.Net\obj\Debug\GeneticProgramming.Net.pdb

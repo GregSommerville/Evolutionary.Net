@@ -1,0 +1,6 @@
+D:\Code\Evolutionary.net\Engine\bin\Debug\Evolutionary.Net.dll
+D:\Code\Evolutionary.net\Engine\bin\Debug\Evolutionary.Net.pdb
+D:\Code\Evolutionary.net\Engine\obj\Debug\Evolutionary.csprojResolveAssemblyReference.cache
+D:\Code\Evolutionary.net\Engine\obj\Debug\Evolutionary.csproj.CoreCompileInputs.cache
+D:\Code\Evolutionary.net\Engine\obj\Debug\Evolutionary.Net.dll
+D:\Code\Evolutionary.net\Engine\obj\Debug\Evolutionary.Net.pdb
