@@ -1,8 +1,9 @@
 ﻿using System.Linq;
+using System.Collections.Generic;
 
 namespace Evolutionary
 {
-    public class CandidateSolution<T>
+    public class CandidateSolution<T, S> where S : new()  // S (the state datatype) must have a parameterless constructor
     {
         private EngineComponents<T> availableComponents;
 
@@ -10,11 +11,13 @@ namespace Evolutionary
         public int TreeMinDepth { get; }
         public int TreeMaxDepth { get; }
         public float Fitness { get; set; }
+        public S StateData { get; }    // used by terminal functions
 
         internal CandidateSolution(EngineComponents<T> availableComponents)
         {
             TreeMinDepth = 3;
             TreeMaxDepth = 6;
+            StateData = new S();
 
             // keep a reference to all of the functions, constants and variables
             this.availableComponents = availableComponents;
@@ -118,8 +121,7 @@ namespace Evolutionary
             // terminal function node 
             int termFunctionIndex = random - (numVars + numConsts);
             var selectedTerminalFunction = availableComponents.TerminalFunctions.ToArray()[termFunctionIndex];
-            return new TerminalFunctionNode<T>(selectedTerminalFunction);
-            
+            return new TerminalFunctionNode<T,S>(selectedTerminalFunction, StateData);            
         }
         public void SetVariableValue(string varName, T varValue)
         {
@@ -166,7 +168,9 @@ namespace Evolutionary
             return Root.SelectRandom(ref numNodesSeen);    
         }
 
-        internal static void SwapSubtrees(NodeBaseType<T> selectedNode1, NodeBaseType<T> selectedNode2, NodeBaseType<T> replacementNode1, NodeBaseType<T> replacementNode2)
+        internal static void SwapSubtrees(
+            NodeBaseType<T> selectedNode1, NodeBaseType<T> selectedNode2, 
+            NodeBaseType<T> replacementNode1, NodeBaseType<T> replacementNode2)
         {
             // find the child we're going to replace
             var parent = (FunctionNode<T>)selectedNode1.Parent;
@@ -193,12 +197,16 @@ namespace Evolutionary
                     break;
                 }
             }
+
+            // now traverse down the new subtrees and point any terminal function nodes to the candidate's state data
+
+
         }
 
-        public CandidateSolution<T> Clone()
+        public CandidateSolution<T,S> Clone()
         {
             // clone the tree object
-            var newTree = new CandidateSolution<T>(availableComponents);
+            var newTree = new CandidateSolution<T,S>(availableComponents);
 
             // and all of the nodes in the tree
             newTree.Root = Root.Clone(null);

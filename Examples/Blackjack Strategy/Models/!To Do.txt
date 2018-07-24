@@ -1,0 +1,18 @@
+﻿==========================
+TO DO
+==========================
+
+- Crossover:
+	- when copying terminal functions over, be sure to point them at the new candidate's state data
+		- Need new recursive method called SetStateDataReference() (can't do it via a property, because that wouldn't recurse)
+
+- Multithreading:  
+	Always on, but allow them to specify #threads
+	variable data must be at the candidate level
+
+- Autodefined functions:
+	.AddAutoDefinedFunction(numParams)
+
+- engine.LoadSolution(solutionName, expressionString) : deserializes, opposite of solution.ToString()
+
+- WPF app to display any function in a tree form

@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Evolutionary
 {
-    public class Engine<T>
+    public class Engine<T,S> where S : new()    // T: return type requested.  S : datatype for state information (must implement 0-param constructor)
     {
         // default settings 
         private int TourneySize = 4;
@@ -19,11 +19,15 @@ namespace Evolutionary
         // object to store all available node contents (functions, constants, variables)
         private EngineComponents<T> operatorsAvailable = new EngineComponents<T>();
 
-        // declares the delegate type for the fitness function, and defines a pointer to our fitness function
-        private delegate float FitnessFunctionPointer(CandidateSolution<T> tree);
+        // declares the delegate type for the fitness function, and defines a pointer for it
+        private delegate float FitnessFunctionPointer(CandidateSolution<T,S> tree);
         FitnessFunctionPointer myFitnessFunction;
 
-        private List<CandidateSolution<T>> currentGeneration = new List<CandidateSolution<T>>();
+        // declares the delegate type for the progress reporting function, and defines a pointer for it
+        private delegate bool ProgressFunctionPointer(EngineProgress progress);
+        ProgressFunctionPointer myProgressFunction;
+
+        private List<CandidateSolution<T,S>> currentGeneration = new List<CandidateSolution<T,S>>();
 
         public Engine()
         {
@@ -40,16 +44,16 @@ namespace Evolutionary
             MutationRate = engineParams.MutationRate;
         }
     
-        public CandidateSolution<T> FindBestSolution()
+        public CandidateSolution<T,S> FindBestSolution()
         {
             float bestFitnessScoreAllTime = (IsLowerFitnessBetter ? float.MaxValue : float.MinValue);
-            CandidateSolution<T> bestTreeAllTime = null;
+            CandidateSolution<T,S> bestTreeAllTime = null;
             int bestSolutionGenerationNumber = 0;
 
             // create an initial population of random trees, passing the possible functions, consts, and variables
             for (int p = 0; p < PopulationSize; p++)
             {
-                CandidateSolution<T> tree = new CandidateSolution<T>(operatorsAvailable);
+                CandidateSolution<T,S> tree = new CandidateSolution<T,S>(operatorsAvailable);
                 tree.CreateRandom();
                 currentGeneration.Add(tree);
             }
@@ -60,7 +64,7 @@ namespace Evolutionary
             {
                 // for each tree, find and store the fitness score
                 float bestFitnessScoreThisGeneration = (IsLowerFitnessBetter ? float.MaxValue : float.MinValue);
-                CandidateSolution<T> bestTreeThisGeneration = null;
+                CandidateSolution<T,S> bestTreeThisGeneration = null;
                 float totalFitness = 0;
                 foreach (var tree in currentGeneration)
                 {
@@ -96,15 +100,22 @@ namespace Evolutionary
                 }
 
                 float averageFitness = totalFitness / PopulationSize;
-                Debug.WriteLine("Generation " + currentGenerationNumber + 
-                    " best: " + bestFitnessScoreThisGeneration.ToString("0.0") +
-                    " avg: " + averageFitness.ToString("0.0"));
+                EngineProgress progress = new EngineProgress()
+                {
+                    GenerationNumber = currentGenerationNumber,
+                    AvgFitnessThisGen = averageFitness,
+                    BestFitnessThisGen = bestFitnessScoreThisGeneration,
+                    BestFitnessSoFar = bestFitnessScoreAllTime
+                };
+                bool keepGoing = myProgressFunction(progress);
+                if (!keepGoing) break;  // user signalled to end looping
 
                 // exit the loop if we're not making any progress
-                if ((currentGenerationNumber - bestSolutionGenerationNumber) >= NoChangeGenerationCountForTermination)
+                if ((currentGenerationNumber - bestSolutionGenerationNumber) 
+                    >= NoChangeGenerationCountForTermination)
                     break;
 
-                List<CandidateSolution<T>> nextGeneration = new List<CandidateSolution<T>>();
+                List<CandidateSolution<T,S>> nextGeneration = new List<CandidateSolution<T,S>>();
 
                 // Elitism
                 int numElitesToAdd = (ElitismPercentageOfPopulation * PopulationSize) / 100;
@@ -122,7 +133,7 @@ namespace Evolutionary
                     var parent2 = TournamentSelectParent();
 
                     // cross them over to generate two new children
-                    CandidateSolution<T> child1, child2;
+                    CandidateSolution<T,S> child1, child2;
                     CrossOverParents(parent1, parent2, out child1, out child2);
 
                     // Mutation
@@ -144,7 +155,7 @@ namespace Evolutionary
             return bestTreeAllTime;
         }
 
-        private void CrossOverParents(CandidateSolution<T> parent1, CandidateSolution<T> parent2, out CandidateSolution<T> child1, out CandidateSolution<T> child2)
+        private void CrossOverParents(CandidateSolution<T,S> parent1, CandidateSolution<T,S> parent2, out CandidateSolution<T,S> child1, out CandidateSolution<T,S> child2)
         {
             // are we crossing over, or just copying a parent directly?
             child1 = parent1.Clone();
@@ -170,13 +181,13 @@ namespace Evolutionary
                 var newChild2 = randomC2node.Clone(null);
 
                 // create new children by swapping subtrees
-                CandidateSolution<T>.SwapSubtrees(randomC1node, randomC2node, newChild1, newChild2);
+                CandidateSolution<T,S>.SwapSubtrees(randomC1node, randomC2node, newChild1, newChild2);
             }
         }
 
-        private CandidateSolution<T> TournamentSelectParent()
+        private CandidateSolution<T,S> TournamentSelectParent()
         {
-            CandidateSolution<T> result = null;
+            CandidateSolution<T,S> result = null;
             float bestFitness = float.MaxValue;
             if (IsLowerFitnessBetter == false)
                 bestFitness = float.MinValue;
@@ -219,11 +230,12 @@ namespace Evolutionary
         }
 
         // zero parameter functions are a type of terminal, so they are stored separate from the other functions
-        public void AddFunction(Func<T> function, string functionName)
+        public void AddTerminalFunction(Func<S, T> function, string functionName)
         {
             operatorsAvailable.TerminalFunctions.Add(new FunctionMetaData<T>(function, 0, functionName));
         }
 
+        // zero param functions not allowed
         // one parameter functions
         public void AddFunction(Func<T, T> function, string functionName)
         {
@@ -243,9 +255,15 @@ namespace Evolutionary
         }
 
         // And a reference to the fitness function
-        public void AddFitnessFunction(Func<CandidateSolution<T>,float> fitnessFunction)
+        public void AddFitnessFunction(Func<CandidateSolution<T,S>,float> fitnessFunction)
         {
             myFitnessFunction = new FitnessFunctionPointer(fitnessFunction);
+        }
+
+        // and allow the caller to monitor progress, and even halt the engine
+        public void AddProgressFunction(Func<EngineProgress, bool> progressFunction)
+        {
+            myProgressFunction = new ProgressFunctionPointer(progressFunction);
         }
     }
 }

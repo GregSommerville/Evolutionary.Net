@@ -43,6 +43,7 @@
     <Compile Include="ConstantNode.cs" />
     <Compile Include="EngineComponents.cs" />
     <Compile Include="EngineParameters.cs" />
+    <Compile Include="EngineProgress.cs" />
     <Compile Include="FunctionNode.cs" />
     <Compile Include="Engine.cs" />
     <Compile Include="FunctionMetadata.cs" />

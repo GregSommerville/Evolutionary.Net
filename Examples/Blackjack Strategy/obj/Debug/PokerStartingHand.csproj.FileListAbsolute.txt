@@ -1,0 +1,16 @@
+D:\Code\Genetic Course Demos\Poker Starting Hand\Poker Starting Hand\PokerStartingHand\bin\Debug\PokerStartingHand.exe.config
+D:\Code\Genetic Course Demos\Poker Starting Hand\Poker Starting Hand\PokerStartingHand\bin\Debug\PokerStartingHand.exe
+D:\Code\Genetic Course Demos\Poker Starting Hand\Poker Starting Hand\PokerStartingHand\bin\Debug\PokerStartingHand.pdb
+D:\Code\Genetic Course Demos\Poker Starting Hand\Poker Starting Hand\PokerStartingHand\bin\Debug\GeneticProgramming.Net.dll
+D:\Code\Genetic Course Demos\Poker Starting Hand\Poker Starting Hand\PokerStartingHand\bin\Debug\GeneticProgramming.Net.pdb
+D:\Code\Genetic Course Demos\Poker Starting Hand\Poker Starting Hand\PokerStartingHand\obj\Debug\PokerStartingHand.csprojResolveAssemblyReference.cache
+D:\Code\Genetic Course Demos\Poker Starting Hand\Poker Starting Hand\PokerStartingHand\obj\Debug\MainWindow.baml
+D:\Code\Genetic Course Demos\Poker Starting Hand\Poker Starting Hand\PokerStartingHand\obj\Debug\MainWindow.g.cs
+D:\Code\Genetic Course Demos\Poker Starting Hand\Poker Starting Hand\PokerStartingHand\obj\Debug\App.g.cs
+D:\Code\Genetic Course Demos\Poker Starting Hand\Poker Starting Hand\PokerStartingHand\obj\Debug\PokerStartingHand_MarkupCompile.cache
+D:\Code\Genetic Course Demos\Poker Starting Hand\Poker Starting Hand\PokerStartingHand\obj\Debug\PokerStartingHand.g.resources
+D:\Code\Genetic Course Demos\Poker Starting Hand\Poker Starting Hand\PokerStartingHand\obj\Debug\PokerStartingHand.Properties.Resources.resources
+D:\Code\Genetic Course Demos\Poker Starting Hand\Poker Starting Hand\PokerStartingHand\obj\Debug\PokerStartingHand.csproj.GenerateResource.Cache
+D:\Code\Genetic Course Demos\Poker Starting Hand\Poker Starting Hand\PokerStartingHand\obj\Debug\PokerStartingHand.csproj.CoreCompileInputs.cache
+D:\Code\Genetic Course Demos\Poker Starting Hand\Poker Starting Hand\PokerStartingHand\obj\Debug\PokerStartingHand.exe
+D:\Code\Genetic Course Demos\Poker Starting Hand\Poker Starting Hand\PokerStartingHand\obj\Debug\PokerStartingHand.pdb
