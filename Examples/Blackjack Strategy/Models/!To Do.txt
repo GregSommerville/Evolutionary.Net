@@ -2,9 +2,7 @@
 TO DO
 ==========================
 
-- Crossover:
-	- when copying terminal functions over, be sure to point them at the new candidate's state data
-		- Need new recursive method called SetStateDataReference() (can't do it via a property, because that wouldn't recurse)
+- Variable nodes should just store a reference to candidate, and use that to get variables
 
 - Multithreading:  
 	Always on, but allow them to specify #threads

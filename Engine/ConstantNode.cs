@@ -1,6 +1,6 @@
 ﻿namespace Evolutionary
 {
-    class ConstantNode<T> : TerminalNode<T>
+    class ConstantNode<T, S> : TerminalNode<T, S> where S : new()
     {
         private T constantValue;
 
@@ -9,9 +9,9 @@
             constantValue = value;
         }
 
-        public override NodeBaseType<T> Clone(NodeBaseType<T> parentNode)
+        public override NodeBaseType<T, S> Clone(NodeBaseType<T, S> parentNode)
         {
-            var newNode = new ConstantNode<T>(constantValue);
+            var newNode = new ConstantNode<T, S>(constantValue);
             newNode.Parent = parentNode;
             return newNode;
         }
@@ -19,6 +19,11 @@
         public override T Evaluate()
         {
             return constantValue;
+        }
+
+        public override void SetCandidateRef(CandidateSolution<T, S> candidate)
+        {
+            // no need to store a reference to the candidate for a constant
         }
 
         public override string ToString()

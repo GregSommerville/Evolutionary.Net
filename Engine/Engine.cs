@@ -164,7 +164,7 @@ namespace Evolutionary
             // Do we use exact copies of parents, or crossover?
             if (Randomizer.GetDoubleFromZeroToOne() < CrossoverRate)
             {
-                NodeBaseType<T> randomC1node, randomC2node;
+                NodeBaseType<T, S> randomC1node, randomC2node;
                 // pick a random node from both parents and clone the tree below it.
                 // We don't want root nodes, since that's not really crossover, so we disallow those
                 do
@@ -181,7 +181,7 @@ namespace Evolutionary
                 var newChild2 = randomC2node.Clone(null);
 
                 // create new children by swapping subtrees
-                CandidateSolution<T,S>.SwapSubtrees(randomC1node, randomC2node, newChild1, newChild2);
+                CandidateSolution<T,S>.SwapSubtrees(child1, child2, randomC1node, randomC2node, newChild1, newChild2);
             }
         }
 

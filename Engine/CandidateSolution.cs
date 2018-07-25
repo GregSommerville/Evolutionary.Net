@@ -7,7 +7,7 @@ namespace Evolutionary
     {
         private EngineComponents<T> availableComponents;
 
-        internal NodeBaseType<T> Root { get; set; }
+        internal NodeBaseType<T, S> Root { get; set; }
         public int TreeMinDepth { get; }
         public int TreeMaxDepth { get; }
         public float Fitness { get; set; }
@@ -35,7 +35,7 @@ namespace Evolutionary
             Root = AddRandomNode(null, depth, buildFullTrees);
         }
 
-        internal NodeBaseType<T> AddRandomNode(NodeBaseType<T> parentNode, int levelsToCreate, bool buildFullTrees)
+        internal NodeBaseType<T, S> AddRandomNode(NodeBaseType<T, S> parentNode, int levelsToCreate, bool buildFullTrees)
         {
             // we're either adding a terminal node (const or var), or a function node (which has children)
             bool addingTerminal = false;
@@ -91,14 +91,14 @@ namespace Evolutionary
             }
         }
 
-        internal FunctionNode<T> NewRandomFunctionNode()
+        internal FunctionNode<T, S> NewRandomFunctionNode()
         {
             // create a function node, leaving the Children unpopulated
             int random = Randomizer.IntLessThan(availableComponents.Functions.Count);
-            return new FunctionNode<T>(availableComponents.Functions[random]);
+            return new FunctionNode<T, S>(availableComponents.Functions[random]);
         }
 
-        internal TerminalNode<T> NewRandomTerminalNode()
+        internal TerminalNode<T, S> NewRandomTerminalNode()
         {
             int numConsts = availableComponents.Constants.Count;
             int numVars = availableComponents.Variables.Count;
@@ -107,21 +107,21 @@ namespace Evolutionary
 
             // create a new constant node, simply passing the value
             if (random < numConsts)
-                return new ConstantNode<T>(availableComponents.Constants[random]);
+                return new ConstantNode<T, S>(availableComponents.Constants[random]);
 
             // create a new variable node, passing a reference to a GPVariable<T> object
             int varIndex = random - numConsts;
             if (varIndex < numVars)
             {
                 var selectedVariable = availableComponents.Variables.ToArray()[varIndex].Value;
-                var newNode = new VariableNode<T>(selectedVariable);
+                var newNode = new VariableNode<T, S>(selectedVariable);
                 return newNode;
             }
 
             // terminal function node 
             int termFunctionIndex = random - (numVars + numConsts);
             var selectedTerminalFunction = availableComponents.TerminalFunctions.ToArray()[termFunctionIndex];
-            return new TerminalFunctionNode<T,S>(selectedTerminalFunction, StateData);            
+            return new TerminalFunctionNode<T,S>(selectedTerminalFunction, this); // "this" is a reference to the candidate solution that owns the tree
         }
         public void SetVariableValue(string varName, T varValue)
         {
@@ -136,7 +136,7 @@ namespace Evolutionary
         internal void Mutate()
         {
             // pick any node but the root (since that would be a replacement of the entire tree, not a mutation)
-            NodeBaseType<T> randomNode = null;
+            NodeBaseType<T, S> randomNode = null;
             do
             {
                 randomNode = SelectRandomNode();
@@ -148,7 +148,7 @@ namespace Evolutionary
             var newSubtree = AddRandomNode(null, depth, buildFullTrees);
 
             // replace the randomly selected node with the new random one 
-            var parent = (FunctionNode<T>)randomNode.Parent;
+            var parent = (FunctionNode<T, S>)randomNode.Parent;
             newSubtree.Parent = parent;
             // find the link from the parent to the old child, and replace it 
             for (int i = 0; i < parent.Children.Count; i++)
@@ -161,7 +161,7 @@ namespace Evolutionary
             }
         }
 
-        internal NodeBaseType<T> SelectRandomNode()
+        internal NodeBaseType<T, S> SelectRandomNode()
         {
             // do one complete pass through the entire tree to randomly select
             int numNodesSeen = 1;
@@ -169,11 +169,12 @@ namespace Evolutionary
         }
 
         internal static void SwapSubtrees(
-            NodeBaseType<T> selectedNode1, NodeBaseType<T> selectedNode2, 
-            NodeBaseType<T> replacementNode1, NodeBaseType<T> replacementNode2)
+            CandidateSolution<T, S> candidate1, CandidateSolution<T, S> candidate2,
+            NodeBaseType<T, S> selectedNode1, NodeBaseType<T, S> selectedNode2, 
+            NodeBaseType<T, S> replacementNode1, NodeBaseType<T, S> replacementNode2)
         {
             // find the child we're going to replace
-            var parent = (FunctionNode<T>)selectedNode1.Parent;
+            var parent = (FunctionNode<T, S>)selectedNode1.Parent;
             for (int i = 0; i < parent.Children.Count; i++)
             {
                 if (parent.Children[i] == selectedNode1)
@@ -186,7 +187,7 @@ namespace Evolutionary
             }
 
             // find the child we're going to replace
-            parent = (FunctionNode<T>)selectedNode2.Parent;
+            parent = (FunctionNode<T, S>)selectedNode2.Parent;
             for (int i = 0; i < parent.Children.Count; i++)
             {
                 if (parent.Children[i] == selectedNode2)
@@ -199,8 +200,8 @@ namespace Evolutionary
             }
 
             // now traverse down the new subtrees and point any terminal function nodes to the candidate's state data
-
-
+            replacementNode1.SetCandidateRef(candidate2);
+            replacementNode2.SetCandidateRef(candidate1);
         }
 
         public CandidateSolution<T,S> Clone()

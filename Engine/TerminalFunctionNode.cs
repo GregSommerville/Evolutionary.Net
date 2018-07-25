@@ -2,28 +2,33 @@
 
 namespace Evolutionary
 {
-    class TerminalFunctionNode<T,S> : TerminalNode<T>
+    class TerminalFunctionNode<T,S> : TerminalNode<T, S> where S : new()
     {
         private FunctionMetaData<T> functionMetadata = null;
-        private S stateDataRef = default(S);
+        private CandidateSolution<T, S> ownerCandidate;
 
-        public TerminalFunctionNode(FunctionMetaData<T> function, S stateData)
+        public TerminalFunctionNode(FunctionMetaData<T> function, CandidateSolution<T, S> candidate)
         {
             functionMetadata = function;
-            stateDataRef = stateData;
+            ownerCandidate = candidate;
         }
 
-        public override NodeBaseType<T> Clone(NodeBaseType<T> parentNode)
+        public override NodeBaseType<T, S> Clone(NodeBaseType<T, S> parentNode)
         {
             // clone the node
-            var newNode = new TerminalFunctionNode<T, S>(functionMetadata, stateDataRef);
+            var newNode = new TerminalFunctionNode<T, S>(functionMetadata, ownerCandidate);
             newNode.Parent = parentNode;
             return newNode;
         }
 
         public override T Evaluate()
         {
-            return ((Func<S,T>)functionMetadata.FunctionPtr)(stateDataRef);
+            return ((Func<S,T>)functionMetadata.FunctionPtr)(ownerCandidate.StateData);
+        }
+
+        public override void SetCandidateRef(CandidateSolution<T, S> candidate)
+        {
+            ownerCandidate = candidate;
         }
 
         public override string ToString()
