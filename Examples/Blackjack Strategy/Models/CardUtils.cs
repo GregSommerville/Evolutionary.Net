@@ -14,19 +14,18 @@ namespace BlackjackStrategy.Models
 
         public int RankValueHigh
         {
-            // For straights where A is treated as above the King
             get
             {
                 switch (Rank)
                 {
                     case "A":
-                        return 14;
-                    case "K":
-                        return 13;
-                    case "Q":
-                        return 12;
-                    case "J":
                         return 11;
+                    case "K":
+                        return 10;
+                    case "Q":
+                        return 10;
+                    case "J":
+                        return 10;
                     case "T":
                         return 10;
                     default:
@@ -45,11 +44,11 @@ namespace BlackjackStrategy.Models
                     case "A":
                         return 1;
                     case "K":
-                        return 13;
+                        return 10;
                     case "Q":
-                        return 12;
+                        return 10;
                     case "J":
-                        return 11;
+                        return 10;
                     case "T":
                         return 10;
                     default:

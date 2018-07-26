@@ -39,8 +39,8 @@ namespace BlackjackStrategy.Models
             engine.AddFunction((a) => !a, "Not");
             engine.AddFunction((a, b, c) => a ? b : c, "If");         // if a, return b else c
 
-            // terminal functions to look at game state - first, the hand total for the player
-            engine.AddTerminalFunction(HasAce, "HasAnAce");
+            // terminal functions to look at game state - first, cards the player is holding
+            engine.AddTerminalFunction(HasAce, "HasAce");
             engine.AddTerminalFunction(HandVal4, "Has4");
             engine.AddTerminalFunction(HandVal5, "Has5");
             engine.AddTerminalFunction(HandVal6, "Has6");
@@ -243,6 +243,9 @@ namespace BlackjackStrategy.Models
         {
             var card1 = stateData.Card1;
             var card2 = stateData.Card1;
+            // RankValueHigh and RankValueLow are the same for all cards except Ace:
+            // "A": RankValueHigh = 13 RankValueLow = 1
+            // "K": RankValueHigh = 10, RankValueLow = 10  (and so forth)
             bool hasit = (
                 ((card1.RankValueHigh + card2.RankValueHigh) == lookingFor) ||
                 ((card1.RankValueLow + card2.RankValueLow) == lookingFor));
