@@ -2,11 +2,8 @@
 TO DO
 ==========================
 
-- Variable nodes should just store a reference to candidate, and use that to get variables
-
 - Multithreading:  
 	Always on, but allow them to specify #threads
-	variable data must be at the candidate level
 
 - Autodefined functions:
 	.AddAutoDefinedFunction(numParams)

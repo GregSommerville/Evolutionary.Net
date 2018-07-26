@@ -220,13 +220,8 @@ namespace Evolutionary
 
         public void AddVariable(string variableName)
         {
-            operatorsAvailable.Variables[variableName] = new VariableMetadata<T>();
-            operatorsAvailable.Variables[variableName].Name = variableName;
-        }
-
-        public void SetVariableValue(string varName, T varVal)
-        {
-            operatorsAvailable.Variables[varName].Value = varVal;
+            if (!operatorsAvailable.VariableNames.Contains(variableName))
+                operatorsAvailable.VariableNames.Add(variableName);
         }
 
         // zero parameter functions are a type of terminal, so they are stored separate from the other functions

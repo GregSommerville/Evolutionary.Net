@@ -12,12 +12,14 @@ namespace Evolutionary
         public int TreeMaxDepth { get; }
         public float Fitness { get; set; }
         public S StateData { get; }    // used by terminal functions
+        public Dictionary<string, T> Variables { get; }
 
         internal CandidateSolution(EngineComponents<T> availableComponents)
         {
             TreeMinDepth = 3;
             TreeMaxDepth = 6;
             StateData = new S();
+            Variables = new Dictionary<string, T>();
 
             // keep a reference to all of the functions, constants and variables
             this.availableComponents = availableComponents;
@@ -57,7 +59,7 @@ namespace Evolutionary
                         // pick a random type, either function or terminal
                         int numFuncs = availableComponents.Functions.Count;
                         int numTerminalFuncs = availableComponents.TerminalFunctions.Count;
-                        int numVars = availableComponents.Variables.Count;
+                        int numVars = availableComponents.VariableNames.Count;
                         int numConsts = availableComponents.Constants.Count;
 
                         int random = Randomizer.IntLessThan(numFuncs + numTerminalFuncs + numVars + numConsts);
@@ -101,7 +103,7 @@ namespace Evolutionary
         internal TerminalNode<T, S> NewRandomTerminalNode()
         {
             int numConsts = availableComponents.Constants.Count;
-            int numVars = availableComponents.Variables.Count;
+            int numVars = availableComponents.VariableNames.Count;
             int numTerminalFunctions = availableComponents.TerminalFunctions.Count;
             int random = Randomizer.IntLessThan(numConsts + numVars + numTerminalFunctions);
 
@@ -113,8 +115,8 @@ namespace Evolutionary
             int varIndex = random - numConsts;
             if (varIndex < numVars)
             {
-                var selectedVariable = availableComponents.Variables.ToArray()[varIndex].Value;
-                var newNode = new VariableNode<T, S>(selectedVariable);
+                var selectedVarName = availableComponents.VariableNames[varIndex];
+                var newNode = new VariableNode<T, S>(selectedVarName, this);
                 return newNode;
             }
 
@@ -125,12 +127,8 @@ namespace Evolutionary
         }
         public void SetVariableValue(string varName, T varValue)
         {
-            // Each tree is passed to a user-written fitness function, and
-            // that function will need to be able to set variable values.  
-            // Even though the variables aren't stored in the tree, it's reasonable 
-            // for a user to set values via the tree.  We used the stored reference to 
-            // the engine's component list
-            availableComponents.Variables[varName].Value = varValue;
+            // Called from the fitness function, this allows the user to set variable values
+            Variables[varName] = varValue;
         }
 
         internal void Mutate()

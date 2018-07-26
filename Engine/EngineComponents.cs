@@ -8,14 +8,14 @@ namespace Evolutionary
         public List<FunctionMetaData<T>> Functions { get; set; }
         public List<FunctionMetaData<T>> TerminalFunctions { get; set; }
         public List<T> Constants { get; set; }
-        public Dictionary<string, VariableMetadata<T>> Variables { get; set; }
+        public List<string> VariableNames { get; set; }
 
         public EngineComponents()
         {
             Functions = new List<FunctionMetaData<T>>();
             TerminalFunctions = new List<FunctionMetaData<T>>();
             Constants = new List<T>();
-            Variables = new Dictionary<string, VariableMetadata<T>>();
+            VariableNames = new List<string>();
         }
     }
 

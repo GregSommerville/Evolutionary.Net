@@ -3,25 +3,25 @@
     class VariableNode<T, S> : TerminalNode<T, S> where S : new()
     {
         // pointer to the variable information
-        private VariableMetadata<T> varPtr;
         private CandidateSolution<T, S> ownerCandidate;
+        private string variableName;
 
-        public VariableNode(VariableMetadata<T> variable)
+        public VariableNode(string varName, CandidateSolution<T, S> candidate)
         {
-            this.varPtr = variable;
+            variableName = varName;
+            ownerCandidate = candidate;
         }
 
         public override NodeBaseType<T, S> Clone(NodeBaseType<T, S> parentNode)
         {
-            var newNode = new VariableNode<T, S>(varPtr);
+            var newNode = new VariableNode<T, S>(variableName, ownerCandidate);
             newNode.Parent = parentNode;
-
             return newNode;
         }
 
         public override T Evaluate()
         {
-            return varPtr.Value;
+            return ownerCandidate.Variables[variableName];
         }
 
         public override void SetCandidateRef(CandidateSolution<T, S> candidate)
@@ -31,7 +31,7 @@
 
         public override string ToString()
         {
-            return varPtr.Name;
+            return variableName;
         }
     }
 }
