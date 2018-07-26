@@ -16,14 +16,14 @@ namespace Evolutionary
         private double CrossoverRate = 0.95;
         private double MutationRate = 0.01;
 
-        // object to store all available node contents (functions, constants, variables)
-        private EngineComponents<T> operatorsAvailable = new EngineComponents<T>();
+        // object to store all available node contents (functions, constants, variables, etc.)
+        private EngineComponents<T> primitiveSet = new EngineComponents<T>();
 
-        // declares the delegate type for the fitness function, and defines a pointer for it
+        // declare the delegate type for the fitness function, and define a pointer for it
         private delegate float FitnessFunctionPointer(CandidateSolution<T,S> tree);
         FitnessFunctionPointer myFitnessFunction;
 
-        // declares the delegate type for the progress reporting function, and defines a pointer for it
+        // declare the delegate type for the progress reporting function, and define a pointer for it
         private delegate bool ProgressFunctionPointer(EngineProgress progress);
         ProgressFunctionPointer myProgressFunction;
 
@@ -53,7 +53,7 @@ namespace Evolutionary
             // create an initial population of random trees, passing the possible functions, consts, and variables
             for (int p = 0; p < PopulationSize; p++)
             {
-                CandidateSolution<T,S> tree = new CandidateSolution<T,S>(operatorsAvailable);
+                CandidateSolution<T,S> tree = new CandidateSolution<T,S>(primitiveSet);
                 tree.CreateRandom();
                 currentGeneration.Add(tree);
             }
@@ -155,7 +155,9 @@ namespace Evolutionary
             return bestTreeAllTime;
         }
 
-        private void CrossOverParents(CandidateSolution<T,S> parent1, CandidateSolution<T,S> parent2, out CandidateSolution<T,S> child1, out CandidateSolution<T,S> child2)
+        private void CrossOverParents(
+            CandidateSolution<T,S> parent1, CandidateSolution<T,S> parent2, 
+            out CandidateSolution<T,S> child1, out CandidateSolution<T,S> child2)
         {
             // are we crossing over, or just copying a parent directly?
             child1 = parent1.Clone();
@@ -198,7 +200,6 @@ namespace Evolutionary
                 var randomTree = currentGeneration[index];
                 var fitness = randomTree.Fitness;
 
-                // each tree's fitness is driven by how long it takes to dock the rocket, so lower is better
                 bool isFitnessBetter = false;
                 if (IsLowerFitnessBetter)
                     isFitnessBetter = fitness < bestFitness;
@@ -215,38 +216,38 @@ namespace Evolutionary
 
         public void AddConstant(T value)
         {
-            operatorsAvailable.Constants.Add(value);
+            primitiveSet.Constants.Add(value);
         }
 
         public void AddVariable(string variableName)
         {
-            if (!operatorsAvailable.VariableNames.Contains(variableName))
-                operatorsAvailable.VariableNames.Add(variableName);
+            if (!primitiveSet.VariableNames.Contains(variableName))
+                primitiveSet.VariableNames.Add(variableName);
         }
 
         // zero parameter functions are a type of terminal, so they are stored separate from the other functions
         public void AddTerminalFunction(Func<S, T> function, string functionName)
         {
-            operatorsAvailable.TerminalFunctions.Add(new FunctionMetaData<T>(function, 0, functionName));
+            primitiveSet.TerminalFunctions.Add(new FunctionMetaData<T>(function, 0, functionName));
         }
 
         // zero param functions not allowed
         // one parameter functions
         public void AddFunction(Func<T, T> function, string functionName)
         {
-            operatorsAvailable.Functions.Add(new FunctionMetaData<T>(function, 1, functionName));
+            primitiveSet.Functions.Add(new FunctionMetaData<T>(function, 1, functionName));
         }
 
         // two parameter functions
         public void AddFunction (Func<T, T, T> function, string functionName)
         {
-            operatorsAvailable.Functions.Add(new FunctionMetaData<T>(function, 2, functionName));
+            primitiveSet.Functions.Add(new FunctionMetaData<T>(function, 2, functionName));
         }
 
         // three parameter functions
         public void AddFunction(Func<T, T, T, T> function, string functionName)
         {
-            operatorsAvailable.Functions.Add(new FunctionMetaData<T>(function, 3, functionName));
+            primitiveSet.Functions.Add(new FunctionMetaData<T>(function, 3, functionName));
         }
 
         // And a reference to the fitness function

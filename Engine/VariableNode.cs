@@ -2,7 +2,7 @@
 {
     class VariableNode<T, S> : TerminalNode<T, S> where S : new()
     {
-        // pointer to the variable information
+        // variable values are stored in the candidate
         private CandidateSolution<T, S> ownerCandidate;
         private string variableName;
 

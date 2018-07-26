@@ -15,7 +15,6 @@ namespace Evolutionary
 
         public override NodeBaseType<T, S> Clone(NodeBaseType<T, S> parentNode)
         {
-            // clone the node
             var newNode = new TerminalFunctionNode<T, S>(functionMetadata, ownerCandidate);
             newNode.Parent = parentNode;
             return newNode;

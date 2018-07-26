@@ -5,7 +5,7 @@ namespace Evolutionary
 {
     public class CandidateSolution<T, S> where S : new()  // S (the state datatype) must have a parameterless constructor
     {
-        private EngineComponents<T> availableComponents;
+        private EngineComponents<T> primitiveSet;
 
         internal NodeBaseType<T, S> Root { get; set; }
         public int TreeMinDepth { get; }
@@ -22,7 +22,7 @@ namespace Evolutionary
             Variables = new Dictionary<string, T>();
 
             // keep a reference to all of the functions, constants and variables
-            this.availableComponents = availableComponents;
+            primitiveSet = availableComponents;
         }
 
         public void CreateRandom()
@@ -57,10 +57,10 @@ namespace Evolutionary
                     else
                     {
                         // pick a random type, either function or terminal
-                        int numFuncs = availableComponents.Functions.Count;
-                        int numTerminalFuncs = availableComponents.TerminalFunctions.Count;
-                        int numVars = availableComponents.VariableNames.Count;
-                        int numConsts = availableComponents.Constants.Count;
+                        int numFuncs = primitiveSet.Functions.Count;
+                        int numTerminalFuncs = primitiveSet.TerminalFunctions.Count;
+                        int numVars = primitiveSet.VariableNames.Count;
+                        int numConsts = primitiveSet.Constants.Count;
 
                         int random = Randomizer.IntLessThan(numFuncs + numTerminalFuncs + numVars + numConsts);
                         if (random < numFuncs)
@@ -96,33 +96,33 @@ namespace Evolutionary
         internal FunctionNode<T, S> NewRandomFunctionNode()
         {
             // create a function node, leaving the Children unpopulated
-            int random = Randomizer.IntLessThan(availableComponents.Functions.Count);
-            return new FunctionNode<T, S>(availableComponents.Functions[random]);
+            int random = Randomizer.IntLessThan(primitiveSet.Functions.Count);
+            return new FunctionNode<T, S>(primitiveSet.Functions[random]);
         }
 
         internal TerminalNode<T, S> NewRandomTerminalNode()
         {
-            int numConsts = availableComponents.Constants.Count;
-            int numVars = availableComponents.VariableNames.Count;
-            int numTerminalFunctions = availableComponents.TerminalFunctions.Count;
+            int numConsts = primitiveSet.Constants.Count;
+            int numVars = primitiveSet.VariableNames.Count;
+            int numTerminalFunctions = primitiveSet.TerminalFunctions.Count;
             int random = Randomizer.IntLessThan(numConsts + numVars + numTerminalFunctions);
 
             // create a new constant node, simply passing the value
             if (random < numConsts)
-                return new ConstantNode<T, S>(availableComponents.Constants[random]);
+                return new ConstantNode<T, S>(primitiveSet.Constants[random]);
 
             // create a new variable node, passing a reference to a GPVariable<T> object
             int varIndex = random - numConsts;
             if (varIndex < numVars)
             {
-                var selectedVarName = availableComponents.VariableNames[varIndex];
+                var selectedVarName = primitiveSet.VariableNames[varIndex];
                 var newNode = new VariableNode<T, S>(selectedVarName, this);
                 return newNode;
             }
 
             // terminal function node 
             int termFunctionIndex = random - (numVars + numConsts);
-            var selectedTerminalFunction = availableComponents.TerminalFunctions.ToArray()[termFunctionIndex];
+            var selectedTerminalFunction = primitiveSet.TerminalFunctions.ToArray()[termFunctionIndex];
             return new TerminalFunctionNode<T,S>(selectedTerminalFunction, this); // "this" is a reference to the candidate solution that owns the tree
         }
         public void SetVariableValue(string varName, T varValue)
@@ -197,7 +197,7 @@ namespace Evolutionary
                 }
             }
 
-            // now traverse down the new subtrees and point any terminal function nodes to the candidate's state data
+            // now traverse down the new subtrees and point any variable or terminal function nodes to the candidate
             replacementNode1.SetCandidateRef(candidate2);
             replacementNode2.SetCandidateRef(candidate1);
         }
@@ -205,7 +205,7 @@ namespace Evolutionary
         public CandidateSolution<T,S> Clone()
         {
             // clone the tree object
-            var newTree = new CandidateSolution<T,S>(availableComponents);
+            var newTree = new CandidateSolution<T,S>(primitiveSet);
 
             // and all of the nodes in the tree
             newTree.Root = Root.Clone(null);

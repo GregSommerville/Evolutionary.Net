@@ -1,8 +1,5 @@
 ﻿using Evolutionary;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace BlackjackStrategy.Models
 {
@@ -36,19 +33,48 @@ namespace BlackjackStrategy.Models
             // no variables for this solution - we can't pass in information about our hand and 
             // the dealer upcard via boolean variables, so we do it via some terminal functions instead
 
-            // add the normal functions that take parameters
+            // for a boolean tree, we use the standard operators
             engine.AddFunction((a, b) => a && b, "And");
             engine.AddFunction((a, b) => a || b, "Or");
             engine.AddFunction((a) => !a, "Not");
             engine.AddFunction((a, b, c) => a ? b : c, "If");         // if a, return b else c
 
-            // terminal functions to look at game state
+            // terminal functions to look at game state - first, the hand total for the player
             engine.AddTerminalFunction(HasAce, "HasAnAce");
             engine.AddTerminalFunction(HandVal4, "Has4");
-            engine.AddTerminalFunction(DealerShowsAce, "DealerAce");
+            engine.AddTerminalFunction(HandVal5, "Has5");
+            engine.AddTerminalFunction(HandVal6, "Has6");
+            engine.AddTerminalFunction(HandVal7, "Has7");
+            engine.AddTerminalFunction(HandVal8, "Has8");
+            engine.AddTerminalFunction(HandVal9, "Has9");
+            engine.AddTerminalFunction(HandVal10, "Has10");
+            engine.AddTerminalFunction(HandVal11, "Has11");
+            engine.AddTerminalFunction(HandVal12, "Has12");
+            engine.AddTerminalFunction(HandVal13, "Has13");
+            engine.AddTerminalFunction(HandVal14, "Has14");
+            engine.AddTerminalFunction(HandVal15, "Has15");
+            engine.AddTerminalFunction(HandVal16, "Has16");
+            engine.AddTerminalFunction(HandVal17, "Has17");
+            engine.AddTerminalFunction(HandVal18, "Has18");
+            engine.AddTerminalFunction(HandVal19, "Has19");
+            engine.AddTerminalFunction(HandVal20, "Has20");
 
-            // terminal functions to indicate a strategy
+            // then whatever the dealer upcard is
+            engine.AddTerminalFunction(DealerShowsA, "DealerA");
+            engine.AddTerminalFunction(DealerShows2, "Dealer2");
+            engine.AddTerminalFunction(DealerShows3, "Dealer3");
+            engine.AddTerminalFunction(DealerShows4, "Dealer4");
+            engine.AddTerminalFunction(DealerShows5, "Dealer5");
+            engine.AddTerminalFunction(DealerShows6, "Dealer6");
+            engine.AddTerminalFunction(DealerShows7, "Dealer7");
+            engine.AddTerminalFunction(DealerShows8, "Dealer8");
+            engine.AddTerminalFunction(DealerShows9, "Dealer9");
+            engine.AddTerminalFunction(DealerShowsT, "DealerT");
+
+            // then add terminal functions to indicate a strategy
             engine.AddTerminalFunction(VoteHit, "Hit");
+            engine.AddTerminalFunction(VoteStand, "Stand");
+            engine.AddTerminalFunction(VoteDouble, "DblDown");
 
             // pass a fitness evaluation function and run
             engine.AddFitnessFunction((t) => EvaluateCandidate(t));
@@ -59,16 +85,67 @@ namespace BlackjackStrategy.Models
             BestSolution = engine.FindBestSolution();
         }
 
-        //-------------------------------------------------------------------------
         // our terminal functions fall into two categories: 
         // ones to get the game state, and ones to indicate which strategy to use.
-        // first, the functions to get state:
+
         //-------------------------------------------------------------------------
-        private static bool DealerShowsAce(ProblemState stateData)
+        // first, terminal functions to get information about the dealer upcard
+        //-------------------------------------------------------------------------
+
+        private static bool DealerShowsA(ProblemState stateData)
+        {
+            return stateData.DealerCard.Rank == "A";
+        }
+
+        private static bool DealerShows2(ProblemState stateData)
+        {
+            return stateData.DealerCard.Rank == "2";
+        }
+
+        private static bool DealerShows3(ProblemState stateData)
+        {
+            return stateData.DealerCard.Rank == "3";
+        }
+
+        private static bool DealerShows4(ProblemState stateData)
+        {
+            return stateData.DealerCard.Rank == "4";
+        }
+
+        private static bool DealerShows5(ProblemState stateData)
+        {
+            return stateData.DealerCard.Rank == "5";
+        }
+
+        private static bool DealerShows6(ProblemState stateData)
+        {
+            return stateData.DealerCard.Rank == "6";
+        }
+
+        private static bool DealerShows7(ProblemState stateData)
+        {
+            return stateData.DealerCard.Rank == "7";
+        }
+
+        private static bool DealerShows8(ProblemState stateData)
+        {
+            return stateData.DealerCard.Rank == "8";
+        }
+
+        private static bool DealerShows9(ProblemState stateData)
+        {
+            return stateData.DealerCard.Rank == "9";
+        }
+
+        private static bool DealerShowsT(ProblemState stateData)
         {
             var dealerCard = stateData.DealerCard;
-            return dealerCard.Rank == "A";
+            return dealerCard.Rank == "T" || dealerCard.Rank == "J" || dealerCard.Rank == "Q" || dealerCard.Rank == "K";
         }
+
+        //-------------------------------------------------------------------------
+        // Now terminal functions to get information about the player's hand
+        //-------------------------------------------------------------------------
 
         private static bool HasAce(ProblemState stateData)
         {
@@ -79,11 +156,96 @@ namespace BlackjackStrategy.Models
 
         private static bool HandVal4(ProblemState stateData)
         {
+            return HandTotalEquals(stateData, 4);
+        }
+
+        private static bool HandVal5(ProblemState stateData)
+        {
+            return HandTotalEquals(stateData, 5);
+        }
+
+        private static bool HandVal6(ProblemState stateData)
+        {
+            return HandTotalEquals(stateData, 6);
+        }
+
+        private static bool HandVal7(ProblemState stateData)
+        {
+            return HandTotalEquals(stateData, 7);
+        }
+
+        private static bool HandVal8(ProblemState stateData)
+        {
+            return HandTotalEquals(stateData, 8);
+        }
+
+        private static bool HandVal9(ProblemState stateData)
+        {
+            return HandTotalEquals(stateData, 9);
+        }
+
+        private static bool HandVal10(ProblemState stateData)
+        {
+            return HandTotalEquals(stateData, 10);
+        }
+
+        private static bool HandVal11(ProblemState stateData)
+        {
+            return HandTotalEquals(stateData, 11);
+        }
+
+        private static bool HandVal12(ProblemState stateData)
+        {
+            return HandTotalEquals(stateData, 12);
+        }
+
+        private static bool HandVal13(ProblemState stateData)
+        {
+            return HandTotalEquals(stateData, 13);
+        }
+
+        private static bool HandVal14(ProblemState stateData)
+        {
+            return HandTotalEquals(stateData, 14);
+        }
+
+        private static bool HandVal15(ProblemState stateData)
+        {
+            return HandTotalEquals(stateData, 15);
+        }
+
+        private static bool HandVal16(ProblemState stateData)
+        {
+            return HandTotalEquals(stateData, 16);
+        }
+
+        private static bool HandVal17(ProblemState stateData)
+        {
+            return HandTotalEquals(stateData, 17);
+        }
+
+        private static bool HandVal18(ProblemState stateData)
+        {
+            return HandTotalEquals(stateData, 18);
+        }
+
+        private static bool HandVal19(ProblemState stateData)
+        {
+            return HandTotalEquals(stateData, 19);
+        }
+
+        private static bool HandVal20(ProblemState stateData)
+        {
+            return HandTotalEquals(stateData, 20);
+        }
+
+        private static bool HandTotalEquals(ProblemState stateData, int lookingFor)
+        {
             var card1 = stateData.Card1;
             var card2 = stateData.Card1;
             bool hasit = (
-                ((card1.RankValueHigh + card2.RankValueHigh) == 4) ||
-                ((card1.RankValueLow + card2.RankValueLow) == 4));
+                ((card1.RankValueHigh + card2.RankValueHigh) == lookingFor) ||
+                ((card1.RankValueLow + card2.RankValueLow) == lookingFor));
             return hasit;
         }
 
@@ -93,6 +255,18 @@ namespace BlackjackStrategy.Models
         private static bool VoteHit(ProblemState stateData)
         {
             stateData.VotesForHit++;
+            return true;
+        }
+
+        private static bool VoteStand(ProblemState stateData)
+        {
+            stateData.VotesForStand++;
+            return true;
+        }
+
+        private static bool VoteDouble(ProblemState stateData)
+        {
+            stateData.VotesForDoubleDown++;
             return true;
         }
 

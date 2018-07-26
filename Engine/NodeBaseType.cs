@@ -1,8 +1,5 @@
 ﻿namespace Evolutionary
 {
-    /// <summary>
-    /// Base class for our Terminal and Function node types
-    /// </summary>
     abstract class NodeBaseType<T,S> where S : new()
     {
         // everybody has a parent
