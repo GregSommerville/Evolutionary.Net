@@ -20,9 +20,9 @@ namespace BlackjackStrategy.Models
                 MutationRate = mutationPercentage / 100F,
                 PopulationSize = populationSize,
                 TourneySize = tourneySize,
-                NoChangeGenerationCountForTermination = 5, // terminate if we go N generations without an improvement of average fitness
-                RandomTreeMinDepth = 5, // when first creating a random tree or subtree
-                RandomTreeMaxDepth = 10
+                NoChangeGenerationCountForTermination = 10, // terminate if we go N generations without an improvement of average fitness
+                RandomTreeMinDepth = 10, // when first creating a random tree or subtree
+                RandomTreeMaxDepth = 15
             };
 
             // create the engine.  each tree (and node within the tree) will return a bool.
@@ -439,7 +439,7 @@ namespace BlackjackStrategy.Models
             return keepRunning;
         }
 
-        private static string GetAction(ProblemState stateData)
+        public static string GetAction(ProblemState stateData)
         {
             int votesForStand = stateData.VotesForStand;
             int votesForHit = stateData.VotesForHit;

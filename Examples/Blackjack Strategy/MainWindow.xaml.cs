@@ -36,11 +36,11 @@ namespace BlackjackStrategy
 
         private void AsyncCall(int populationSize, int crossoverPercentage, double mutationPercentage, int elitismPercentage, int tourneySize)
         {
-            Models.Solution.BuildProgram(populationSize, crossoverPercentage, mutationPercentage, elitismPercentage, tourneySize);
+            Solution.BuildProgram(populationSize, crossoverPercentage, mutationPercentage, elitismPercentage, tourneySize);
 
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                string solution = Models.Solution.BestSolution.ToString();
+                string solution = Solution.BestSolution.ToString();
 
                 gaResultTB.Text = "Found solution:\n\n" + solution;
                 Debug.WriteLine(solution);
@@ -52,68 +52,97 @@ namespace BlackjackStrategy
 
         private void ShowPlayableHands()
         {
-            const int columnWidth = 43, rowHeight = 43;
-            int startX = ((int)canvas.ActualWidth - (13 * columnWidth)) / 2;
-            int startY = ((int)canvas.ActualHeight - (13 * rowHeight)) / 2;
+            var best = Solution.BestSolution;
 
             // clear the screen
             canvas.Children.Clear();
 
-            // now display on screen
-            for (int outerRank = (int)Card.Ranks.Ace; outerRank >= (int)Card.Ranks.Two; outerRank--)
-                for (int innerRank = (int)Card.Ranks.Ace; innerRank >= (int)Card.Ranks.Two; innerRank--)
+            // display a grid for hands without an ace.  One column for each possible dealer upcard
+            AddColorBox(Colors.White, "", 0, 0);
+            int x = 1;
+            for (int upcardRank = 2; upcardRank < 12; upcardRank++)
+            {
+                string rankNeeded = (upcardRank == 11) ? "A" : upcardRank.ToString();
+                AddColorBox(Colors.White, rankNeeded, x, 0);
+                int y = 1;
+
+                for (int hardTotal = 20; hardTotal > 3; hardTotal--)
                 {
-                    int x = (int)Card.Ranks.Ace - outerRank;
-                    int y = (int)Card.Ranks.Ace - innerRank;
+                    // add a white box with the total
+                    AddColorBox(Colors.White, hardTotal.ToString(), 0, y);
 
-                    // how should I play it?
-                    bool highlight = false; 
+                    var deck = new MultiDeck(TestConditions.NumDecks);
 
-                    // name of hand?
-                    string handName = "";
-                    if (x == y)
+                    // build dealer hand
+                    Hand dealerHand = new Hand();
+                    dealerHand.AddCard(new Card(rankNeeded, "S"));
+                    dealerHand.AddCard(deck.DealCard());    // next card doesn't matter, since only the upcard is evaluated in the candidate
+
+                    // build player hand
+                    Hand playerHand = new Hand();
+                    // divide by 2 if it's even, else add one and divide by two
+                    int firstCardRank = ((hardTotal % 2) != 0) ? (hardTotal + 1) / 2 : hardTotal / 2;
+                    int secondCardRank = hardTotal - firstCardRank;
+                    playerHand.AddCard(new Card(firstCardRank, "D"));
+                    playerHand.AddCard(new Card(secondCardRank, "S"));
+
+                    // get strategy and display
+                    best.StateData.DealerHand = dealerHand;
+                    best.StateData.PlayerHand = playerHand;
+                    best.StateData.VotesForDoubleDown = 0;
+                    best.StateData.VotesForHit = 0;
+                    best.StateData.VotesForStand = 0;
+
+                    best.Evaluate();    // get the decision
+                    string action = Solution.GetAction(best.StateData);
+
+                    // Now draw the box
+                    switch (action)
                     {
-                        // pair
-                        handName = Card.RankText(outerRank) + Card.RankText(outerRank);
+                        case "H":
+                            AddColorBox(Colors.Green, "H", x, y);
+                            break;
+
+                        case "S":
+                            AddColorBox(Colors.Red, "S", x, y);
+                            break;
+
+                        case "D":
+                            AddColorBox(Colors.Yellow, "D", x, y);
+                            break;
                     }
-                    else if (x > y)
-                    {
-                        // suited
-                        handName = Card.RankText(innerRank) + Card.RankText(outerRank) + "s";
-                    }
-                    else
-                    {
-                        // offsuit
-                        handName = Card.RankText(outerRank) + Card.RankText(innerRank) + "o";
-                    }
-
-                    // drawing on canvas
-
-                    // the element is a border
-                    var box = new Border();
-                    box.BorderBrush = Brushes.Black;
-                    box.BorderThickness = new System.Windows.Thickness(1);
-                    if (highlight)
-                        box.Background = new SolidColorBrush(Colors.Yellow);
-                    else
-                        box.Background = new SolidColorBrush(Colors.White);                    
-                    box.Width = columnWidth;
-                    box.Height = rowHeight;
-
-                    // and a label as a child
-                    var itemText = new TextBlock();
-                    itemText.HorizontalAlignment = HorizontalAlignment.Center;
-                    itemText.VerticalAlignment = VerticalAlignment.Center;
-                    if (highlight)
-                        itemText.Inlines.Add(new Bold(new Run(handName)));
-                    else
-                        itemText.Text = handName;
-                    box.Child = itemText;
-
-                    canvas.Children.Add(box);
-                    Canvas.SetTop(box, startY + y * rowHeight);
-                    Canvas.SetLeft(box, startX + x * columnWidth);
+                    y++;
                 }
+                x++;
+            }
+            
+            // and another for hands with an ace
+        }
+
+        private void AddColorBox(Color color, string label, int x, int y)
+        {
+            const int columnWidth = 30, rowHeight = 30;
+            int startX = (((int)canvas.ActualWidth / 2) - (11 * columnWidth)) / 2;
+            int startY = ((int)canvas.ActualHeight - (17 * rowHeight)) / 2;
+
+            // the element is a border
+            var box = new Border();
+            box.BorderBrush = Brushes.Black;
+            box.BorderThickness = new System.Windows.Thickness(1);
+            box.Background = new SolidColorBrush(color);
+            box.Width = columnWidth;
+            box.Height = rowHeight;
+
+            // and a label as a child
+            var itemText = new TextBlock();
+            itemText.HorizontalAlignment = HorizontalAlignment.Center;
+            itemText.VerticalAlignment = VerticalAlignment.Center;
+            itemText.Text = label;
+            box.Child = itemText;
+
+            canvas.Children.Add(box);
+            Canvas.SetTop(box, startY + y * rowHeight);
+            Canvas.SetLeft(box, startX + x * columnWidth);
         }
     }
 }

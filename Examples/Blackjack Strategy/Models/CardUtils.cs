@@ -69,6 +69,13 @@ namespace BlackjackStrategy.Models
             Suit = combined[1].ToString();
         }
 
+        public Card(int rankValue, string suit)
+        {
+            var rankChars = "  23456789TJQKA".ToCharArray();
+            Rank = rankChars[rankValue].ToString();
+            Suit = suit;
+        }
+
         public Card(Ranks rankValue, string suit)
         {
             var rankChars = "  23456789TJQKA".ToCharArray();
