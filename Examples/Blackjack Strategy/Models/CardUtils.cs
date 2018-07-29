@@ -137,6 +137,91 @@ namespace BlackjackStrategy.Models
         }
     }
 
+    class Hand
+    {
+        public Hand()
+        {
+            Cards = new List<Card>();
+        }
+
+        public List<Card> Cards { get; set; }
+
+        public void AddCard(Card card)
+        {
+            Cards.Add(card);
+        }
+
+        public override string ToString()
+        {
+            List<string> cardNames = new List<string>();
+            foreach (var card in Cards)
+                cardNames.Add(card.ToString());
+
+            string hand = String.Join(",", cardNames);
+            return hand + " = " + HandValue().ToString();
+        }
+
+        public int HandValue()
+        {
+            // the best score possible
+            int highValue = 0, lowValue = 0;
+            bool aceWasUsedAsHigh = false;
+            foreach (var card in Cards)
+            {
+                if (card.Rank == "A")
+                {
+                    if (!aceWasUsedAsHigh)
+                    {
+                        highValue += card.RankValueHigh;
+                        lowValue += card.RankValueLow;
+                        aceWasUsedAsHigh = true;
+                    }
+                    else
+                    {
+                        // only one Ace can be used as high, so all others are low
+                        highValue += card.RankValueLow;
+                        lowValue += card.RankValueLow;
+                    }
+
+                }
+                else
+                {
+                    highValue += card.RankValueHigh;
+                    lowValue += card.RankValueLow;
+                }
+            }
+
+            // if the low value > 21, then so is the high, so simply pass back the low
+            if (lowValue > 21) return lowValue;
+
+            // if the high value > 21, return the low
+            if (highValue > 21) return lowValue;
+            // else the high, which will be the same value as the low except when there's an Ace in the hand
+            return highValue;
+        }
+    }
+
+    class MultiDeck
+    {
+        public List<Card> Cards { get; set; }
+        private int currentCard = 0;
+
+        public MultiDeck(int numDecks)
+        {
+            Cards = new List<Card>();
+            for (int deckNum = 0; deckNum < numDecks; deckNum++)
+            {
+                Cards.AddRange(CardUtils.GetRandomDeck());
+            }
+        }
+
+        public Card DealCard()
+        {
+            // bad code - it doesn't deal with running out of cards
+            return Cards[currentCard++];
+        }
+    }
+
     class CardUtils
     {
         static public List<Card> GetRandomDeck()

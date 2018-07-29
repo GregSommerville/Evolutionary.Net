@@ -15,6 +15,8 @@ namespace Evolutionary
         private bool IsLowerFitnessBetter = true;
         private double CrossoverRate = 0.95;
         private double MutationRate = 0.01;
+        private int MinTreeDepth = 4;
+        private int MaxTreeDepth = 7;
 
         // object to store all available node contents (functions, constants, variables, etc.)
         private EngineComponents<T> primitiveSet = new EngineComponents<T>();
@@ -42,6 +44,8 @@ namespace Evolutionary
             IsLowerFitnessBetter = engineParams.IsLowerFitnessBetter;
             CrossoverRate = engineParams.CrossoverRate;
             MutationRate = engineParams.MutationRate;
+            MinTreeDepth = engineParams.RandomTreeMinDepth;
+            MaxTreeDepth = engineParams.RandomTreeMaxDepth;
         }
     
         public CandidateSolution<T,S> FindBestSolution()
@@ -53,7 +57,7 @@ namespace Evolutionary
             // create an initial population of random trees, passing the possible functions, consts, and variables
             for (int p = 0; p < PopulationSize; p++)
             {
-                CandidateSolution<T,S> tree = new CandidateSolution<T,S>(primitiveSet);
+                CandidateSolution<T,S> tree = new CandidateSolution<T,S>(primitiveSet, MinTreeDepth, MaxTreeDepth);
                 tree.CreateRandom();
                 currentGeneration.Add(tree);
             }

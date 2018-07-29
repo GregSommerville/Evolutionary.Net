@@ -9,6 +9,8 @@
         public bool IsLowerFitnessBetter { get; set; }
         public double CrossoverRate { get; set; }
         public double MutationRate { get; set; }
+        public int RandomTreeMinDepth { get; set; }
+        public int RandomTreeMaxDepth { get; set; }
 
         // Future: min generations, max generations, num threads
     }

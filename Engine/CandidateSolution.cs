@@ -14,10 +14,10 @@ namespace Evolutionary
         public S StateData { get; }    // used by terminal functions
         public Dictionary<string, T> Variables { get; }
 
-        internal CandidateSolution(EngineComponents<T> availableComponents)
+        internal CandidateSolution(EngineComponents<T> availableComponents, int minDepth, int maxDepth)
         {
-            TreeMinDepth = 3;
-            TreeMaxDepth = 6;
+            TreeMinDepth = minDepth;
+            TreeMaxDepth = maxDepth;
             StateData = new S();
             Variables = new Dictionary<string, T>();
 
@@ -205,7 +205,7 @@ namespace Evolutionary
         public CandidateSolution<T,S> Clone()
         {
             // clone the tree object
-            var newTree = new CandidateSolution<T,S>(primitiveSet);
+            var newTree = new CandidateSolution<T,S>(primitiveSet, TreeMinDepth, TreeMaxDepth);
 
             // and all of the nodes in the tree
             newTree.Root = Root.Clone(null);

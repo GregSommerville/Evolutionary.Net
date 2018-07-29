@@ -1,4 +1,5 @@
 ﻿using Evolutionary;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace BlackjackStrategy.Models
@@ -19,7 +20,9 @@ namespace BlackjackStrategy.Models
                 MutationRate = mutationPercentage / 100F,
                 PopulationSize = populationSize,
                 TourneySize = tourneySize,
-                NoChangeGenerationCountForTermination = 12
+                NoChangeGenerationCountForTermination = 12,
+                RandomTreeMinDepth = 5,
+                RandomTreeMaxDepth = 10
             };
 
             // create the engine.  each tree (and node within the tree) will return a bool.
@@ -37,10 +40,12 @@ namespace BlackjackStrategy.Models
             engine.AddFunction((a, b) => a && b, "And");
             engine.AddFunction((a, b) => a || b, "Or");
             engine.AddFunction((a) => !a, "Not");
-            engine.AddFunction((a, b, c) => a ? b : c, "If");         // if a, return b else c
+            //engine.AddFunction((a, b, c) => a ? b : c, "If");         // if a, return b else c
 
-            // terminal functions to look at game state - first, cards the player is holding
+            // terminal functions to look at game state - first, cards the player is holding:
+            // holding ace
             engine.AddTerminalFunction(HasAce, "HasAce");
+            // hand totals
             engine.AddTerminalFunction(HandVal4, "Has4");
             engine.AddTerminalFunction(HandVal5, "Has5");
             engine.AddTerminalFunction(HandVal6, "Has6");
@@ -58,23 +63,27 @@ namespace BlackjackStrategy.Models
             engine.AddTerminalFunction(HandVal18, "Has18");
             engine.AddTerminalFunction(HandVal19, "Has19");
             engine.AddTerminalFunction(HandVal20, "Has20");
+            // num cards held
+            engine.AddTerminalFunction(Holding2Cards, "Hold2");
+            engine.AddTerminalFunction(Holding3Cards, "Hold3");
+            engine.AddTerminalFunction(Holding4PlusCards, "HoldGE4");
 
             // then whatever the dealer upcard is
-            engine.AddTerminalFunction(DealerShowsA, "DealerA");
-            engine.AddTerminalFunction(DealerShows2, "Dealer2");
-            engine.AddTerminalFunction(DealerShows3, "Dealer3");
-            engine.AddTerminalFunction(DealerShows4, "Dealer4");
-            engine.AddTerminalFunction(DealerShows5, "Dealer5");
-            engine.AddTerminalFunction(DealerShows6, "Dealer6");
-            engine.AddTerminalFunction(DealerShows7, "Dealer7");
-            engine.AddTerminalFunction(DealerShows8, "Dealer8");
-            engine.AddTerminalFunction(DealerShows9, "Dealer9");
-            engine.AddTerminalFunction(DealerShowsT, "DealerT");
+            engine.AddTerminalFunction(DealerShowsA, "DlrA");
+            engine.AddTerminalFunction(DealerShows2, "Dlr2");
+            engine.AddTerminalFunction(DealerShows3, "Dlr3");
+            engine.AddTerminalFunction(DealerShows4, "Dlr4");
+            engine.AddTerminalFunction(DealerShows5, "Dlr5");
+            engine.AddTerminalFunction(DealerShows6, "Dlr6");
+            engine.AddTerminalFunction(DealerShows7, "Dlr7");
+            engine.AddTerminalFunction(DealerShows8, "Dlr8");
+            engine.AddTerminalFunction(DealerShows9, "Dlr9");
+            engine.AddTerminalFunction(DealerShowsT, "DlrT");
 
             // then add terminal functions to indicate a strategy
             engine.AddTerminalFunction(VoteHit, "Hit");
             engine.AddTerminalFunction(VoteStand, "Stand");
-            engine.AddTerminalFunction(VoteDouble, "DblDown");
+            engine.AddTerminalFunction(VoteDouble, "Dbl");
 
             // pass a fitness evaluation function and run
             engine.AddFitnessFunction((t) => EvaluateCandidate(t));
@@ -94,52 +103,52 @@ namespace BlackjackStrategy.Models
 
         private static bool DealerShowsA(ProblemState stateData)
         {
-            return stateData.DealerCard.Rank == "A";
+            return stateData.DealerHand.Cards[0].Rank == "A";
         }
 
         private static bool DealerShows2(ProblemState stateData)
         {
-            return stateData.DealerCard.Rank == "2";
+            return stateData.DealerHand.Cards[0].Rank == "2";
         }
 
         private static bool DealerShows3(ProblemState stateData)
         {
-            return stateData.DealerCard.Rank == "3";
+            return stateData.DealerHand.Cards[0].Rank == "3";
         }
 
         private static bool DealerShows4(ProblemState stateData)
         {
-            return stateData.DealerCard.Rank == "4";
+            return stateData.DealerHand.Cards[0].Rank == "4";
         }
 
         private static bool DealerShows5(ProblemState stateData)
         {
-            return stateData.DealerCard.Rank == "5";
+            return stateData.DealerHand.Cards[0].Rank == "5";
         }
 
         private static bool DealerShows6(ProblemState stateData)
         {
-            return stateData.DealerCard.Rank == "6";
+            return stateData.DealerHand.Cards[0].Rank == "6";
         }
 
         private static bool DealerShows7(ProblemState stateData)
         {
-            return stateData.DealerCard.Rank == "7";
+            return stateData.DealerHand.Cards[0].Rank == "7";
         }
 
         private static bool DealerShows8(ProblemState stateData)
         {
-            return stateData.DealerCard.Rank == "8";
+            return stateData.DealerHand.Cards[0].Rank == "8";
         }
 
         private static bool DealerShows9(ProblemState stateData)
         {
-            return stateData.DealerCard.Rank == "9";
+            return stateData.DealerHand.Cards[0].Rank == "9";
         }
 
         private static bool DealerShowsT(ProblemState stateData)
         {
-            var dealerCard = stateData.DealerCard;
+            var dealerCard = stateData.DealerHand.Cards[0];
             return dealerCard.Rank == "T" || dealerCard.Rank == "J" || dealerCard.Rank == "Q" || dealerCard.Rank == "K";
         }
 
@@ -149,9 +158,9 @@ namespace BlackjackStrategy.Models
 
         private static bool HasAce(ProblemState stateData)
         {
-            var card1 = stateData.Card1;
-            var card2 = stateData.Card1;
-            return card1.Rank == "A" || card2.Rank == "A";
+            foreach (var card in stateData.PlayerHand.Cards)
+                if (card.Rank == "A") return true;
+            return false;
         }
 
         private static bool HandVal4(ProblemState stateData)
@@ -241,15 +250,22 @@ namespace BlackjackStrategy.Models
 
         private static bool HandTotalEquals(ProblemState stateData, int lookingFor)
         {
-            var card1 = stateData.Card1;
-            var card2 = stateData.Card1;
-            // RankValueHigh and RankValueLow are the same for all cards except Ace:
-            // "A": RankValueHigh = 13 RankValueLow = 1
-            // "K": RankValueHigh = 10, RankValueLow = 10  (and so forth)
-            bool hasit = (
-                ((card1.RankValueHigh + card2.RankValueHigh) == lookingFor) ||
-                ((card1.RankValueLow + card2.RankValueLow) == lookingFor));
-            return hasit;
+            return stateData.PlayerHand.HandValue() == lookingFor;
+        }
+
+        private static bool Holding2Cards(ProblemState stateData)
+        {
+            return stateData.PlayerHand.Cards.Count == 2;
+        }
+
+        private static bool Holding3Cards(ProblemState stateData)
+        {
+            return stateData.PlayerHand.Cards.Count == 3;
+        }
+
+        private static bool Holding4PlusCards(ProblemState stateData)
+        {
+            return stateData.PlayerHand.Cards.Count >= 4;
         }
 
         //-------------------------------------------------------------------------
@@ -278,14 +294,135 @@ namespace BlackjackStrategy.Models
         //-------------------------------------------------------------------------
         private static float EvaluateCandidate(CandidateSolution<bool, ProblemState> candidate)
         {
-            var state = candidate.StateData;    // the engine allocates the state data, so we don't have to
+            int playerChips = 0;
 
-            // loop over X hands
-            // randomly deal cards to player + dealer and save in state data
-            // get the decision
-            // if not busted or won, try again
-            // after standing, deal out cards to see who wins
-            return 0;
+            for (int handNum = 0; handNum < TestConditions.NumHandsToPlay; handNum++)
+            {
+                // for each hand, we generate a random deck.  Blackjack is often played with multiple decks to improve the house edge
+                MultiDeck deck = new MultiDeck(TestConditions.NumDecks);
+                Hand dealerHand = new Hand();
+                Hand playerHand = new Hand();
+
+                playerHand.AddCard(deck.DealCard());
+                dealerHand.AddCard(deck.DealCard());
+                playerHand.AddCard(deck.DealCard());
+                dealerHand.AddCard(deck.DealCard());
+
+                // save the cards in state, and reset the votes for this hand
+                candidate.StateData.DealerHand = dealerHand;
+                candidate.StateData.PlayerHand = playerHand;
+                candidate.StateData.VotesForDoubleDown = 0;
+                candidate.StateData.VotesForHit = 0;
+                candidate.StateData.VotesForStand = 0;
+
+                // loop until the hand is done
+                var currentHandState = TestConditions.GameState.PlayerDrawing;
+
+                // do the intial wager
+                int totalBetAmount = TestConditions.BetSize;
+                playerChips -= TestConditions.BetSize;
+
+                // check for player having a blackjack, which is an instant win
+                if (playerHand.HandValue() == 21)
+                {
+                    // if the dealer also has 21, then it's a tie
+                    if (dealerHand.HandValue() != 21)
+                    {
+                        currentHandState = TestConditions.GameState.PlayerBlackjack;
+                        playerChips += TestConditions.BlackjackPayoffSize;
+                    }
+                    else
+                    {
+                        // a tie means we just ignore it and drop through
+                        currentHandState = TestConditions.GameState.HandComparison;
+                    }
+                }
+
+                // check for dealer having blackjack, which is either instant loss or tie 
+                if (dealerHand.HandValue() == 21) currentHandState = TestConditions.GameState.HandComparison;
+
+                // player draws 
+                while (currentHandState == TestConditions.GameState.PlayerDrawing)
+                {
+                    // get the decision
+                    candidate.Evaluate();   // throw away the result, because it's meaningless
+
+                    // look at the votes to see what to do
+                    string action = GetAction(candidate.StateData);
+                    switch (action)
+                    {
+                        case "H":
+                            // hit means give me another card, and let's evaluate again
+                            playerHand.AddCard(deck.DealCard());
+                            if (playerHand.HandValue() > 21)
+                                currentHandState = TestConditions.GameState.PlayerBusted;
+                            break;
+
+                        case "S":
+                            // if player stands, it's the dealer's turn to draw
+                            currentHandState = TestConditions.GameState.DealerDrawing;
+                            break;
+
+                        case "D":
+                            // double down means bet another chip, and get one and only card card
+                            playerChips -= TestConditions.BetSize;
+                            totalBetAmount += TestConditions.BetSize;
+                            playerHand.AddCard(deck.DealCard());
+                            if (playerHand.HandValue() > 21)
+                                currentHandState = TestConditions.GameState.PlayerBusted;
+                            else
+                                currentHandState = TestConditions.GameState.DealerDrawing;
+                            break;
+                    }
+                }
+
+                // if the player busted, nothing to do, since chips have already been consumed.  Just go on to the next hand
+                // on the other hand, if the player hasn't busted, then we need to play the hand for the dealer
+                while (currentHandState == TestConditions.GameState.DealerDrawing)
+                {
+                    // if player didn't bust or blackjack, dealer hits until they have 17+ (hits on soft 17)
+                    if (dealerHand.HandValue() < 17)
+                    {
+                        dealerHand.AddCard(deck.DealCard());
+                        if (dealerHand.HandValue() > 21)
+                        {
+                            currentHandState = TestConditions.GameState.DealerBusted;
+                            playerChips += TestConditions.BetSize * 2;  // the original bet and a matching amount
+                        }
+                    }
+                    else
+                    {
+                        // dealer hand is 17+, so we're done
+                        currentHandState = TestConditions.GameState.HandComparison;
+                    }
+                }
+
+                if (currentHandState == TestConditions.GameState.HandComparison)
+                {
+                    int playerHandValue = playerHand.HandValue();
+                    int dealerHandValue = dealerHand.HandValue();
+
+                    // if it's a tie, give the player his bet back
+                    if (playerHandValue == dealerHandValue)
+                    {
+                        playerChips += TestConditions.BetSize;
+                    }
+                    else
+                    {
+                        if (playerHandValue > dealerHandValue)
+                        {
+                            // player won
+                            playerChips += TestConditions.BetSize * 2;  // the original bet and a matching amount
+                        }
+                        else
+                        {
+                            // player lost, nothing to do since the chips have already been decremented
+                        }
+                    }
+                }
+            }
+
+            return playerChips;
         }
 
         //-------------------------------------------------------------------------
@@ -294,11 +431,23 @@ namespace BlackjackStrategy.Models
         private static bool PerGenerationCallback(EngineProgress progress)
         {
             Debug.WriteLine("Generation " + progress.GenerationNumber +
-                " best: " + progress.BestFitnessThisGen.ToString("0.0") +
-                " avg: " + progress.AvgFitnessThisGen.ToString("0.0"));
+                " best: " + progress.BestFitnessThisGen.ToString("0") +
+                " avg: " + progress.AvgFitnessThisGen.ToString("0"));
 
             // return true to keep going, false to halt the system
-            return true;
+            bool keepRunning = true;
+            return keepRunning;
+        }
+
+        private static string GetAction(ProblemState stateData)
+        {
+            int votesForStand = stateData.VotesForStand;
+            int votesForHit = stateData.VotesForHit;
+            int votesForDouble = stateData.VotesForDoubleDown;
+
+            if ((votesForStand > votesForHit) && (votesForStand > votesForDouble)) return "S";
+            if ((votesForDouble > votesForHit) && (votesForDouble > votesForStand)) return "D";
+            return "H";
         }
     }
 }

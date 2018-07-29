@@ -1,12 +1,11 @@
 ﻿==========================
 TO DO
 ==========================
+- Num gens without improvements should be average fitness, not best
 
-- Multithreading:  
-	Always on, but allow them to specify #threads
+- Multithreading:  Specify # threads
 
-- Autodefined functions:
-	.AddAutoDefinedFunction(numParams)
+- Autodefined functions: .AddAutoDefinedFunction(numParams)
 
 - engine.LoadSolution(solutionName, expressionString) : deserializes, opposite of solution.ToString()
 

@@ -1,11 +1,12 @@
-﻿namespace BlackjackStrategy.Models
+﻿using System.Collections.Generic;
+
+namespace BlackjackStrategy.Models
 {
     class ProblemState
     {
-        // Before evaluating a candidate, we load the state data with the curren game situation - player cards and dealer upcard
-        public Card Card1 { get; set; }
-        public Card Card2 { get; set; }
-        public Card DealerCard { get; set; }
+        // Before evaluating a candidate, we load the state data with the current game situation, which is the current hands
+        public Hand PlayerHand{ get; set; }
+        public Hand DealerHand { get; set; }    // .Cards[0] is the upcard
 
         // Each candidate expression tree will have terminal functions that indicate a strategy (stand, hit, etc.)  
         // Since a given candidate could potentially have several of these in the tree, each time such a terminal function 
