@@ -20,8 +20,8 @@ namespace BlackjackStrategy.Models
                 MutationRate = mutationPercentage / 100F,
                 PopulationSize = populationSize,
                 TourneySize = tourneySize,
-                NoChangeGenerationCountForTermination = 12,
-                RandomTreeMinDepth = 5,
+                NoChangeGenerationCountForTermination = 5, // terminate if we go N generations without an improvement of average fitness
+                RandomTreeMinDepth = 5, // when first creating a random tree or subtree
                 RandomTreeMaxDepth = 10
             };
 
@@ -30,8 +30,8 @@ namespace BlackjackStrategy.Models
             var engine = new Engine<bool, ProblemState>(engineParams);
 
             // constants are simple in this case since there are only two possibilities
-            engine.AddConstant(false);
-            engine.AddConstant(true);
+            //engine.AddConstant(false);
+            //engine.AddConstant(true);
 
             // no variables for this solution - we can't pass in information about our hand and 
             // the dealer upcard via boolean variables, so we do it via some terminal functions instead

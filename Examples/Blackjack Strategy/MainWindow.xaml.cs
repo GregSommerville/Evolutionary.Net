@@ -59,9 +59,6 @@ namespace BlackjackStrategy
             // clear the screen
             canvas.Children.Clear();
 
-            // get boolean array that indicates whether to play each hand
-            //var playableCards = Solution.GetPlayableCards();
-
             // now display on screen
             for (int outerRank = (int)Card.Ranks.Ace; outerRank >= (int)Card.Ranks.Two; outerRank--)
                 for (int innerRank = (int)Card.Ranks.Ace; innerRank >= (int)Card.Ranks.Two; innerRank--)
@@ -69,8 +66,8 @@ namespace BlackjackStrategy
                     int x = (int)Card.Ranks.Ace - outerRank;
                     int y = (int)Card.Ranks.Ace - innerRank;
 
-                    // should I play it?
-                    bool highlight = true; // playableCards[x, y];   
+                    // how should I play it?
+                    bool highlight = false; 
 
                     // name of hand?
                     string handName = "";

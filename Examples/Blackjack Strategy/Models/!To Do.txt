@@ -1,12 +1,17 @@
 ﻿==========================
 TO DO
 ==========================
-- Num gens without improvements should be average fitness, not best
 
-- Multithreading:  Specify # threads
+--------------------------
+Engine
+--------------------------
+- EngineParameters.NumThreadsForFitnessEval : def = 4
+- .AddAutoDefinedFunction(numParams)
+- .LoadSolution(solutionName, expressionString) : deserializes, opposite of solution.ToString()
+- WPF app to load and display any expression tree 
 
-- Autodefined functions: .AddAutoDefinedFunction(numParams)
-
-- engine.LoadSolution(solutionName, expressionString) : deserializes, opposite of solution.ToString()
-
-- WPF app to display any function in a tree form
+--------------------------
+Blackjack Example
+--------------------------
+- In per-loop callback, display time for each generation
+- Do post-calculation display of results

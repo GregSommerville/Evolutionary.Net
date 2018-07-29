@@ -51,8 +51,9 @@ namespace Evolutionary
         public CandidateSolution<T,S> FindBestSolution()
         {
             float bestFitnessScoreAllTime = (IsLowerFitnessBetter ? float.MaxValue : float.MinValue);
+            float bestAverageFitnessScore = (IsLowerFitnessBetter ? float.MaxValue : float.MinValue);
             CandidateSolution<T,S> bestTreeAllTime = null;
-            int bestSolutionGenerationNumber = 0;
+            int bestSolutionGenerationNumber = 0, bestAverageFitnessGenerationNumber = 0;
 
             // create an initial population of random trees, passing the possible functions, consts, and variables
             for (int p = 0; p < PopulationSize; p++)
@@ -104,6 +105,23 @@ namespace Evolutionary
                 }
 
                 float averageFitness = totalFitness / PopulationSize;
+                if (IsLowerFitnessBetter)
+                {
+                    if (averageFitness < bestAverageFitnessScore)
+                    {
+                        bestAverageFitnessGenerationNumber = currentGenerationNumber;
+                        bestAverageFitnessScore = averageFitness;
+                    }
+                }
+                else
+                {
+                    if (averageFitness > bestAverageFitnessScore)
+                    {
+                        bestAverageFitnessGenerationNumber = currentGenerationNumber;
+                        bestAverageFitnessScore = averageFitness;
+                    }
+                }
+
                 EngineProgress progress = new EngineProgress()
                 {
                     GenerationNumber = currentGenerationNumber,
@@ -114,8 +132,8 @@ namespace Evolutionary
                 bool keepGoing = myProgressFunction(progress);
                 if (!keepGoing) break;  // user signalled to end looping
 
-                // exit the loop if we're not making any progress
-                if ((currentGenerationNumber - bestSolutionGenerationNumber) 
+                // exit the loop if we're not making any progress in our average fitness score
+                if ((currentGenerationNumber - bestAverageFitnessGenerationNumber) 
                     >= NoChangeGenerationCountForTermination)
                     break;
 
