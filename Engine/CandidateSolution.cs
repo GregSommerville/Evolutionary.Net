@@ -97,7 +97,7 @@ namespace Evolutionary
         {
             // create a function node, leaving the Children unpopulated
             int random = Randomizer.IntLessThan(primitiveSet.Functions.Count);
-            return new FunctionNode<T, S>(primitiveSet.Functions[random]);
+            return new FunctionNode<T, S>(primitiveSet.Functions[random], this);
         }
 
         internal TerminalNode<T, S> NewRandomTerminalNode()

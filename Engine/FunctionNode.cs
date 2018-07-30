@@ -11,33 +11,73 @@ namespace Evolutionary
         // a function node always has N children, where N depends on the function
         public List<NodeBaseType<T, S>> Children { get; set; }
         private FunctionMetaData<T> functionMetadata = null;
+        private CandidateSolution<T, S> ownerCandidate;
 
-        public FunctionNode(FunctionMetaData<T> function)
+        public FunctionNode(FunctionMetaData<T> function, CandidateSolution<T, S> candidate)
         {
             functionMetadata = function;
             Children = new List<NodeBaseType<T, S>>(function.NumArguments);
+            ownerCandidate = candidate;
         }
 
         public override T Evaluate()
         {
-            switch(functionMetadata.NumArguments)
-            {
-                case 1:
-                    return ((Func<T, T>)functionMetadata.FunctionPtr)(Children[0].Evaluate());
-                case 2:
-                    return ((Func<T, T, T>)functionMetadata.FunctionPtr)(Children[0].Evaluate(), Children[1].Evaluate());
-                case 3:
-                    return ((Func<T, T, T, T>)functionMetadata.FunctionPtr)(Children[0].Evaluate(), Children[1].Evaluate(), Children[2].Evaluate());
-                case 4:
-                    return ((Func<T, T, T, T, T>)functionMetadata.FunctionPtr)(Children[0].Evaluate(), Children[1].Evaluate(), Children[2].Evaluate(), Children[3].Evaluate());
-            }
+            if (functionMetadata.UsesState == false)
+                switch(functionMetadata.NumArguments)
+                {
+                    case 1:
+                        return ((Func<T, T>)functionMetadata.FunctionPtr)(
+                            Children[0].Evaluate());
+                    case 2:
+                        return ((Func<T, T, T>)functionMetadata.FunctionPtr)(
+                            Children[0].Evaluate(), 
+                            Children[1].Evaluate());
+                    case 3:
+                        return ((Func<T, T, T, T>)functionMetadata.FunctionPtr)(
+                            Children[0].Evaluate(), 
+                            Children[1].Evaluate(), 
+                            Children[2].Evaluate());
+                    case 4:
+                        return ((Func<T, T, T, T, T>)functionMetadata.FunctionPtr)(
+                            Children[0].Evaluate(), 
+                            Children[1].Evaluate(), 
+                            Children[2].Evaluate(), 
+                            Children[3].Evaluate());
+                }
+            else
+                switch (functionMetadata.NumArguments)
+                {
+                    case 1:
+                        return ((Func<T, S, T>)functionMetadata.FunctionPtr)(
+                            Children[0].Evaluate(), 
+                            ownerCandidate.StateData);
+                    case 2:
+                        return ((Func<T, T, S, T>)functionMetadata.FunctionPtr)(
+                            Children[0].Evaluate(), 
+                            Children[1].Evaluate(), 
+                            ownerCandidate.StateData);
+                    case 3:
+                        return ((Func<T, T, T, S, T>)functionMetadata.FunctionPtr)(
+                            Children[0].Evaluate(), 
+                            Children[1].Evaluate(), 
+                            Children[2].Evaluate(),
+                            ownerCandidate.StateData);
+                    case 4:
+                        return ((Func<T, T, T, T, S, T>)functionMetadata.FunctionPtr)(
+                            Children[0].Evaluate(), 
+                            Children[1].Evaluate(), 
+                            Children[2].Evaluate(), 
+                            Children[3].Evaluate(),
+                            ownerCandidate.StateData);
+                }
+
             throw new Exception("Evaluate: Invalid number of arguments in a function node");
         }
 
         public override NodeBaseType<T, S> Clone(NodeBaseType<T, S> parentNode)
         {
             // clone the node
-            var newNode = new FunctionNode<T, S>(functionMetadata);
+            var newNode = new FunctionNode<T, S>(functionMetadata, ownerCandidate);
             newNode.Parent = parentNode;
 
             // clone the children
@@ -88,7 +128,8 @@ namespace Evolutionary
 
         public override void SetCandidateRef(CandidateSolution<T, S> candidate)
         {
-            // function node doesn't require a reference to the candidate, but a descendant might
+            ownerCandidate = candidate;
+            // and get the descendants
             foreach (var child in Children)
                 child.SetCandidateRef(candidate);
         }

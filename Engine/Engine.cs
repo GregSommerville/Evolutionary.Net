@@ -236,10 +236,14 @@ namespace Evolutionary
             return result;
         }
 
+        //--------------------------------------------------------------------------------
+
         public void AddConstant(T value)
         {
             primitiveSet.Constants.Add(value);
         }
+
+        //--------------------------------------------------------------------------------
 
         public void AddVariable(string variableName)
         {
@@ -247,17 +251,21 @@ namespace Evolutionary
                 primitiveSet.VariableNames.Add(variableName);
         }
 
+        //--------------------------------------------------------------------------------
+
         // zero parameter functions are a type of terminal, so they are stored separate from the other functions
         public void AddTerminalFunction(Func<S, T> function, string functionName)
         {
             primitiveSet.TerminalFunctions.Add(new FunctionMetaData<T>(function, 0, functionName));
         }
 
+        //--------------------------------------------------------------------------------
+
         // zero param functions not allowed
         // one parameter functions
         public void AddFunction(Func<T, T> function, string functionName)
         {
-            primitiveSet.Functions.Add(new FunctionMetaData<T>(function, 1, functionName));
+            primitiveSet.Functions.Add(new FunctionMetaData<T>(function, 1, functionName, false));
         }
 
         // two parameter functions
@@ -272,11 +280,34 @@ namespace Evolutionary
             primitiveSet.Functions.Add(new FunctionMetaData<T>(function, 3, functionName));
         }
 
+        //--------------------------------------------------------------------------------
+
+        public void AddStatefulFunction(Func<T, S, T> function, string functionName)
+        {
+            primitiveSet.Functions.Add(new FunctionMetaData<T>(function, 1, functionName, true));
+        }
+
+        // two parameter functions
+        public void AddFunction(Func<T, T, S, T> function, string functionName)
+        {
+            primitiveSet.Functions.Add(new FunctionMetaData<T>(function, 2, functionName, true));
+        }
+
+        // three parameter functions
+        public void AddFunction(Func<T, T, T, S, T> function, string functionName)
+        {
+            primitiveSet.Functions.Add(new FunctionMetaData<T>(function, 3, functionName, true));
+        }
+
+        //--------------------------------------------------------------------------------
+
         // And a reference to the fitness function
         public void AddFitnessFunction(Func<CandidateSolution<T,S>,float> fitnessFunction)
         {
             myFitnessFunction = new FitnessFunctionPointer(fitnessFunction);
         }
+
+        //--------------------------------------------------------------------------------
 
         // and allow the caller to monitor progress, and even halt the engine
         public void AddProgressFunction(Func<EngineProgress, bool> progressFunction)

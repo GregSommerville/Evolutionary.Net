@@ -40,7 +40,11 @@ namespace BlackjackStrategy.Models
             engine.AddFunction((a, b) => a && b, "And");
             engine.AddFunction((a, b) => a || b, "Or");
             engine.AddFunction((a) => !a, "Not");
-            //engine.AddFunction((a, b, c) => a ? b : c, "If");         // if a, return b else c
+
+            // then add functions to indicate a strategy
+            engine.AddStatefulFunction(HitIf, "HitIf");
+            engine.AddStatefulFunction(StandIf, "StandIf");
+            engine.AddStatefulFunction(DoubleIf, "DoubleIf");
 
             // terminal functions to look at game state - first, cards the player is holding:
             // holding ace
@@ -64,9 +68,9 @@ namespace BlackjackStrategy.Models
             engine.AddTerminalFunction(HandVal19, "Has19");
             engine.AddTerminalFunction(HandVal20, "Has20");
             // num cards held
-            engine.AddTerminalFunction(Holding2Cards, "Hold2");
-            engine.AddTerminalFunction(Holding3Cards, "Hold3");
-            engine.AddTerminalFunction(Holding4PlusCards, "HoldGE4");
+            //engine.AddTerminalFunction(Holding2Cards, "Hold2");
+            //engine.AddTerminalFunction(Holding3Cards, "Hold3");
+            //engine.AddTerminalFunction(Holding4PlusCards, "HoldGE4");
 
             // then whatever the dealer upcard is
             engine.AddTerminalFunction(DealerShowsA, "DlrA");
@@ -80,11 +84,6 @@ namespace BlackjackStrategy.Models
             engine.AddTerminalFunction(DealerShows9, "Dlr9");
             engine.AddTerminalFunction(DealerShowsT, "DlrT");
 
-            // then add terminal functions to indicate a strategy
-            engine.AddTerminalFunction(VoteHit, "Hit");
-            engine.AddTerminalFunction(VoteStand, "Stand");
-            engine.AddTerminalFunction(VoteDouble, "Dbl");
-
             // pass a fitness evaluation function and run
             engine.AddFitnessFunction((t) => EvaluateCandidate(t));
 
@@ -93,9 +92,6 @@ namespace BlackjackStrategy.Models
 
             BestSolution = engine.FindBestSolution();
         }
-
-        // our terminal functions fall into two categories: 
-        // ones to get the game state, and ones to indicate which strategy to use.
 
         //-------------------------------------------------------------------------
         // first, terminal functions to get information about the dealer upcard
@@ -165,93 +161,89 @@ namespace BlackjackStrategy.Models
 
         private static bool HandVal4(ProblemState stateData)
         {
-            return HandTotalEquals(stateData, 4);
+            return stateData.PlayerHand.HandValue() == 4;
         }
 
         private static bool HandVal5(ProblemState stateData)
         {
-            return HandTotalEquals(stateData, 5);
+            return stateData.PlayerHand.HandValue() == 5;
         }
 
         private static bool HandVal6(ProblemState stateData)
         {
-            return HandTotalEquals(stateData, 6);
+            return stateData.PlayerHand.HandValue() == 6;
         }
 
         private static bool HandVal7(ProblemState stateData)
         {
-            return HandTotalEquals(stateData, 7);
+            return stateData.PlayerHand.HandValue() == 7;
         }
 
         private static bool HandVal8(ProblemState stateData)
         {
-            return HandTotalEquals(stateData, 8);
+            return stateData.PlayerHand.HandValue() == 8;
         }
 
         private static bool HandVal9(ProblemState stateData)
         {
-            return HandTotalEquals(stateData, 9);
+            return stateData.PlayerHand.HandValue() == 9;
         }
 
         private static bool HandVal10(ProblemState stateData)
         {
-            return HandTotalEquals(stateData, 10);
+            return stateData.PlayerHand.HandValue() == 10;
         }
 
         private static bool HandVal11(ProblemState stateData)
         {
-            return HandTotalEquals(stateData, 11);
+            return stateData.PlayerHand.HandValue() == 11;
         }
 
         private static bool HandVal12(ProblemState stateData)
         {
-            return HandTotalEquals(stateData, 12);
+            return stateData.PlayerHand.HandValue() == 12;
         }
 
         private static bool HandVal13(ProblemState stateData)
         {
-            return HandTotalEquals(stateData, 13);
+            return stateData.PlayerHand.HandValue() == 13;
         }
 
         private static bool HandVal14(ProblemState stateData)
         {
-            return HandTotalEquals(stateData, 14);
+            return stateData.PlayerHand.HandValue() == 14;
         }
 
         private static bool HandVal15(ProblemState stateData)
         {
-            return HandTotalEquals(stateData, 15);
+            return stateData.PlayerHand.HandValue() == 15;
         }
 
         private static bool HandVal16(ProblemState stateData)
         {
-            return HandTotalEquals(stateData, 16);
+            return stateData.PlayerHand.HandValue() == 16;
         }
 
         private static bool HandVal17(ProblemState stateData)
         {
-            return HandTotalEquals(stateData, 17);
+            return stateData.PlayerHand.HandValue() == 17;
         }
 
         private static bool HandVal18(ProblemState stateData)
         {
-            return HandTotalEquals(stateData, 18);
+            return stateData.PlayerHand.HandValue() == 18;
         }
 
         private static bool HandVal19(ProblemState stateData)
         {
-            return HandTotalEquals(stateData, 19);
+            return stateData.PlayerHand.HandValue() == 19;
         }
 
         private static bool HandVal20(ProblemState stateData)
         {
-            return HandTotalEquals(stateData, 20);
+            return stateData.PlayerHand.HandValue() == 20;
         }
 
-        private static bool HandTotalEquals(ProblemState stateData, int lookingFor)
-        {
-            return stateData.PlayerHand.HandValue() == lookingFor;
-        }
 
         private static bool Holding2Cards(ProblemState stateData)
         {
@@ -269,24 +261,27 @@ namespace BlackjackStrategy.Models
         }
 
         //-------------------------------------------------------------------------
-        // then terminal functions to steer the strategy
+        // then functions to steer the strategy via storing to state
         //-------------------------------------------------------------------------
-        private static bool VoteHit(ProblemState stateData)
+        private static bool HitIf(bool value, ProblemState state)
         {
-            stateData.VotesForHit++;
-            return true;
+            // pass through the value, but register the vote
+            if (value) state.VotesForHit++;
+            return value;
         }
 
-        private static bool VoteStand(ProblemState stateData)
+        private static bool StandIf(bool value, ProblemState state)
         {
-            stateData.VotesForStand++;
-            return true;
+            // pass through the value, but register the vote
+            if (value) state.VotesForStand++;
+            return value;
         }
 
-        private static bool VoteDouble(ProblemState stateData)
+        private static bool DoubleIf(bool value, ProblemState state)
         {
-            stateData.VotesForDoubleDown++;
-            return true;
+            // pass through the value, but register the vote
+            if (value) state.VotesForDoubleDown++;
+            return value;
         }
 
         //-------------------------------------------------------------------------
@@ -311,9 +306,6 @@ namespace BlackjackStrategy.Models
                 // save the cards in state, and reset the votes for this hand
                 candidate.StateData.DealerHand = dealerHand;
                 candidate.StateData.PlayerHand = playerHand;
-                candidate.StateData.VotesForDoubleDown = 0;
-                candidate.StateData.VotesForHit = 0;
-                candidate.StateData.VotesForStand = 0;
 
                 // loop until the hand is done
                 var currentHandState = TestConditions.GameState.PlayerDrawing;
@@ -345,6 +337,9 @@ namespace BlackjackStrategy.Models
                 while (currentHandState == TestConditions.GameState.PlayerDrawing)
                 {
                     // get the decision
+                    candidate.StateData.VotesForDoubleDown = 0;
+                    candidate.StateData.VotesForHit = 0;
+                    candidate.StateData.VotesForStand = 0;
                     candidate.Evaluate();   // throw away the result, because it's meaningless
 
                     // look at the votes to see what to do
@@ -405,14 +400,14 @@ namespace BlackjackStrategy.Models
                     // if it's a tie, give the player his bet back
                     if (playerHandValue == dealerHandValue)
                     {
-                        playerChips += TestConditions.BetSize;
+                        playerChips += totalBetAmount;
                     }
                     else
                     {
                         if (playerHandValue > dealerHandValue)
                         {
                             // player won
-                            playerChips += TestConditions.BetSize * 2;  // the original bet and a matching amount
+                            playerChips += totalBetAmount * 2;  // the original bet and a matching amount
                         }
                         else
                         {
