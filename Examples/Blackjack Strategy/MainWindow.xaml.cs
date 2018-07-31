@@ -86,6 +86,8 @@ namespace BlackjackStrategy
                     playerHand.AddCard(new Card(firstCardRank, "D"));
                     playerHand.AddCard(new Card(secondCardRank, "S"));
 
+                    Debug.Assert(playerHand.HandValue() == hardTotal);
+
                     // get strategy and display
                     best.StateData.DealerHand = dealerHand;
                     best.StateData.PlayerHand = playerHand;
