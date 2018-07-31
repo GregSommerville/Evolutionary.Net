@@ -38,7 +38,9 @@ namespace BlackjackStrategy.Models
 
             // for a boolean tree, we use the standard operators
             engine.AddFunction((a, b) => a && b, "And");
+            engine.AddFunction((a, b, c) => a && b && c, "And3");
             engine.AddFunction((a, b) => a || b, "Or");
+            engine.AddFunction((a, b, c) => a || b || c, "Or3");
             engine.AddFunction((a) => !a, "Not");
 
             // then add functions to indicate a strategy
@@ -347,8 +349,15 @@ namespace BlackjackStrategy.Models
                     switch (action)
                     {
                         case "H":
-                            // hit means give me another card, and let's evaluate again
+                            // hit me
                             playerHand.AddCard(deck.DealCard());
+                            // if we're at 21, we're done
+                            if (playerHand.HandValue() == 21)
+                            {
+                                currentHandState = TestConditions.GameState.DealerDrawing;
+                                break;
+                            }
+                            // did we bust?
                             if (playerHand.HandValue() > 21)
                                 currentHandState = TestConditions.GameState.PlayerBusted;
                             break;
@@ -382,7 +391,7 @@ namespace BlackjackStrategy.Models
                         if (dealerHand.HandValue() > 21)
                         {
                             currentHandState = TestConditions.GameState.DealerBusted;
-                            playerChips += TestConditions.BetSize * 2;  // the original bet and a matching amount
+                            playerChips += totalBetAmount * 2;  // the original bet and a matching amount
                         }
                     }
                     else
