@@ -54,6 +54,7 @@ namespace Evolutionary
             float bestAverageFitnessScore = (IsLowerFitnessBetter ? float.MaxValue : float.MinValue);
             CandidateSolution<T,S> bestTreeAllTime = null;
             int bestSolutionGenerationNumber = 0, bestAverageFitnessGenerationNumber = 0;
+            Stopwatch timer = new Stopwatch();
 
             // create an initial population of random trees, passing the possible functions, consts, and variables
             for (int p = 0; p < PopulationSize; p++)
@@ -71,6 +72,8 @@ namespace Evolutionary
                 float bestFitnessScoreThisGeneration = (IsLowerFitnessBetter ? float.MaxValue : float.MinValue);
                 CandidateSolution<T,S> bestTreeThisGeneration = null;
                 float totalFitness = 0;
+                timer.Restart();
+
                 foreach (var tree in currentGeneration)
                 {
                     // calc the fitness by calling the user-supplied function via the delegate   
@@ -127,7 +130,8 @@ namespace Evolutionary
                     GenerationNumber = currentGenerationNumber,
                     AvgFitnessThisGen = averageFitness,
                     BestFitnessThisGen = bestFitnessScoreThisGeneration,
-                    BestFitnessSoFar = bestFitnessScoreAllTime
+                    BestFitnessSoFar = bestFitnessScoreAllTime,
+                    TimeForGeneration = timer.Elapsed
                 };
                 bool keepGoing = myProgressFunction(progress);
                 if (!keepGoing) break;  // user signalled to end looping
@@ -141,7 +145,9 @@ namespace Evolutionary
 
                 // Elitism
                 int numElitesToAdd = (ElitismPercentageOfPopulation * PopulationSize) / 100;
-                var theBest = currentGeneration.OrderBy(c => c.Fitness).Take(numElitesToAdd);
+                var theBest = (IsLowerFitnessBetter ?
+                    currentGeneration.OrderBy(c => c.Fitness).Take(numElitesToAdd) :
+                    currentGeneration.OrderByDescending(c => c.Fitness).Take(numElitesToAdd));
                 foreach (var peakPerformer in theBest)
                 {
                     nextGeneration.Add(peakPerformer);
@@ -288,13 +294,13 @@ namespace Evolutionary
         }
 
         // two parameter functions
-        public void AddFunction(Func<T, T, S, T> function, string functionName)
+        public void AddStatefulFunction(Func<T, T, S, T> function, string functionName)
         {
             primitiveSet.Functions.Add(new FunctionMetaData<T>(function, 2, functionName, true));
         }
 
         // three parameter functions
-        public void AddFunction(Func<T, T, T, S, T> function, string functionName)
+        public void AddStatefulFunction(Func<T, T, T, S, T> function, string functionName)
         {
             primitiveSet.Functions.Add(new FunctionMetaData<T>(function, 3, functionName, true));
         }

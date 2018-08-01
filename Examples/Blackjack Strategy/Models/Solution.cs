@@ -21,9 +21,11 @@ namespace BlackjackStrategy.Models
                 PopulationSize = populationSize,
                 TourneySize = tourneySize,
                 NoChangeGenerationCountForTermination = 10, // terminate if we go N generations without an improvement of average fitness
-                RandomTreeMinDepth = 10, // when first creating a random tree or subtree
-                RandomTreeMaxDepth = 15
+                RandomTreeMinDepth = 5, // when first creating a random tree or subtree
+                RandomTreeMaxDepth = 8
             };
+
+            Debug.WriteLine("Starting test with muation " + engineParams.MutationRate + ", pop size " + engineParams.PopulationSize);
 
             // create the engine.  each tree (and node within the tree) will return a bool.
             // we also indicate the type of our problem state data (used by terminal functions)
@@ -38,9 +40,9 @@ namespace BlackjackStrategy.Models
 
             // for a boolean tree, we use the standard operators
             engine.AddFunction((a, b) => a && b, "And");
-            engine.AddFunction((a, b, c) => a && b && c, "And3");
+            //engine.AddFunction((a, b, c) => a && b && c, "And3");
             engine.AddFunction((a, b) => a || b, "Or");
-            engine.AddFunction((a, b, c) => a || b || c, "Or3");
+            //engine.AddFunction((a, b, c) => a || b || c, "Or3");
             engine.AddFunction((a) => !a, "Not");
 
             // then add functions to indicate a strategy
@@ -48,9 +50,11 @@ namespace BlackjackStrategy.Models
             engine.AddStatefulFunction(StandIf, "StandIf");
             engine.AddStatefulFunction(DoubleIf, "DoubleIf");
 
+            //engine.AddStatefulFunction(DecideAction, "Decide");
+
             // terminal functions to look at game state - first, cards the player is holding:
             // holding ace
-            engine.AddTerminalFunction(HasAce, "HasAce");
+            //engine.AddTerminalFunction(HasAce, "HasAce");
             // hand totals
             engine.AddTerminalFunction(HandVal4, "Has4");
             engine.AddTerminalFunction(HandVal5, "Has5");
@@ -269,21 +273,45 @@ namespace BlackjackStrategy.Models
         {
             // pass through the value, but register the vote
             if (value) state.VotesForHit++;
-            return value;
+            return true;
+            //return value;
         }
 
         private static bool StandIf(bool value, ProblemState state)
         {
             // pass through the value, but register the vote
             if (value) state.VotesForStand++;
-            return value;
+            return true;
+            //return value;
         }
 
         private static bool DoubleIf(bool value, ProblemState state)
         {
             // pass through the value, but register the vote
             if (value) state.VotesForDoubleDown++;
-            return value;
+            return true;
+            //return value;
+        }
+
+        private static bool DecideAction(bool v1, bool v2, bool v3, ProblemState state)
+        {
+            if (v1)
+            {
+                state.VotesForDoubleDown++;
+                return true;
+            }
+
+            if (v2)
+            {
+                state.VotesForHit++;
+                return true;
+            }
+            if (v3)
+            {
+                state.VotesForStand++;
+                return true;
+            }
+            return false;
         }
 
         //-------------------------------------------------------------------------
@@ -300,8 +328,16 @@ namespace BlackjackStrategy.Models
                 Hand dealerHand = new Hand();
                 Hand playerHand = new Hand();
 
+                // the player always has a total of 11 (the exact cards don't matter)
+                //playerHand.AddCard(new Card(Card.Ranks.Nine, Card.Suits.Clubs));
+                //playerHand.AddCard(new Card(Card.Ranks.Two, Card.Suits.Spades));
+
+                //// and the dealer has an upcard of 6
+                //dealerHand.AddCard(new Card(Card.Ranks.Six, Card.Suits.Hearts));
+                //dealerHand.AddCard(deck.DealCard());
+
+                // totally random
                 playerHand.AddCard(deck.DealCard());
-                dealerHand.AddCard(deck.DealCard());
                 playerHand.AddCard(deck.DealCard());
                 dealerHand.AddCard(deck.DealCard());
 
@@ -353,10 +389,7 @@ namespace BlackjackStrategy.Models
                             playerHand.AddCard(deck.DealCard());
                             // if we're at 21, we're done
                             if (playerHand.HandValue() == 21)
-                            {
                                 currentHandState = TestConditions.GameState.DealerDrawing;
-                                break;
-                            }
                             // did we bust?
                             if (playerHand.HandValue() > 21)
                                 currentHandState = TestConditions.GameState.PlayerBusted;
@@ -449,9 +482,9 @@ namespace BlackjackStrategy.Models
             int votesForHit = stateData.VotesForHit;
             int votesForDouble = stateData.VotesForDoubleDown;
 
-            if ((votesForStand > votesForHit) && (votesForStand > votesForDouble)) return "S";
+            if ((votesForHit > votesForStand) && (votesForHit > votesForDouble)) return "H";
             if ((votesForDouble > votesForHit) && (votesForDouble > votesForStand)) return "D";
-            return "H";
+            return "S";
         }
     }
 }

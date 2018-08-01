@@ -1,4 +1,6 @@
-﻿namespace Evolutionary
+﻿using System;
+
+namespace Evolutionary
 {
     public class EngineProgress
     {
@@ -6,5 +8,6 @@
         public float BestFitnessThisGen { get; set; }
         public float AvgFitnessThisGen { get; set; }
         public float BestFitnessSoFar { get; set; }
+        public TimeSpan TimeForGeneration { get; set; }
     }
 }
