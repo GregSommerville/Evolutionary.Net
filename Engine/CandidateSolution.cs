@@ -167,7 +167,6 @@ namespace Evolutionary
         }
 
         internal static void SwapSubtrees(
-            CandidateSolution<T, S> candidate1, CandidateSolution<T, S> candidate2,
             NodeBaseType<T, S> selectedNode1, NodeBaseType<T, S> selectedNode2, 
             NodeBaseType<T, S> replacementNode1, NodeBaseType<T, S> replacementNode2)
         {
@@ -196,10 +195,6 @@ namespace Evolutionary
                     break;
                 }
             }
-
-            // now traverse down the new subtrees and point any variable or terminal function nodes to the candidate
-            replacementNode1.SetCandidateRef(candidate2);
-            replacementNode2.SetCandidateRef(candidate1);
         }
 
         public CandidateSolution<T,S> Clone()

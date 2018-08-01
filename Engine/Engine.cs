@@ -211,7 +211,11 @@ namespace Evolutionary
                 var newChild2 = randomC2node.Clone(null);
 
                 // create new children by swapping subtrees
-                CandidateSolution<T,S>.SwapSubtrees(child1, child2, randomC1node, randomC2node, newChild1, newChild2);
+                CandidateSolution<T,S>.SwapSubtrees(randomC1node, randomC2node, newChild1, newChild2);
+
+                // and reset the pointers to the candidate
+                child1.Root.SetCandidateRef(child1);
+                child2.Root.SetCandidateRef(child2);
             }
         }
 

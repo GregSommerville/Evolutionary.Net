@@ -54,7 +54,7 @@ namespace BlackjackStrategy.Models
 
             // terminal functions to look at game state - first, cards the player is holding:
             // holding ace
-            //engine.AddTerminalFunction(HasAce, "HasAce");
+            engine.AddTerminalFunction(HasAce, "HasAce");
             // hand totals
             engine.AddTerminalFunction(HandVal4, "Has4");
             engine.AddTerminalFunction(HandVal5, "Has5");
@@ -273,24 +273,21 @@ namespace BlackjackStrategy.Models
         {
             // pass through the value, but register the vote
             if (value) state.VotesForHit++;
-            return true;
-            //return value;
+            return value;
         }
 
         private static bool StandIf(bool value, ProblemState state)
         {
             // pass through the value, but register the vote
             if (value) state.VotesForStand++;
-            return true;
-            //return value;
+            return value;
         }
 
         private static bool DoubleIf(bool value, ProblemState state)
         {
             // pass through the value, but register the vote
             if (value) state.VotesForDoubleDown++;
-            return true;
-            //return value;
+            return value;
         }
 
         private static bool DecideAction(bool v1, bool v2, bool v3, ProblemState state)

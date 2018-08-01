@@ -6,18 +6,28 @@ TO DO
 Engine
 --------------------------
 - EngineParameters.NumThreadsForFitnessEval : def = 4
-- .AddDeferredFunction - calls <T> functionName (List<Node<T,S> parameterNodes, S state) - good for boolean shortcircuiting
+- EngineParameters.MinGenerations : def = 10
+- EngineParameters.MaxGenerations : def = 100
+- EngineParameters.SingleCrossoverAllowed: def = true (50/50 split)
+- EngineParameters.SelectionMethod: { Tournament, RouletteWheel, Ranking }
+
+- .AddDeferredFunction - calls
+	<T> functionName (List<Node<T,S> parameterNodes, S state) - good for boolean shortcircuiting
+
 - .AddAutoDefinedFunction(numParams)
+
+- Break Closure and allow different types
+	- Probably have to use reflection to get references to everything, hard to imagine the syntax otherwise
+
 - .LoadSolution(solutionName, expressionString) : deserializes, opposite of solution.ToString()
+
 - WPF app to load and display any expression tree 
+
 - 50% of the time, crossover should take a random subtree from the better candidate and insert into weaker, but not vice-versa
 
 --------------------------
 Blackjack Example
 --------------------------
 - Things to try:
-	- The statedata is pointing the wrong place by the time we get into the terminal functions
-	- Default to stand, rather than hit
-	- different settings?
-	- display time for each loo
-	- 
+	- generation callback should display current stats, inc best all-time and time taken
+	- handle splitting hands
