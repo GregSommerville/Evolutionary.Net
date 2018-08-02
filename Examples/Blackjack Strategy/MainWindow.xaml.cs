@@ -1,4 +1,5 @@
 ﻿using BlackjackStrategy.Models;
+using Evolutionary;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -28,7 +29,7 @@ namespace BlackjackStrategy
             var elitismPercentage = (int)elitismPercentageSlider.Value;
             var tourneySize = (int)tourneySizeSlider.Value;
 
-            gaResultTB.Text = "Creating solution...";
+            gaResultTB.Text = "Creating solution, please wait...";
 
             // Finding the solution takes a while, so kick off a thread for it
             Task.Factory.StartNew(() => AsyncCall(populationSize, crossoverPercentage, mutationPercentage, elitismPercentage, tourneySize));
@@ -36,24 +37,32 @@ namespace BlackjackStrategy
 
         private void AsyncCall(int populationSize, int crossoverPercentage, double mutationPercentage, int elitismPercentage, int tourneySize)
         {
-            Solution.BuildProgram(populationSize, crossoverPercentage, mutationPercentage, elitismPercentage, tourneySize);
+            var solutionFinder = new Solution();
+            solutionFinder.BuildProgram(populationSize, crossoverPercentage, mutationPercentage, elitismPercentage, tourneySize, DisplayCurrentStatus);
 
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                string solution = Solution.BestSolution.ToString();
+                string solution = solutionFinder.BestSolution.ToString();
 
                 gaResultTB.Text = "Found solution:\n\n" + solution;
                 Debug.WriteLine(solution);
 
-                ShowPlayableHands();
+                ShowPlayableHands(solutionFinder.BestSolution);
             }),
             DispatcherPriority.Background);
         }
 
-        private void ShowPlayableHands()
+        private void DisplayCurrentStatus(string status)
         {
-            var best = Solution.BestSolution;
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                gaResultTB.Text = "Working...\n" + status;
+            }),
+            DispatcherPriority.Background);
+        }
 
+        private void ShowPlayableHands(CandidateSolution<bool, ProblemState> best)
+        {
             // clear the screen
             canvas.Children.Clear();
 

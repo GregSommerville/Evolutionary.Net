@@ -1,17 +1,24 @@
 ﻿using Evolutionary;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Windows.Controls;
+using System.Threading.Tasks;
+using System.Windows.Threading;
+using System;
 
 namespace BlackjackStrategy.Models
 {
     class Solution
     {
         // a place to store the best solution, once we find it
-        public static CandidateSolution<bool, ProblemState> BestSolution { get; set; }
+        public CandidateSolution<bool, ProblemState> BestSolution { get; set; }
+        private Action<string> displayGenerationCallback;
 
-        public static void BuildProgram(int populationSize, int crossoverPercentage, 
-            double mutationPercentage, int elitismPercentage, int tourneySize)
+        public void BuildProgram(int populationSize, int crossoverPercentage, 
+            double mutationPercentage, int elitismPercentage, int tourneySize, Action<string> currentStatusCallback)
         {
+            displayGenerationCallback = currentStatusCallback;
+
             var engineParams = new EngineParameters()
             {
                 CrossoverRate = crossoverPercentage / 100F,
@@ -31,10 +38,8 @@ namespace BlackjackStrategy.Models
             // we also indicate the type of our problem state data (used by terminal functions)
             var engine = new Engine<bool, ProblemState>(engineParams);
 
-            // constants are simple in this case since there are only two possibilities
-            //engine.AddConstant(false);
-            //engine.AddConstant(true);
-
+            // no constants for this problem
+            
             // no variables for this solution - we can't pass in information about our hand and 
             // the dealer upcard via boolean variables, so we do it via some terminal functions instead
 
@@ -49,8 +54,6 @@ namespace BlackjackStrategy.Models
             engine.AddStatefulFunction(HitIf, "HitIf");
             engine.AddStatefulFunction(StandIf, "StandIf");
             engine.AddStatefulFunction(DoubleIf, "DoubleIf");
-
-            //engine.AddStatefulFunction(DecideAction, "Decide");
 
             // terminal functions to look at game state - first, cards the player is holding:
             // holding ace
@@ -103,52 +106,52 @@ namespace BlackjackStrategy.Models
         // first, terminal functions to get information about the dealer upcard
         //-------------------------------------------------------------------------
 
-        private static bool DealerShowsA(ProblemState stateData)
+        private bool DealerShowsA(ProblemState stateData)
         {
             return stateData.DealerHand.Cards[0].Rank == "A";
         }
 
-        private static bool DealerShows2(ProblemState stateData)
+        private bool DealerShows2(ProblemState stateData)
         {
             return stateData.DealerHand.Cards[0].Rank == "2";
         }
 
-        private static bool DealerShows3(ProblemState stateData)
+        private  bool DealerShows3(ProblemState stateData)
         {
             return stateData.DealerHand.Cards[0].Rank == "3";
         }
 
-        private static bool DealerShows4(ProblemState stateData)
+        private  bool DealerShows4(ProblemState stateData)
         {
             return stateData.DealerHand.Cards[0].Rank == "4";
         }
 
-        private static bool DealerShows5(ProblemState stateData)
+        private  bool DealerShows5(ProblemState stateData)
         {
             return stateData.DealerHand.Cards[0].Rank == "5";
         }
 
-        private static bool DealerShows6(ProblemState stateData)
+        private  bool DealerShows6(ProblemState stateData)
         {
             return stateData.DealerHand.Cards[0].Rank == "6";
         }
 
-        private static bool DealerShows7(ProblemState stateData)
+        private  bool DealerShows7(ProblemState stateData)
         {
             return stateData.DealerHand.Cards[0].Rank == "7";
         }
 
-        private static bool DealerShows8(ProblemState stateData)
+        private  bool DealerShows8(ProblemState stateData)
         {
             return stateData.DealerHand.Cards[0].Rank == "8";
         }
 
-        private static bool DealerShows9(ProblemState stateData)
+        private  bool DealerShows9(ProblemState stateData)
         {
             return stateData.DealerHand.Cards[0].Rank == "9";
         }
 
-        private static bool DealerShowsT(ProblemState stateData)
+        private  bool DealerShowsT(ProblemState stateData)
         {
             var dealerCard = stateData.DealerHand.Cards[0];
             return dealerCard.Rank == "T" || dealerCard.Rank == "J" || dealerCard.Rank == "Q" || dealerCard.Rank == "K";
@@ -158,110 +161,110 @@ namespace BlackjackStrategy.Models
         // Now terminal functions to get information about the player's hand
         //-------------------------------------------------------------------------
 
-        private static bool HasAce(ProblemState stateData)
+        private  bool HasAce(ProblemState stateData)
         {
             foreach (var card in stateData.PlayerHand.Cards)
                 if (card.Rank == "A") return true;
             return false;
         }
 
-        private static bool HandVal4(ProblemState stateData)
+        private  bool HandVal4(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 4;
         }
 
-        private static bool HandVal5(ProblemState stateData)
+        private  bool HandVal5(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 5;
         }
 
-        private static bool HandVal6(ProblemState stateData)
+        private  bool HandVal6(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 6;
         }
 
-        private static bool HandVal7(ProblemState stateData)
+        private  bool HandVal7(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 7;
         }
 
-        private static bool HandVal8(ProblemState stateData)
+        private  bool HandVal8(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 8;
         }
 
-        private static bool HandVal9(ProblemState stateData)
+        private  bool HandVal9(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 9;
         }
 
-        private static bool HandVal10(ProblemState stateData)
+        private  bool HandVal10(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 10;
         }
 
-        private static bool HandVal11(ProblemState stateData)
+        private  bool HandVal11(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 11;
         }
 
-        private static bool HandVal12(ProblemState stateData)
+        private  bool HandVal12(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 12;
         }
 
-        private static bool HandVal13(ProblemState stateData)
+        private  bool HandVal13(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 13;
         }
 
-        private static bool HandVal14(ProblemState stateData)
+        private  bool HandVal14(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 14;
         }
 
-        private static bool HandVal15(ProblemState stateData)
+        private  bool HandVal15(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 15;
         }
 
-        private static bool HandVal16(ProblemState stateData)
+        private  bool HandVal16(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 16;
         }
 
-        private static bool HandVal17(ProblemState stateData)
+        private  bool HandVal17(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 17;
         }
 
-        private static bool HandVal18(ProblemState stateData)
+        private  bool HandVal18(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 18;
         }
 
-        private static bool HandVal19(ProblemState stateData)
+        private  bool HandVal19(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 19;
         }
 
-        private static bool HandVal20(ProblemState stateData)
+        private  bool HandVal20(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 20;
         }
 
 
-        private static bool Holding2Cards(ProblemState stateData)
+        private  bool Holding2Cards(ProblemState stateData)
         {
             return stateData.PlayerHand.Cards.Count == 2;
         }
 
-        private static bool Holding3Cards(ProblemState stateData)
+        private  bool Holding3Cards(ProblemState stateData)
         {
             return stateData.PlayerHand.Cards.Count == 3;
         }
 
-        private static bool Holding4PlusCards(ProblemState stateData)
+        private  bool Holding4PlusCards(ProblemState stateData)
         {
             return stateData.PlayerHand.Cards.Count >= 4;
         }
@@ -269,52 +272,31 @@ namespace BlackjackStrategy.Models
         //-------------------------------------------------------------------------
         // then functions to steer the strategy via storing to state
         //-------------------------------------------------------------------------
-        private static bool HitIf(bool value, ProblemState state)
+        private  bool HitIf(bool value, ProblemState state)
         {
             // pass through the value, but register the vote
             if (value) state.VotesForHit++;
             return value;
         }
 
-        private static bool StandIf(bool value, ProblemState state)
+        private  bool StandIf(bool value, ProblemState state)
         {
             // pass through the value, but register the vote
             if (value) state.VotesForStand++;
             return value;
         }
 
-        private static bool DoubleIf(bool value, ProblemState state)
+        private  bool DoubleIf(bool value, ProblemState state)
         {
             // pass through the value, but register the vote
             if (value) state.VotesForDoubleDown++;
             return value;
         }
 
-        private static bool DecideAction(bool v1, bool v2, bool v3, ProblemState state)
-        {
-            if (v1)
-            {
-                state.VotesForDoubleDown++;
-                return true;
-            }
-
-            if (v2)
-            {
-                state.VotesForHit++;
-                return true;
-            }
-            if (v3)
-            {
-                state.VotesForStand++;
-                return true;
-            }
-            return false;
-        }
-
         //-------------------------------------------------------------------------
         // each candidate gets evaluated here
         //-------------------------------------------------------------------------
-        private static float EvaluateCandidate(CandidateSolution<bool, ProblemState> candidate)
+        private float EvaluateCandidate(CandidateSolution<bool, ProblemState> candidate)
         {
             int playerChips = 0;
 
@@ -336,6 +318,7 @@ namespace BlackjackStrategy.Models
                 // totally random
                 playerHand.AddCard(deck.DealCard());
                 playerHand.AddCard(deck.DealCard());
+                dealerHand.AddCard(deck.DealCard());
                 dealerHand.AddCard(deck.DealCard());
 
                 // save the cards in state, and reset the votes for this hand
@@ -462,11 +445,14 @@ namespace BlackjackStrategy.Models
         //-------------------------------------------------------------------------
         // For each generation, we get information about what's going on
         //-------------------------------------------------------------------------
-        private static bool PerGenerationCallback(EngineProgress progress)
+        private bool PerGenerationCallback(EngineProgress progress)
         {
-            Debug.WriteLine("Generation " + progress.GenerationNumber +
+            string summary = "Generation " + progress.GenerationNumber +
                 " best: " + progress.BestFitnessThisGen.ToString("0") +
-                " avg: " + progress.AvgFitnessThisGen.ToString("0"));
+                " avg: " + progress.AvgFitnessThisGen.ToString("0");
+
+            displayGenerationCallback(summary);
+            Debug.WriteLine(summary);
 
             // return true to keep going, false to halt the system
             bool keepRunning = true;
