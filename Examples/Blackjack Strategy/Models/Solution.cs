@@ -27,7 +27,7 @@ namespace BlackjackStrategy.Models
                 MutationRate = mutationPercentage / 100F,
                 PopulationSize = populationSize,
                 TourneySize = tourneySize,
-                NoChangeGenerationCountForTermination = 10, // terminate if we go N generations without an improvement of average fitness
+                NoChangeGenerationCountForTermination = 2, // terminate if we go N generations without an improvement of average fitness
                 RandomTreeMinDepth = 5, // when first creating a random tree or subtree
                 RandomTreeMaxDepth = 8
             };
@@ -362,10 +362,12 @@ namespace BlackjackStrategy.Models
 
                     // look at the votes to see what to do
                     string action = GetAction(candidate.StateData);
+
                     switch (action)
                     {
                         case "H":
                             // hit me
+                            DebugDisplayStrategy(candidate, "Hit   ");
                             playerHand.AddCard(deck.DealCard());
                             // if we're at 21, we're done
                             if (playerHand.HandValue() == 21)
@@ -381,6 +383,7 @@ namespace BlackjackStrategy.Models
                             break;
 
                         case "D":
+                            DebugDisplayStrategy(candidate, "Double");
                             // double down means bet another chip, and get one and only card card
                             playerChips -= TestConditions.BetSize;
                             totalBetAmount += TestConditions.BetSize;
@@ -440,6 +443,19 @@ namespace BlackjackStrategy.Models
             }
 
             return playerChips;
+        }
+
+        public static void DebugDisplayStrategy(CandidateSolution<bool, ProblemState> candidate, string prefixText)
+        {
+            string debug = 
+                prefixText + 
+                (String.IsNullOrWhiteSpace(prefixText) ? "" : "  ") +
+                "Dlr: " + candidate.StateData.DealerHand.Cards[0].Rank + 
+                "  Plr: " + candidate.StateData.PlayerHand + 
+                "  H: " + candidate.StateData.VotesForHit +
+                "  S: " + candidate.StateData.VotesForStand +
+                "  D: " + candidate.StateData.VotesForDoubleDown;
+            Debug.WriteLine(debug);
         }
 
         //-------------------------------------------------------------------------

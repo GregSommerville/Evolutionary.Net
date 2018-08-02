@@ -29,5 +29,8 @@ Engine
 Blackjack Example
 --------------------------
 - Things to try:
-	- generation callback should display current stats, inc best all-time and time taken
+	- disable button when calculating, or add ability to halt process
+	- display status and results in a scrolling region
 	- handle splitting hands
+	- "Visualization" --> "Resulting Strategy"
+	- Display hands with an Ace on the right

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace BlackjackStrategy.Models
 {
@@ -15,5 +16,7 @@ namespace BlackjackStrategy.Models
         public int VotesForHit { get; set; }
         public int VotesForStand { get; set; }
         public int VotesForDoubleDown { get; set; }
+
+        public string Id = Guid.NewGuid().ToString();
     }
 }

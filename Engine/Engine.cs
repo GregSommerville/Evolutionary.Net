@@ -180,6 +180,7 @@ namespace Evolutionary
                 currentGenerationNumber++;
             }
 
+            bestTreeAllTime.Root.SetCandidateRef(bestTreeAllTime);
             return bestTreeAllTime;
         }
 

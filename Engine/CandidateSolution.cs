@@ -19,6 +19,7 @@ namespace Evolutionary
             TreeMinDepth = minDepth;
             TreeMaxDepth = maxDepth;
             StateData = new S();
+            
             Variables = new Dictionary<string, T>();
 
             // keep a reference to all of the functions, constants and variables

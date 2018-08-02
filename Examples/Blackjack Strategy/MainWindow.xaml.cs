@@ -1,6 +1,7 @@
 ﻿using BlackjackStrategy.Models;
 using Evolutionary;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
@@ -16,6 +17,8 @@ namespace BlackjackStrategy
     /// </summary>
     public partial class MainWindow : Window
     {
+        private List<string> progressSoFar = new List<string>();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -54,9 +57,12 @@ namespace BlackjackStrategy
 
         private void DisplayCurrentStatus(string status)
         {
+            progressSoFar.Insert(0, status);
+            string allStatuses = String.Join("\n", progressSoFar);
+
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                gaResultTB.Text = "Working...\n" + status;
+                gaResultTB.Text = "Working...\n" + allStatuses;
             }),
             DispatcherPriority.Background);
         }
@@ -65,6 +71,7 @@ namespace BlackjackStrategy
         {
             // clear the screen
             canvas.Children.Clear();
+            Debug.WriteLine("FINAL SOLUTION");
 
             // display a grid for hands without an ace.  One column for each possible dealer upcard
             AddColorBox(Colors.White, "", 0, 0);
@@ -85,7 +92,6 @@ namespace BlackjackStrategy
                     // build dealer hand
                     Hand dealerHand = new Hand();
                     dealerHand.AddCard(new Card(rankNeeded, "S"));
-                    dealerHand.AddCard(deck.DealCard());    // next card doesn't matter, since only the upcard is evaluated in the candidate
 
                     // build player hand
                     Hand playerHand = new Hand();
@@ -105,6 +111,8 @@ namespace BlackjackStrategy
                     best.StateData.VotesForStand = 0;
 
                     best.Evaluate();    // get the decision
+                    Solution.DebugDisplayStrategy(best, "Final");
+
                     string action = Solution.GetAction(best.StateData);
 
                     // Now draw the box
