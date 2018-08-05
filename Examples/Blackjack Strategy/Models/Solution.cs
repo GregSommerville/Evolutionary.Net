@@ -44,21 +44,21 @@ namespace BlackjackStrategy.Models
             // the dealer upcard via boolean variables, so we do it via some terminal functions instead
 
             // for a boolean tree, we use the standard operators
-            engine.AddFunction((a, b) => a && b, "And");
+            //engine.AddFunction((a, b) => a && b, "And");
             //engine.AddFunction((a, b, c) => a && b && c, "And3");
             engine.AddFunction((a, b) => a || b, "Or");
-            //engine.AddFunction((a, b, c) => a || b || c, "Or3");
-            engine.AddFunction((a) => !a, "Not");
+            engine.AddFunction((a, b, c) => a || b || c, "Or3");
+//            engine.AddFunction((a) => !a, "Not");
 
             // then add functions to indicate a strategy
             engine.AddStatefulFunction(HitIf, "HitIf");
             engine.AddStatefulFunction(StandIf, "StandIf");
             engine.AddStatefulFunction(DoubleIf, "DoubleIf");
 
-            // terminal functions to look at game state - first, cards the player is holding:
-            // holding ace
+            // terminal functions to look at game state
+            // first, player holding ace?
             engine.AddTerminalFunction(HasAce, "HasAce");
-            // hand totals
+            // player hand totals
             engine.AddTerminalFunction(HandVal4, "Has4");
             engine.AddTerminalFunction(HandVal5, "Has5");
             engine.AddTerminalFunction(HandVal6, "Has6");
@@ -307,15 +307,6 @@ namespace BlackjackStrategy.Models
                 Hand dealerHand = new Hand();
                 Hand playerHand = new Hand();
 
-                // the player always has a total of 11 (the exact cards don't matter)
-                //playerHand.AddCard(new Card(Card.Ranks.Nine, Card.Suits.Clubs));
-                //playerHand.AddCard(new Card(Card.Ranks.Two, Card.Suits.Spades));
-
-                //// and the dealer has an upcard of 6
-                //dealerHand.AddCard(new Card(Card.Ranks.Six, Card.Suits.Hearts));
-                //dealerHand.AddCard(deck.DealCard());
-
-                // totally random
                 playerHand.AddCard(deck.DealCard());
                 playerHand.AddCard(deck.DealCard());
                 dealerHand.AddCard(deck.DealCard());
@@ -367,7 +358,6 @@ namespace BlackjackStrategy.Models
                     {
                         case "H":
                             // hit me
-                            DebugDisplayStrategy(candidate, "Hit   ");
                             playerHand.AddCard(deck.DealCard());
                             // if we're at 21, we're done
                             if (playerHand.HandValue() == 21)
@@ -383,7 +373,6 @@ namespace BlackjackStrategy.Models
                             break;
 
                         case "D":
-                            DebugDisplayStrategy(candidate, "Double");
                             // double down means bet another chip, and get one and only card card
                             playerChips -= TestConditions.BetSize;
                             totalBetAmount += TestConditions.BetSize;

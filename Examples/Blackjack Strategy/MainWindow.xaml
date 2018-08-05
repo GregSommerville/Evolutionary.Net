@@ -208,17 +208,21 @@
                             x:Name="btnSolve"
                             Click="btnSolve_Click">Find Solution</Button>
                 </StackPanel>
-                <TextBlock x:Name="gaResultTB"
-                           VerticalAlignment="Bottom"
-                           Text="..."
-                           Grid.Column="0"
-                           Grid.Row="7"
-                           Margin="10,0,0,11"
-                           FontWeight="Bold"
-                           Width="240"
-                           Height="Auto"
-                           TextWrapping="Wrap"
-                           HorizontalAlignment="Left" />
+                <ScrollViewer Height="280"
+                              Width="255"
+                              Grid.Column="0"
+                              Grid.Row="7"
+                              Margin="0 20 0 0"
+                              HorizontalAlignment="Left">
+                    <TextBlock x:Name="gaResultTB"
+                               VerticalAlignment="Top"
+                               Text="Configure settings,then click on the green Find Solution button to proceed"
+                               Margin="10,0,0,11"
+                               Height="Auto"
+                               TextWrapping="Wrap"
+                               FontSize="12px"
+                               HorizontalAlignment="Left" />
+                </ScrollViewer>
             </Grid>
         </Border>
         <Border Grid.Column="1"
@@ -228,17 +232,16 @@
                 HorizontalAlignment="Left"
                 Background="LightGray">
             <Grid Margin="0"
-                  Width="940"
+                  Width="950"
                   Height="660">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="276*" />
-                    <ColumnDefinition Width="199*" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <Label Content="Visualization"
+                <Label Content="Results Shown Below"
                        Grid.Column="0"
                        Grid.Row="0"
                        HorizontalAlignment="Left"
@@ -248,8 +251,8 @@
                         Grid.Column="0"
                         Grid.Row="1"
                         Height="600"
-                        Width="870"
-                        Margin="35,10,35,11"
+                        Width="915"
+                        Margin="20,10,5,11"
                         BorderBrush="Black"
                         Grid.ColumnSpan="2">
                     <Canvas x:Name="canvas"

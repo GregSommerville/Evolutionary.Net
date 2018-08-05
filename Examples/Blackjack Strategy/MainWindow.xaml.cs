@@ -71,7 +71,6 @@ namespace BlackjackStrategy
         {
             // clear the screen
             canvas.Children.Clear();
-            Debug.WriteLine("FINAL SOLUTION");
 
             // display a grid for hands without an ace.  One column for each possible dealer upcard
             AddColorBox(Colors.White, "", 0, 0);
@@ -111,7 +110,7 @@ namespace BlackjackStrategy
                     best.StateData.VotesForStand = 0;
 
                     best.Evaluate();    // get the decision
-                    Solution.DebugDisplayStrategy(best, "Final");
+                    //Solution.DebugDisplayStrategy(best, "Final");
 
                     string action = Solution.GetAction(best.StateData);
 
@@ -134,15 +133,78 @@ namespace BlackjackStrategy
                 }
                 x++;
             }
-            
+
             // and another for hands with an ace
+            // display a grid for hands without an ace.  One column for each possible dealer upcard
+            const int leftColumnForAces = 12;
+            AddColorBox(Colors.White, "", leftColumnForAces, 0);
+            x = leftColumnForAces + 1;
+            for (int upcardRank = 2; upcardRank < 12; upcardRank++)
+            {
+                string rankNeeded = (upcardRank == 11) ? "A" : upcardRank.ToString();
+                AddColorBox(Colors.White, rankNeeded, x, 0);
+                int y = 1;
+
+                for (int otherCard = 11; otherCard > 1; otherCard--)
+                {
+                    string otherCardRank = (otherCard == 11) ? "A" : otherCard.ToString();
+
+                    // add a white box with the player hand: "A-x"
+                    AddColorBox(Colors.White, "A-" + otherCardRank, leftColumnForAces, y);
+
+                    var deck = new MultiDeck(TestConditions.NumDecks);
+
+                    // build dealer hand
+                    Hand dealerHand = new Hand();
+                    dealerHand.AddCard(new Card(rankNeeded, "S"));
+
+                    // build player hand
+                    Hand playerHand = new Hand();
+                    // first card is an ace, second card is looped over
+                    playerHand.AddCard(new Card("AH")); // ace of hearts
+                    playerHand.AddCard(new Card(otherCardRank, "S")); 
+
+                    // get strategy and display
+                    best.StateData.DealerHand = dealerHand;
+                    best.StateData.PlayerHand = playerHand;
+                    best.StateData.VotesForDoubleDown = 0;
+                    best.StateData.VotesForHit = 0;
+                    best.StateData.VotesForStand = 0;
+
+                    best.Evaluate();    // get the decision
+                    //Solution.DebugDisplayStrategy(best, "Final");
+
+                    string action = Solution.GetAction(best.StateData);
+
+                    // Now draw the box
+                    switch (action)
+                    {
+                        case "H":
+                            AddColorBox(Colors.Green, "H", x, y);
+                            break;
+
+                        case "S":
+                            AddColorBox(Colors.Red, "S", x, y);
+                            break;
+
+                        case "D":
+                            AddColorBox(Colors.Yellow, "D", x, y);
+                            break;
+                    }
+                    y++;
+                }
+                x++;
+            }
         }
 
         private void AddColorBox(Color color, string label, int x, int y)
         {
-            const int columnWidth = 30, rowHeight = 30;
-            int startX = (((int)canvas.ActualWidth / 2) - (11 * columnWidth)) / 2;
-            int startY = ((int)canvas.ActualHeight - (17 * rowHeight)) / 2;
+            // easy to do constants when the screen isn't meant to resize
+            const int 
+                columnWidth = 38, 
+                rowHeight = 30,
+                startX = 20,
+                startY = 20;
 
             // the element is a border
             var box = new Border();
