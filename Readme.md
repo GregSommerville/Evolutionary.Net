@@ -149,12 +149,12 @@ Please see the Blackjack example, including with this solution.  It shows how to
 
 Here's a screenshot of the resulting strategy for a run of the Blackjack program:
 
-![blackjack strategy program screenshot](https://github.com/GregSommerville/Evolutionary.Net/blob/master/images/blackjack_screenshot1.png)
+![blackjack strategy program screenshot](images/blackjack_screenshot1.png)
  
  
 ## Contributing
 
-Please read [CONTRIBUTING.md](https://) for details on our code of conduct, and the process for submitting pull requests to us.
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
 
  
 ## Authors
