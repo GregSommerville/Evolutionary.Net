@@ -11,14 +11,13 @@ Engine
 - EngineParameters.SingleCrossoverAllowed: def = true (50/50 split)
 - EngineParameters.SelectionMethod: { Tournament, RouletteWheel, Ranking }
 
+- When randomly constructing, should the node type be selected by category?  So if you have 2 functions but 18 terminals, 
+is that 50/50, or 1/9?
+
 - .AddDeferredFunction - calls
 	<T> functionName (List<Node<T,S> parameterNodes, S state) - good for boolean shortcircuiting
 
 - .AddAutoDefinedFunction(numParams)
-
-- Break Closure and allow different types
-	- Probably have to use reflection to get references to everything, hard to imagine the syntax otherwise
-	- Would you designate the required final type?
 
 - .LoadSolution(solutionName, expressionString) : deserializes, opposite of solution.ToString()
 
@@ -29,6 +28,5 @@ Engine
 --------------------------
 Blackjack Example
 --------------------------
-- disable button when calculating, or add ability to halt process
 - handle splitting hands
-- Display hands with an Ace on the right
+- UI for #nochange, min/max tree depth

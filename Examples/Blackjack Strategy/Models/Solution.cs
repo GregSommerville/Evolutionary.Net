@@ -27,15 +27,13 @@ namespace BlackjackStrategy.Models
                 MutationRate = mutationPercentage / 100F,
                 PopulationSize = populationSize,
                 TourneySize = tourneySize,
-                NoChangeGenerationCountForTermination = 2, // terminate if we go N generations without an improvement of average fitness
+                NoChangeGenerationCountForTermination = 10, // terminate if we go N generations without an improvement of average fitness
                 RandomTreeMinDepth = 5, // when first creating a random tree or subtree
-                RandomTreeMaxDepth = 8
+                RandomTreeMaxDepth = 10
             };
 
-            Debug.WriteLine("Starting test with muation " + engineParams.MutationRate + ", pop size " + engineParams.PopulationSize);
-
             // create the engine.  each tree (and node within the tree) will return a bool.
-            // we also indicate the type of our problem state data (used by terminal functions)
+            // we also indicate the type of our problem state data (used by terminal functions and stateful functions)
             var engine = new Engine<bool, ProblemState>(engineParams);
 
             // no constants for this problem
@@ -44,8 +42,6 @@ namespace BlackjackStrategy.Models
             // the dealer upcard via boolean variables, so we do it via some terminal functions instead
 
             // for a boolean tree, we use the standard operators
-            //engine.AddFunction((a, b) => a && b, "And");
-            //engine.AddFunction((a, b, c) => a && b && c, "And3");
             engine.AddFunction((a, b) => a || b, "Or");
             engine.AddFunction((a, b, c) => a || b || c, "Or3");
 //            engine.AddFunction((a) => !a, "Not");
@@ -77,7 +73,7 @@ namespace BlackjackStrategy.Models
             engine.AddTerminalFunction(HandVal19, "Has19");
             engine.AddTerminalFunction(HandVal20, "Has20");
             // num cards held
-            //engine.AddTerminalFunction(Holding2Cards, "Hold2");
+            engine.AddTerminalFunction(Holding2Cards, "Hold2");
             //engine.AddTerminalFunction(Holding3Cards, "Hold3");
             //engine.AddTerminalFunction(Holding4PlusCards, "HoldGE4");
 
