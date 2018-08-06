@@ -74,72 +74,72 @@ There are two main chunks of code you&apos;ll need to write in order to use Evol
 
 First, you instantiate the engine and define the primitive set:
 ```csharp
-            // set up the parameters for the engine
-            var engineParams = new EngineParameters()
-            {
-                CrossoverRate = crossoverPercentage / 100F,
-                ElitismPercentageOfPopulation = elitismPercentage,
-                IsLowerFitnessBetter = false,
-                MutationRate = mutationPercentage / 100F,
-                PopulationSize = populationSize,
-                TourneySize = tourneySize,
-                NoChangeGenerationCountForTermination = 10, 
-                RandomTreeMinDepth = 5, 
-                RandomTreeMaxDepth = 10
-            };
+// set up the parameters for the engine
+var engineParams = new EngineParameters()
+{
+	CrossoverRate = 0.95,
+	ElitismPercentageOfPopulation = 15,
+	IsLowerFitnessBetter = false,
+	MutationRate = 0.15,
+	PopulationSize = 750,
+	TourneySize = 6,
+	NoChangeGenerationCountForTermination = 10, 
+	RandomTreeMinDepth = 5, 
+	RandomTreeMaxDepth = 10
+};
 
-            // due to closure, all nodes are the same type - float, in this case
-            // we also have to specify the type of our problem state data, which is the second type used
-            var engine = new Engine<float,ProblemState>(engineParams);
+// due to closure, all nodes are the same type - float, in this case
+// we also have to specify the type of our problem state data, which is the second type used
+var engine = new Engine<float,ProblemState>(engineParams);
 
-            // we add variables via the name, and then set them in our fitness function (below)
-            engine.AddVariable("X");
-            
-            // reasonable constants, since they combine well with multiplication, addition, etc. 
-            engine.AddConstant(0);
-            engine.AddConstant(-1);
+// we add variables via the name, and then set them in our fitness function (below)
+engine.AddVariable("X");
 
-            // functions 
-            engine.AddFunction((a, b) => a + b, "Add");
-            engine.AddFunction((a, b) => a - b, "Sub");
-            engine.AddFunction((a, b) => a * b, "Mult");
-            engine.AddFunction((a, b) => (b == 0) ? 1 : a / b, "Div");
+// reasonable constants, since they combine well with multiplication, addition, etc. 
+engine.AddConstant(0);
+engine.AddConstant(-1);
 
-            // Our fitness function is EvaluateCandidate.  Here's how we specify that
-            engine.AddFitnessFunction((t) => EvaluateCandidate(t));
-            
-            // each generation we get a callback to show progress
-            engine.AddProgressFunction((t) => PerGenerationCallback(t));
+// functions 
+engine.AddFunction((a, b) => a + b, "Add");
+engine.AddFunction((a, b) => a - b, "Sub");
+engine.AddFunction((a, b) => a * b, "Mult");
+engine.AddFunction((a, b) => (b == 0) ? 1 : a / b, "Div");
 
-            // retrieve the best solution found and display
-            var bestSolution = engine.FindBestSolution();
-            Console.WriteLine("Best result is:");
-            Console.WriteLine(bestSolution.ToString());
+// Our fitness function is EvaluateCandidate.  Here's how we specify that
+engine.AddFitnessFunction((t) => EvaluateCandidate(t));
+
+// each generation we get a callback to show progress
+engine.AddProgressFunction((t) => PerGenerationCallback(t));
+
+// retrieve the best solution found and display
+var bestSolution = engine.FindBestSolution();
+Console.WriteLine("Best result is:");
+Console.WriteLine(bestSolution.ToString());
 ```
 
 Second, the thing that drives the evolutionary process is the fitness function.  Here's an example:
 
 ```csharp
-        private static float EvaluateCandidate(CandidateSolution<float,ProblemState> candidate)
-        {
-            // run through our training data and see how close it is to the answers from the genetic program
-            float totalDifference = 0;
-            foreach (var dataPoint in testDataPoints)
-            {
-            	// specify the value of our variable before evaluating this candidate
-                candidate.SetVariableValue("X", dataPoint.X);
-                float result = candidate.Evaluate();
+private static float EvaluateCandidate(CandidateSolution<float,ProblemState> candidate)
+{
+    // run through our training data and see how close it is to the answers from the genetic program
+    float totalDifference = 0;
+    foreach (var dataPoint in testDataPoints)
+    {
+	// specify the value of our variable before evaluating this candidate
+	candidate.SetVariableValue("X", dataPoint.X);
+	float result = candidate.Evaluate();
 
-                // now figure the difference between the calculated value and the training data
-                float diff = Math.Abs(result - dataPoint.Y);
-                totalDifference += diff;
-            }
+	// now figure the difference between the calculated value and the training data
+	float diff = Math.Abs(result - dataPoint.Y);
+	totalDifference += diff;
+    }
 
-            // since the genetic engine doesn't stop while fitness scores are still improving,
-            // speed things up by truncating the precision to 4 digits after the decimal
-            totalDifference = (float)(Math.Truncate(totalDifference * 10000F) / 10000F);
-            return totalDifference;
-        }
+    // since the genetic engine doesn't stop while fitness scores are still improving,
+    // speed things up by truncating the precision to 4 digits after the decimal
+    totalDifference = (float)(Math.Truncate(totalDifference * 10000F) / 10000F);
+    return totalDifference;
+}
 
 ```
 

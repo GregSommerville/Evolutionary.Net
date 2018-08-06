@@ -44,7 +44,10 @@ namespace BlackjackStrategy.Models
             // for a boolean tree, we use the standard operators
             engine.AddFunction((a, b) => a || b, "Or");
             engine.AddFunction((a, b, c) => a || b || c, "Or3");
-//            engine.AddFunction((a) => !a, "Not");
+            engine.AddFunction((a, b) => a && b, "And");
+            engine.AddFunction((a, b, c) => a && b && c, "And3");
+            engine.AddFunction((a) => !a, "Not");
+
 
             // then add functions to indicate a strategy
             engine.AddStatefulFunction(HitIf, "HitIf");
