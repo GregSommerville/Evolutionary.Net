@@ -158,6 +158,17 @@ private bool PerGenerationCallback(EngineProgress progress)
 }
 ```
 
+There's not much in the problem state for this problem:
+
+```csharp
+class ProblemState
+{
+    // save state data in an object of this type before evaluating the expression tree
+    // terminal functions can then look at it, and they or stateful functions can modify it, if desired
+}
+
+```
+
 ## Examples
 
 Please see the Blackjack example, including with this solution.  It shows how to use state information (in this case, the player's two cards and the dealer's upcard) in conjunction with terminal functions like DealerShows8() and PlayerHolds16() to develop a strategy for Blackjack.
