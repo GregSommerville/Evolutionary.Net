@@ -140,7 +140,22 @@ private static float EvaluateCandidate(CandidateSolution<float,ProblemState> can
     totalDifference = (float)(Math.Truncate(totalDifference * 10000F) / 10000F);
     return totalDifference;
 }
+```
+And finally, it usually takes a while to find a good answer, so for each generation, we'll get a callback with status information.  We can also terminate the looping by returning a false from this function.
 
+```csharp
+private bool PerGenerationCallback(EngineProgress progress)
+{
+    string summary = "Generation " + progress.GenerationNumber +
+	" best: " + progress.BestFitnessThisGen.ToString("0") +
+	" avg: " + progress.AvgFitnessThisGen.ToString("0");
+
+    Debug.WriteLine(summary);
+
+    // return true to keep going, false to halt the system
+    bool keepRunning = true;
+    return keepRunning;
+}
 ```
 
 ## Examples
