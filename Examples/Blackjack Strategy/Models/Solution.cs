@@ -13,11 +13,15 @@ namespace BlackjackStrategy.Models
         // a place to store the best solution, once we find it
         public CandidateSolution<bool, ProblemState> BestSolution { get; set; }
         private Action<string> displayGenerationCallback;
+        private string dealerUpcardRank;
 
-        public void BuildProgram(int populationSize, int crossoverPercentage, 
-            double mutationPercentage, int elitismPercentage, int tourneySize, Action<string> currentStatusCallback)
+        public void BuildProgram(
+            int populationSize, int crossoverPercentage, 
+            double mutationPercentage, int elitismPercentage, int tourneySize, Action<string> currentStatusCallback,
+            string dealerUpcardRankToUse)
         {
             displayGenerationCallback = currentStatusCallback;
+            dealerUpcardRank = dealerUpcardRankToUse;
 
             var engineParams = new EngineParameters()
             {
@@ -38,8 +42,8 @@ namespace BlackjackStrategy.Models
 
             // no constants for this problem
             
-            // no variables for this solution - we can't pass in information about our hand and 
-            // the dealer upcard via boolean variables, so we do it via some terminal functions instead
+            // no variables for this solution - we can't pass in information about our hand 
+            // via boolean variables, so we do it via some terminal functions instead
 
             // for a boolean tree, we use the standard operators
             engine.AddFunction((a, b) => a || b, "Or");
@@ -77,20 +81,7 @@ namespace BlackjackStrategy.Models
             engine.AddTerminalFunction(HandVal20, "Has20");
             // num cards held
             engine.AddTerminalFunction(Holding2Cards, "Hold2");
-            //engine.AddTerminalFunction(Holding3Cards, "Hold3");
-            //engine.AddTerminalFunction(Holding4PlusCards, "HoldGE4");
-
-            // then whatever the dealer upcard is
-            engine.AddTerminalFunction(DealerShowsA, "DlrA");
-            engine.AddTerminalFunction(DealerShows2, "Dlr2");
-            engine.AddTerminalFunction(DealerShows3, "Dlr3");
-            engine.AddTerminalFunction(DealerShows4, "Dlr4");
-            engine.AddTerminalFunction(DealerShows5, "Dlr5");
-            engine.AddTerminalFunction(DealerShows6, "Dlr6");
-            engine.AddTerminalFunction(DealerShows7, "Dlr7");
-            engine.AddTerminalFunction(DealerShows8, "Dlr8");
-            engine.AddTerminalFunction(DealerShows9, "Dlr9");
-            engine.AddTerminalFunction(DealerShowsT, "DlrT");
+            engine.AddTerminalFunction(Holding3Cards, "Hold3");
 
             // pass a fitness evaluation function and run
             engine.AddFitnessFunction((t) => EvaluateCandidate(t));
@@ -99,61 +90,6 @@ namespace BlackjackStrategy.Models
             engine.AddProgressFunction((t) => PerGenerationCallback(t));
 
             BestSolution = engine.FindBestSolution();
-        }
-
-        //-------------------------------------------------------------------------
-        // first, terminal functions to get information about the dealer upcard
-        //-------------------------------------------------------------------------
-
-        private bool DealerShowsA(ProblemState stateData)
-        {
-            return stateData.DealerHand.Cards[0].Rank == "A";
-        }
-
-        private bool DealerShows2(ProblemState stateData)
-        {
-            return stateData.DealerHand.Cards[0].Rank == "2";
-        }
-
-        private  bool DealerShows3(ProblemState stateData)
-        {
-            return stateData.DealerHand.Cards[0].Rank == "3";
-        }
-
-        private  bool DealerShows4(ProblemState stateData)
-        {
-            return stateData.DealerHand.Cards[0].Rank == "4";
-        }
-
-        private  bool DealerShows5(ProblemState stateData)
-        {
-            return stateData.DealerHand.Cards[0].Rank == "5";
-        }
-
-        private  bool DealerShows6(ProblemState stateData)
-        {
-            return stateData.DealerHand.Cards[0].Rank == "6";
-        }
-
-        private  bool DealerShows7(ProblemState stateData)
-        {
-            return stateData.DealerHand.Cards[0].Rank == "7";
-        }
-
-        private  bool DealerShows8(ProblemState stateData)
-        {
-            return stateData.DealerHand.Cards[0].Rank == "8";
-        }
-
-        private  bool DealerShows9(ProblemState stateData)
-        {
-            return stateData.DealerHand.Cards[0].Rank == "9";
-        }
-
-        private  bool DealerShowsT(ProblemState stateData)
-        {
-            var dealerCard = stateData.DealerHand.Cards[0];
-            return dealerCard.Rank == "T" || dealerCard.Rank == "J" || dealerCard.Rank == "Q" || dealerCard.Rank == "K";
         }
 
         //-------------------------------------------------------------------------
@@ -308,7 +244,9 @@ namespace BlackjackStrategy.Models
 
                 playerHand.AddCard(deck.DealCard());
                 playerHand.AddCard(deck.DealCard());
-                dealerHand.AddCard(deck.DealCard());
+
+                // always use the designated dealer upcard (of hearts)
+                dealerHand.AddCard(new Card(dealerUpcardRank, "H"));    
                 dealerHand.AddCard(deck.DealCard());
 
                 // save the cards in state, and reset the votes for this hand
@@ -352,6 +290,9 @@ namespace BlackjackStrategy.Models
 
                     // look at the votes to see what to do
                     string action = GetAction(candidate.StateData);
+
+                    // if the vote is for doubledown, that's only valid for the first move
+                    if (action == "D" && playerHand.Cards.Count > 2) action = "H";  // do a hit instead, if that's the case
 
                     switch (action)
                     {

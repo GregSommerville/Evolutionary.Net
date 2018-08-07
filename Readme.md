@@ -42,18 +42,20 @@ Each candidate is evaluated and is assigned a numeric fitness score.  You can ha
  
 Then the engine selects candidate solutions two at a time for reproduction, via genetic crossover.  
  
+## Installing
+
+Download the code and compile using Visual Studio.  There are no dependencies in the code - it's just straight C#.  Any version of the .NET framework should be fine, although this hasn't been tested with versions prior to 4.5.  Then just add a reference to the Evolutionary.Net assembly to your program.
+
 ## Getting Started
-To get started, download the code and add the assembly to your code.  
+The first step is to instantiate an engine object.  When you do that, you must specify two data types.  First, the data type for all of the nodes in the expression trees that will be generated is specified.  The concept that all nodes must share a single data type is called *closure*.  The second data type specified is an object to store state data.
  
-After that, you need to instantiate an engine object.  When you do that, you must specify the data type for all of the nodes in the expression trees that will be generated.  The concept that all nodes must share a single data type is called *closure*.
+After instantiating the engine object, you begin by defining the primitive set, which is a collection of constants, variables, functions and terminal functions that the genetic engine will use to create a program.
  
-After instantiating the engine object, you begin by defining the primitive set, which is a collection of constants, variables, functions and terminal functions.
+Adding constants is done by simply passing in the numeric or boolean constants you wish to be available during construction of an expression tree.
  
-Adding constants is easy - you simply pass in the numeric or boolean constants you wish to be available during construction of an expression tree.
+Variables are sometimes used to pass information from the calling program into the expression tree.  Adding them is done by calling AddVariable, passing in the name of the variable.  Then, before the expression tree is evaluated, you must set the value of the variables.
  
-Adding variables is also easy.  Variables are used to pass information from the calling program into the expression tree, so adding them is as simple as calling AddVariable, passing in the name of the variable.  Then, before the expression tree is evaluated, you must set the value of the variables.
- 
-Adding a function is quite simple.  You call AddFunction, passing in a lambda function and a name for the function.  In this version of the Evolutionary.NET engine, functions can have up to four parameters each.
+Adding a function is done by calling AddFunction, passing in a lambda function and a name for the function.  In this version of the Evolutionary.NET engine, functions can have up to four parameters each.
 
 There's a second variation of adding a function, and that's a *stateful* function.  By calling AddStatefulFunction, you specify a function that will receive parameters like a regular function node does, but has an additional parameter that passes in the candidate's state data.
  
@@ -64,10 +66,6 @@ Once the primitive set is defined, you call the engine and it returns the best s
 ### State Data
 
 Terminal functions are often used to query information about the state of the problem.  If you have problem state information that doesn't fit neatly into a variable due to closure, you can store additional information in the state data and then use a stateful function or terminal function to query or manipulate that data.  An example of this would be a card game - the suits and ranks of a player's cards won't fit within a single-data typed expression tree, but it can be stored in the state data, where it can be examined or manipulated by stateful functions or terminal functions.
-
-### Installing
-
-Download the code and compile using Visual Studio.  There are no dependencies in the code - it's just straight C#.  Any version of the .NET framework should be fine, although this hasn't been tested with versions prior to 4.5.
 
 ## Using Evolutionary.NET
 There are two main chunks of code you&apos;ll need to write in order to use Evolutionary.Net.  

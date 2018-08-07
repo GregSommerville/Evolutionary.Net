@@ -18,6 +18,8 @@ namespace BlackjackStrategy
     public partial class MainWindow : Window
     {
         private List<string> progressSoFar = new List<string>();
+        private string currentRank = "";
+        private Dictionary<string, CandidateSolution<bool, ProblemState>> solutionByUpcard = new Dictionary<string, CandidateSolution<bool, ProblemState>>();
 
         public MainWindow()
         {
@@ -40,17 +42,36 @@ namespace BlackjackStrategy
 
         private void AsyncCall(int populationSize, int crossoverPercentage, double mutationPercentage, int elitismPercentage, int tourneySize)
         {
-            var solutionFinder = new Solution();
-            solutionFinder.BuildProgram(populationSize, crossoverPercentage, mutationPercentage, elitismPercentage, tourneySize, DisplayCurrentStatus);
+            // create a solution for each upcard 
+            for (var upcard = 2; upcard < 12; upcard++)
+            {
+                // set the dealer upcard to use
+                currentRank = upcard.ToString();
+                if (upcard == 11) currentRank = "A";
+                
+                // reset the progress messages
+                progressSoFar = new List<string>();
 
+                // find the solution for this dealer upcard
+                var solutionFinder = new Solution();
+                solutionFinder.BuildProgram(
+                    populationSize, 
+                    crossoverPercentage, 
+                    mutationPercentage, 
+                    elitismPercentage, 
+                    tourneySize, 
+                    DisplayCurrentStatus, 
+                    currentRank);
+
+                // save the solution 
+                solutionByUpcard[currentRank] = solutionFinder.BestSolution;
+            }
+
+            // then display the final results
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                string solution = solutionFinder.BestSolution.ToString();
-
-                gaResultTB.Text = "Found solution:\n\n" + solution;
-                Debug.WriteLine(solution);
-
-                ShowPlayableHands(solutionFinder.BestSolution);
+                gaResultTB.Text = "Found solution";
+                ShowPlayableHands();
             }),
             DispatcherPriority.Background);
         }
@@ -62,12 +83,12 @@ namespace BlackjackStrategy
 
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                gaResultTB.Text = "Working...\n" + allStatuses;
+                gaResultTB.Text = "Dealer upcard: " + currentRank + "\n" + allStatuses;
             }),
             DispatcherPriority.Background);
         }
 
-        private void ShowPlayableHands(CandidateSolution<bool, ProblemState> best)
+        private void ShowPlayableHands()
         {
             // clear the screen
             canvas.Children.Clear();
@@ -77,9 +98,11 @@ namespace BlackjackStrategy
             int x = 1;
             for (int upcardRank = 2; upcardRank < 12; upcardRank++)
             {
-                string rankNeeded = (upcardRank == 11) ? "A" : upcardRank.ToString();
-                AddColorBox(Colors.White, rankNeeded, x, 0);
+                string upcardRankName = (upcardRank == 11) ? "A" : upcardRank.ToString();
+                AddColorBox(Colors.White, upcardRankName, x, 0);
                 int y = 1;
+
+                var best = solutionByUpcard[upcardRankName];
 
                 for (int hardTotal = 20; hardTotal > 3; hardTotal--)
                 {
@@ -90,7 +113,7 @@ namespace BlackjackStrategy
 
                     // build dealer hand
                     Hand dealerHand = new Hand();
-                    dealerHand.AddCard(new Card(rankNeeded, "S"));
+                    dealerHand.AddCard(new Card(upcardRankName, "S"));
 
                     // build player hand
                     Hand playerHand = new Hand();
@@ -141,12 +164,17 @@ namespace BlackjackStrategy
             x = leftColumnForAces + 1;
             for (int upcardRank = 2; upcardRank < 12; upcardRank++)
             {
-                string rankNeeded = (upcardRank == 11) ? "A" : upcardRank.ToString();
-                AddColorBox(Colors.White, rankNeeded, x, 0);
+                string upcardRankName = (upcardRank == 11) ? "A" : upcardRank.ToString();
+                AddColorBox(Colors.White, upcardRankName, x, 0);
                 int y = 1;
+
+                var best = solutionByUpcard[upcardRankName];
 
                 for (int otherCard = 11; otherCard > 1; otherCard--)
                 {
+                    // a-10 should be a blackjack, so there's no strategy needed
+                    if (otherCard == 10) continue;
+
                     string otherCardRank = (otherCard == 11) ? "A" : otherCard.ToString();
 
                     // add a white box with the player hand: "A-x"
@@ -156,7 +184,7 @@ namespace BlackjackStrategy
 
                     // build dealer hand
                     Hand dealerHand = new Hand();
-                    dealerHand.AddCard(new Card(rankNeeded, "S"));
+                    dealerHand.AddCard(new Card(upcardRankName, "S"));
 
                     // build player hand
                     Hand playerHand = new Hand();
