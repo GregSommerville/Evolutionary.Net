@@ -169,7 +169,7 @@ class ProblemState
 
 ## Examples
 
-Please see the Blackjack example, including with this solution.  It shows how to use state information in conjunction with terminal functions like PlayerHolds16() to develop a strategy for Blackjack.
+The Blackjack example available for download shows how to use state information in conjunction with terminal functions like PlayerHolds16() to develop a strategy for Blackjack.  A genetic program is developed for each distinct dealer upcard.
 
 Here's a screenshot of the resulting strategy for a run of the Blackjack program:
 
