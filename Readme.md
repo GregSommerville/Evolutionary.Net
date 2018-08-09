@@ -34,7 +34,7 @@ Often genetic programs are used when a solution is not immediately obvious to a 
 ### How Do Genetic Programs Work?
 To create a genetic program, you supply the engine with the components (called the *primitive set*) that might be needed to solve a problem.  Then the engine creates an initial randomly generated population of candidate solutions.  
  
-A candidate solution contains a tree data structure, with each node in the tree being either a constant (usually numeric, but it could be Boolean), a variable name (which is how the generated program implements parameters), or a function node.  Constant and variable nodes are known as terminal nodes since they don&#39;t have children, but functions usually do have children - one per parameter.  For example, a node for **add** would have two child nodes, and once each of those children are evaluated, the **add** node adds the values together and returns the sum total.
+A candidate solution contains a tree data structure, with each node in the tree being either a constant (usually numeric, but it could be Boolean), a variable name (which is how the generated program implements parameters), or a function node.  Constant and variable nodes are known as terminal nodes since they don&#39;t have children, but functions usually do have children - one per parameter.  For example, a node for *add* would have two child nodes, and once each of those children are evaluated, the *add* node adds the values together and returns the sum total.
  
 Evaluating a tree is done recursively.  First, the root node of the tree is evaluated, and if it&#39;s a function node (which it should be), then each of its children nodes is evaluated, and then the function operation (whatever it happens to be) is executed.  Because of this approach, the tree can be quite deep and full, with many nodes contributing to a final solution.
  
@@ -53,11 +53,11 @@ After instantiating the engine object, you begin by defining the primitive set, 
  
 Adding constants is done by simply passing in the numeric or boolean constants you wish to be available during construction of an expression tree.
  
-Variables are sometimes used to pass information from the calling program into the expression tree.  Adding them is done by calling AddVariable, passing in the name of the variable.  Then, before the expression tree is evaluated, you must set the value of the variables.
+Variables are sometimes used to pass information from the calling program into the expression tree.  Adding them is done by calling `.AddVariable()`, passing in the name of the variable.  Then, before the expression tree is evaluated, you must set the value of the variables.
  
-Adding a function is done by calling AddFunction, passing in a lambda function and a name for the function.  In this version of the Evolutionary.NET engine, functions can have up to four parameters each.
+Adding a function is done by calling `.AddFunction()`, passing in a lambda function and a name for the function.  In this version of the Evolutionary.NET engine, functions can have up to four parameters each.
 
-There's a second variation of adding a function, and that's a *stateful* function.  By calling AddStatefulFunction, you specify a function that will receive parameters like a regular function node does, but has an additional parameter that passes in the candidate's state data.
+There's a second variation of adding a function, and that's a *stateful* function.  By calling `.AddStatefulFunction()`, you specify a function that will receive parameters like a regular function node does, but has an additional parameter that passes in the candidate's state data.
  
 Terminal functions are a special case of functions - they have zero parameters (meaning, no child nodes).  These functions typically are used to set or get some other information related to the state of the problem, so each terminal function is passed a copy of the candidate's state data object.
  
@@ -66,6 +66,9 @@ Once the primitive set is defined, you call the engine and it returns the best s
 ### State Data
 
 Terminal functions are often used to query information about the state of the problem.  If you have problem state information that doesn't fit neatly into a variable due to closure, you can store additional information in the state data and then use a stateful function or terminal function to query or manipulate that data.  An example of this would be a card game - the suits and ranks of a player's cards won't fit within a single-data typed expression tree, but it can be stored in the state data, where it can be examined or manipulated by stateful functions or terminal functions.
+
+## Technical Documentation
+For detailed technical documentation, please see the [Wiki](wiki)
 
 ## Using Evolutionary.NET
 There are two main chunks of code you&apos;ll need to write in order to use Evolutionary.Net.  
