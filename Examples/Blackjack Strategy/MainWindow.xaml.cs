@@ -126,7 +126,6 @@ namespace BlackjackStrategy
                     Debug.Assert(playerHand.HandValue() == hardTotal);
 
                     // get strategy and display
-                    best.StateData.DealerHand = dealerHand;
                     best.StateData.PlayerHand = playerHand;
                     best.StateData.VotesForDoubleDown = 0;
                     best.StateData.VotesForHit = 0;
@@ -193,7 +192,6 @@ namespace BlackjackStrategy
                     playerHand.AddCard(new Card(otherCardRank, "S")); 
 
                     // get strategy and display
-                    best.StateData.DealerHand = dealerHand;
                     best.StateData.PlayerHand = playerHand;
                     best.StateData.VotesForDoubleDown = 0;
                     best.StateData.VotesForHit = 0;

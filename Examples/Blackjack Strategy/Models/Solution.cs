@@ -52,7 +52,6 @@ namespace BlackjackStrategy.Models
             engine.AddFunction((a, b, c) => a && b && c, "And3");
             engine.AddFunction((a) => !a, "Not");
 
-
             // then add functions to indicate a strategy
             engine.AddStatefulFunction(HitIf, "HitIf");
             engine.AddStatefulFunction(StandIf, "StandIf");
@@ -250,7 +249,6 @@ namespace BlackjackStrategy.Models
                 dealerHand.AddCard(deck.DealCard());
 
                 // save the cards in state, and reset the votes for this hand
-                candidate.StateData.DealerHand = dealerHand;
                 candidate.StateData.PlayerHand = playerHand;
 
                 // loop until the hand is done
@@ -379,7 +377,6 @@ namespace BlackjackStrategy.Models
             string debug = 
                 prefixText + 
                 (String.IsNullOrWhiteSpace(prefixText) ? "" : "  ") +
-                "Dlr: " + candidate.StateData.DealerHand.Cards[0].Rank + 
                 "  Plr: " + candidate.StateData.PlayerHand + 
                 "  H: " + candidate.StateData.VotesForHit +
                 "  S: " + candidate.StateData.VotesForStand +
