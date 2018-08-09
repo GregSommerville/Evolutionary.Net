@@ -68,7 +68,7 @@ Once the primitive set is defined, you call the engine and it returns the best s
 Terminal functions are often used to query information about the state of the problem.  If you have problem state information that doesn't fit neatly into a variable due to closure, you can store additional information in the state data and then use a stateful function or terminal function to query or manipulate that data.  An example of this would be a card game - the suits and ranks of a player's cards won't fit within a single-data typed expression tree, but it can be stored in the state data, where it can be examined or manipulated by stateful functions or terminal functions.
 
 ## Technical Documentation
-For detailed technical documentation, please see the [Wiki](wiki)
+For detailed technical documentation, please see the [Wiki](https://github.com/GregSommerville/Evolutionary.Net/wiki)
 
 ## Using Evolutionary.NET
 There are two main chunks of code you&apos;ll need to write in order to use Evolutionary.Net.  
