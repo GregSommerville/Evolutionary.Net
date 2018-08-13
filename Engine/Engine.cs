@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Evolutionary
 {
@@ -67,17 +68,23 @@ namespace Evolutionary
             // loop over generations
             int currentGenerationNumber = 0;
             while (true)
-            {
-                // for each tree, find and store the fitness score
-                float bestFitnessScoreThisGeneration = (IsLowerFitnessBetter ? float.MaxValue : float.MinValue);
-                CandidateSolution<T,S> bestTreeThisGeneration = null;
-                float totalFitness = 0;
+            {                
                 timer.Restart();
 
-                foreach (var tree in currentGeneration)
+                // multithread the fitness evaluation 
+                Parallel.ForEach(currentGeneration, (candidate) =>
                 {
                     // calc the fitness by calling the user-supplied function via the delegate   
-                    tree.Fitness = myFitnessFunction(tree);
+                    float fitness = myFitnessFunction(candidate);
+                    candidate.Fitness = fitness;
+                });
+
+                // for each tree, find and store the fitness score
+                float bestFitnessScoreThisGeneration = (IsLowerFitnessBetter ? float.MaxValue : float.MinValue);
+                CandidateSolution<T, S> bestTreeThisGeneration = null;
+                float totalFitness = 0;
+                foreach (var tree in currentGeneration)
+                {
                     totalFitness += tree.Fitness;
 
                     // find best of this generation, update best all-time if needed
