@@ -8,18 +8,18 @@ namespace Evolutionary
 {
     public class Engine<T,S> where S : new()    // T: return type requested.  S : datatype for state information (must implement 0-param constructor)
     {
-        // default settings 
-        private int TourneySize = 4;
-        private int NoChangeGenerationCountForTermination = 12;
-        private int ElitismPercentageOfPopulation = 10;
-        private int PopulationSize = 200;
-        private bool IsLowerFitnessBetter = true;
-        private double CrossoverRate = 0.95;
-        private double MutationRate = 0.01;
-        private int MinTreeDepth = 4;
-        private int MaxTreeDepth = 7;
-        private int MinGenerations = 10;
-        private int MaxGenerations = 100;
+        // the engine parameters
+        private int TourneySize                             = EngineParameterDefaults.TourneySize;
+        private int NoChangeGenerationCountForTermination   = EngineParameterDefaults.NoChangeGenerationCountForTermination;
+        private int ElitismPercentageOfPopulation           = EngineParameterDefaults.ElitismPercentageOfPopulation;
+        private int PopulationSize                          = EngineParameterDefaults.PopulationSize;
+        private bool IsLowerFitnessBetter                   = EngineParameterDefaults.IsLowerFitnessBetter;
+        private double CrossoverRate                        = EngineParameterDefaults.CrossoverRate;
+        private double MutationRate                         = EngineParameterDefaults.MutationRate;
+        private int RandomTreeMinDepth                      = EngineParameterDefaults.RandomTreeMinDepth;
+        private int RandomTreeMaxDepth                      = EngineParameterDefaults.RandomTreeMaxDepth;
+        private int MinGenerations                          = EngineParameterDefaults.MinGenerations;
+        private int MaxGenerations                          = EngineParameterDefaults.MaxGenerations;
 
         // object to store all available node contents (functions, constants, variables, etc.)
         private EngineComponents<T> primitiveSet = new EngineComponents<T>();
@@ -38,21 +38,21 @@ namespace Evolutionary
         {
         }
 
-        public Engine(EngineParameters engineParams)
+        public Engine(EngineParameters userParams)
         {
-            TourneySize = engineParams.TourneySize;
-            NoChangeGenerationCountForTermination = engineParams.NoChangeGenerationCountForTermination;
-            ElitismPercentageOfPopulation = engineParams.ElitismPercentageOfPopulation;
-            PopulationSize = engineParams.PopulationSize;
-            IsLowerFitnessBetter = engineParams.IsLowerFitnessBetter;
-            CrossoverRate = engineParams.CrossoverRate;
-            MutationRate = engineParams.MutationRate;
-            MinTreeDepth = engineParams.RandomTreeMinDepth;
-            MaxTreeDepth = engineParams.RandomTreeMaxDepth;
-            MinGenerations = engineParams.MinGenerations;
-            MaxGenerations = engineParams.MaxGenerations;
+            if (userParams.CrossoverRate.HasValue)                          CrossoverRate = userParams.CrossoverRate.Value;
+            if (userParams.ElitismPercentageOfPopulation.HasValue)          ElitismPercentageOfPopulation = userParams.ElitismPercentageOfPopulation.Value;
+            if (userParams.IsLowerFitnessBetter.HasValue)                   IsLowerFitnessBetter = userParams.IsLowerFitnessBetter.Value;
+            if (userParams.MaxGenerations.HasValue)                         MaxGenerations = userParams.MaxGenerations.Value;
+            if (userParams.MinGenerations.HasValue)                         MinGenerations = userParams.MinGenerations.Value;
+            if (userParams.MutationRate.HasValue)                           MutationRate = userParams.MutationRate.Value;
+            if (userParams.NoChangeGenerationCountForTermination.HasValue)  NoChangeGenerationCountForTermination = userParams.NoChangeGenerationCountForTermination.Value;
+            if (userParams.PopulationSize.HasValue)                         PopulationSize = userParams.PopulationSize.Value;
+            if (userParams.RandomTreeMaxDepth.HasValue)                     RandomTreeMaxDepth = userParams.RandomTreeMaxDepth.Value;
+            if (userParams.RandomTreeMinDepth.HasValue)                     RandomTreeMinDepth = userParams.RandomTreeMinDepth.Value;
+            if (userParams.TourneySize.HasValue)                            TourneySize = userParams.TourneySize.Value;
         }
-    
+
         public CandidateSolution<T,S> FindBestSolution()
         {
             float bestFitnessScoreAllTime = (IsLowerFitnessBetter ? float.MaxValue : float.MinValue);
@@ -64,7 +64,7 @@ namespace Evolutionary
             // create an initial population of random trees, passing the possible functions, consts, and variables
             for (int p = 0; p < PopulationSize; p++)
             {
-                CandidateSolution<T,S> tree = new CandidateSolution<T,S>(primitiveSet, MinTreeDepth, MaxTreeDepth);
+                CandidateSolution<T,S> tree = new CandidateSolution<T,S>(primitiveSet, RandomTreeMinDepth, RandomTreeMaxDepth);
                 tree.CreateRandom();
                 currentGeneration.Add(tree);
             }

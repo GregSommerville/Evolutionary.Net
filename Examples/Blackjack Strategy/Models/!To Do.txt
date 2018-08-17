@@ -5,8 +5,6 @@ TO DO
 --------------------------
 Engine
 --------------------------
-- EngineParameters.MinGenerations : def = 10
-- EngineParameters.MaxGenerations : def = 100
 - EngineParameters.SingleCrossoverAllowed: def = true (50/50 split)
 - EngineParameters.SelectionMethod: { Tournament, RouletteWheel, Ranking }
 
@@ -27,4 +25,4 @@ is that 50/50, or 1/9?
 --------------------------
 Blackjack Example
 --------------------------
-- UI for #nochange, min/max tree depth
+- UI for #nochange, min/max tree depth, min/max generations

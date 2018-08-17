@@ -23,6 +23,7 @@ namespace BlackjackStrategy.Models
             displayGenerationCallback = currentStatusCallback;
             dealerUpcardRank = dealerUpcardRankToUse;
 
+            // just some values, leave the rest as defaults
             var engineParams = new EngineParameters()
             {
                 CrossoverRate = crossoverPercentage / 100F,
@@ -30,10 +31,7 @@ namespace BlackjackStrategy.Models
                 IsLowerFitnessBetter = false,
                 MutationRate = mutationPercentage / 100F,
                 PopulationSize = populationSize,
-                TourneySize = tourneySize,
-                NoChangeGenerationCountForTermination = 10, // terminate if we go N generations without an improvement of average fitness
-                RandomTreeMinDepth = 5, // when first creating a random tree or subtree
-                RandomTreeMaxDepth = 10
+                TourneySize = tourneySize
             };
 
             // create the engine.  each tree (and node within the tree) will return a bool.
