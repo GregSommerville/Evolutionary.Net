@@ -18,6 +18,8 @@ namespace Evolutionary
         private double MutationRate = 0.01;
         private int MinTreeDepth = 4;
         private int MaxTreeDepth = 7;
+        private int MinGenerations = 10;
+        private int MaxGenerations = 100;
 
         // object to store all available node contents (functions, constants, variables, etc.)
         private EngineComponents<T> primitiveSet = new EngineComponents<T>();
@@ -47,6 +49,8 @@ namespace Evolutionary
             MutationRate = engineParams.MutationRate;
             MinTreeDepth = engineParams.RandomTreeMinDepth;
             MaxTreeDepth = engineParams.RandomTreeMaxDepth;
+            MinGenerations = engineParams.MinGenerations;
+            MaxGenerations = engineParams.MaxGenerations;
         }
     
         public CandidateSolution<T,S> FindBestSolution()
@@ -143,10 +147,18 @@ namespace Evolutionary
                 bool keepGoing = myProgressFunction(progress);
                 if (!keepGoing) break;  // user signalled to end looping
 
-                // exit the loop if we're not making any progress in our average fitness score
-                if ((currentGenerationNumber - bestAverageFitnessGenerationNumber) 
-                    >= NoChangeGenerationCountForTermination)
-                    break;
+                // termination conditions
+                if (currentGenerationNumber >= MinGenerations)
+                {
+                    // exit the loop if we're not making any progress in our average fitness score
+                    if ((currentGenerationNumber - bestAverageFitnessGenerationNumber)
+                        >= NoChangeGenerationCountForTermination)
+                        break;
+
+                    // maxed out?
+                    if (currentGenerationNumber >= MaxGenerations)
+                        break;
+                }
 
                 List<CandidateSolution<T,S>> nextGeneration = new List<CandidateSolution<T,S>>();
 
