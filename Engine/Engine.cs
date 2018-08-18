@@ -77,6 +77,7 @@ namespace Evolutionary
             {                
                 timer.Restart();
 
+                // for each tree, find and store the fitness score
                 // multithread the fitness evaluation 
                 Parallel.ForEach(currentGeneration, (candidate) =>
                 {
@@ -85,7 +86,7 @@ namespace Evolutionary
                     candidate.Fitness = fitness;
                 });
 
-                // for each tree, find and store the fitness score
+                // now check if we have a new best
                 float bestFitnessScoreThisGeneration = (IsLowerFitnessBetter ? float.MaxValue : float.MinValue);
                 CandidateSolution<T, S> bestTreeThisGeneration = null;
                 float totalFitness = 0;
@@ -120,6 +121,7 @@ namespace Evolutionary
                     }
                 }
 
+                // determine average fitness and store if it's all-time best
                 float averageFitness = totalFitness / PopulationSize;
                 if (IsLowerFitnessBetter)
                 {
@@ -138,6 +140,7 @@ namespace Evolutionary
                     }
                 }
 
+                // report progress back to the user, and allow them to terminate the loop
                 EngineProgress progress = new EngineProgress()
                 {
                     GenerationNumber = currentGenerationNumber,
@@ -162,6 +165,11 @@ namespace Evolutionary
                         break;
                 }
 
+                // we may need to sort the current generation by fitness, depending on SelectionStyle
+                if (SelectionStyle == CrossoverSelectionStyle.RouletteWheel || SelectionStyle == CrossoverSelectionStyle.Ranked)
+                    currentGeneration = currentGeneration.OrderBy(c => c.Fitness).ToList();
+
+                // Start building the next generation
                 List<CandidateSolution<T,S>> nextGeneration = new List<CandidateSolution<T,S>>();
 
                 // Elitism
@@ -187,6 +195,8 @@ namespace Evolutionary
                             break;
 
                         case CrossoverSelectionStyle.RouletteWheel:
+                            parent1 = RouletteSelectParent();
+                            parent2 = RouletteSelectParent();
                             break;
 
                         case CrossoverSelectionStyle.Ranked:
@@ -253,6 +263,8 @@ namespace Evolutionary
             }
         }
 
+        // Selection Routines -----------------------------------------------
+
         private CandidateSolution<T,S> TournamentSelectParent()
         {
             CandidateSolution<T,S> result = null;
@@ -278,6 +290,11 @@ namespace Evolutionary
                 }
             }
             return result;
+        }
+
+        private CandidateSolution<T, S> RouletteSelectParent()
+        {
+            throw new NotImplementedException();
         }
 
         //--------------------------------------------------------------------------------

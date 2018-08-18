@@ -6,10 +6,10 @@ TO DO
 Engine
 --------------------------
 - EngineParameters.SingleCrossoverAllowed: def = true (50/50 split)
-- EngineParameters.SelectionMethod: { Tournament, RouletteWheel, Ranking }
+	50% of the time, crossover should take a random subtree from the better candidate and insert into weaker, but not vice-versa
 
-- When randomly constructing, should the node type be selected by category?  So if you have 2 functions but 18 terminals, 
-is that 50/50, or 1/9?
+- When randomly constructing, should the node type be selected by category?  
+	So if you have 2 functions but 18 terminals, is that 50/50, or 1/9?
 
 - .AddDeferredFunction - calls
 	<T> functionName (List<Node<T,S> parameterNodes, S state) - good for boolean shortcircuiting
@@ -20,7 +20,6 @@ is that 50/50, or 1/9?
 
 - WPF app to load and display any expression tree 
 
-- 50% of the time, crossover should take a random subtree from the better candidate and insert into weaker, but not vice-versa
 
 --------------------------
 Blackjack Example
