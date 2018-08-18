@@ -13,6 +13,7 @@
         public double? MutationRate { get; set; }
         public int? RandomTreeMinDepth { get; set; }
         public int? RandomTreeMaxDepth { get; set; }
+        public CrossoverSelectionStyle? SelectionStyle { get; set; }
     }
 
     // Default values for the above
@@ -29,5 +30,6 @@
         public static double MutationRate = 0.02;
         public static int RandomTreeMinDepth = 4;
         public static int RandomTreeMaxDepth = 7;
+        public static CrossoverSelectionStyle SelectionStyle = CrossoverSelectionStyle.Tourney;
     }
 }

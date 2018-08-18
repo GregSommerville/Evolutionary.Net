@@ -20,6 +20,7 @@ namespace Evolutionary
         private int RandomTreeMaxDepth                      = EngineParameterDefaults.RandomTreeMaxDepth;
         private int MinGenerations                          = EngineParameterDefaults.MinGenerations;
         private int MaxGenerations                          = EngineParameterDefaults.MaxGenerations;
+        private CrossoverSelectionStyle SelectionStyle      = EngineParameterDefaults.SelectionStyle;
 
         // object to store all available node contents (functions, constants, variables, etc.)
         private EngineComponents<T> primitiveSet = new EngineComponents<T>();
@@ -51,6 +52,7 @@ namespace Evolutionary
             if (userParams.RandomTreeMaxDepth.HasValue)                     RandomTreeMaxDepth = userParams.RandomTreeMaxDepth.Value;
             if (userParams.RandomTreeMinDepth.HasValue)                     RandomTreeMinDepth = userParams.RandomTreeMinDepth.Value;
             if (userParams.TourneySize.HasValue)                            TourneySize = userParams.TourneySize.Value;
+            if (userParams.SelectionStyle.HasValue)                         SelectionStyle = userParams.SelectionStyle.Value;
         }
 
         public CandidateSolution<T,S> FindBestSolution()
@@ -176,8 +178,20 @@ namespace Evolutionary
                 while (nextGeneration.Count < PopulationSize)
                 {
                     // select parents
-                    var parent1 = TournamentSelectParent();
-                    var parent2 = TournamentSelectParent();
+                    CandidateSolution<T, S> parent1 = null, parent2 = null;
+                    switch(SelectionStyle)
+                    {
+                        case CrossoverSelectionStyle.Tourney:
+                            parent1 = TournamentSelectParent();
+                            parent2 = TournamentSelectParent();
+                            break;
+
+                        case CrossoverSelectionStyle.RouletteWheel:
+                            break;
+
+                        case CrossoverSelectionStyle.Ranked:
+                            break;
+                    }
 
                     // cross them over to generate two new children
                     CandidateSolution<T,S> child1, child2;

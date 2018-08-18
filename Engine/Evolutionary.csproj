@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConstantNode.cs" />
+    <Compile Include="CrossoverSelectionStyle.cs" />
     <Compile Include="EngineComponents.cs" />
     <Compile Include="EngineParameters.cs" />
     <Compile Include="EngineProgress.cs" />
