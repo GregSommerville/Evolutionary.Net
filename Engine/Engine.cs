@@ -34,6 +34,7 @@ namespace Evolutionary
         ProgressFunctionPointer myProgressFunction;
 
         private List<CandidateSolution<T,S>> currentGeneration = new List<CandidateSolution<T,S>>();
+        private double totalFitness = 0;
 
         public Engine()
         {
@@ -57,10 +58,21 @@ namespace Evolutionary
 
         public CandidateSolution<T,S> FindBestSolution()
         {
+            // keep track of best overall, average fitness scores
             float bestFitnessScoreAllTime = (IsLowerFitnessBetter ? float.MaxValue : float.MinValue);
             float bestAverageFitnessScore = (IsLowerFitnessBetter ? float.MaxValue : float.MinValue);
             CandidateSolution<T,S> bestTreeAllTime = null;
             int bestSolutionGenerationNumber = 0, bestAverageFitnessGenerationNumber = 0;
+
+            // elitism
+            int numElitesToAdd = (ElitismPercentageOfPopulation * PopulationSize) / 100;
+
+            // depending on whether elitism is used, or the selection type, we may need to sort candidates by fitness (which is slower)
+            bool needToSortByFitness =
+                SelectionStyle == CrossoverSelectionStyle.RouletteWheel ||
+                SelectionStyle == CrossoverSelectionStyle.Ranked ||
+                ElitismPercentageOfPopulation > 0;
+
             Stopwatch timer = new Stopwatch();
 
             // create an initial population of random trees, passing the possible functions, consts, and variables
@@ -166,17 +178,22 @@ namespace Evolutionary
                 }
 
                 // we may need to sort the current generation by fitness, depending on SelectionStyle
-                if (SelectionStyle == CrossoverSelectionStyle.RouletteWheel || SelectionStyle == CrossoverSelectionStyle.Ranked)
-                    currentGeneration = currentGeneration.OrderBy(c => c.Fitness).ToList();
+                if (needToSortByFitness)
+                {
+                    if (IsLowerFitnessBetter)
+                        currentGeneration = currentGeneration.OrderBy(c => c.Fitness).ToList();
+                    else
+                        currentGeneration = currentGeneration.OrderByDescending(c => c.Fitness).ToList();
+                }
+
+                // depending on the SelectionStyle, we may need to adjust all candidate's fitness scores
+                AdjustFitnessScores(currentGeneration);
 
                 // Start building the next generation
                 List<CandidateSolution<T,S>> nextGeneration = new List<CandidateSolution<T,S>>();
 
                 // Elitism
-                int numElitesToAdd = (ElitismPercentageOfPopulation * PopulationSize) / 100;
-                var theBest = (IsLowerFitnessBetter ?
-                    currentGeneration.OrderBy(c => c.Fitness).Take(numElitesToAdd) :
-                    currentGeneration.OrderByDescending(c => c.Fitness).Take(numElitesToAdd));
+                var theBest = currentGeneration.Take(numElitesToAdd);
                 foreach (var peakPerformer in theBest)
                 {
                     nextGeneration.Add(peakPerformer);
@@ -195,11 +212,9 @@ namespace Evolutionary
                             break;
 
                         case CrossoverSelectionStyle.RouletteWheel:
+                        case CrossoverSelectionStyle.Ranked:
                             parent1 = RouletteSelectParent();
                             parent2 = RouletteSelectParent();
-                            break;
-
-                        case CrossoverSelectionStyle.Ranked:
                             break;
                     }
 
@@ -225,6 +240,40 @@ namespace Evolutionary
 
             bestTreeAllTime.Root.SetCandidateRef(bestTreeAllTime);
             return bestTreeAllTime;
+        }
+
+        private void AdjustFitnessScores(List<CandidateSolution<T, S>> currentGeneration)
+        {
+            // if doing ranked, adjust the fitness scores to be the ranking, with 0 = worst, (N-1) = best.
+            // this style is good if the fitness scores for different candidates in the same generation would vary widely, especially
+            // in early generations.  It smooths out those differences, which allows more genetic diversity
+            if (SelectionStyle == CrossoverSelectionStyle.Ranked)
+            {
+                float fitness = currentGeneration.Count - 1;
+                foreach (var candidate in currentGeneration)
+                    candidate.Fitness = fitness--;
+            }
+
+            // and calc total and highest fitness for two kinds of selections
+            totalFitness = 0;
+            float largestFitness = float.MinValue;
+            if (SelectionStyle == CrossoverSelectionStyle.RouletteWheel || SelectionStyle == CrossoverSelectionStyle.Ranked)
+            {
+                foreach (var candidate in currentGeneration)
+                {
+                    float fitness = candidate.Fitness;
+                    totalFitness += fitness;
+                    if (fitness > largestFitness)
+                        largestFitness = fitness;
+                }
+            }  
+
+            // if it's roulette wheel, but lower fitness scores are better, adjust by subtract each fitness from the largest
+            if (SelectionStyle == CrossoverSelectionStyle.RouletteWheel && IsLowerFitnessBetter)
+            {
+                foreach (var candidate in currentGeneration)
+                    candidate.Fitness = largestFitness - candidate.Fitness;
+            }
         }
 
         private void CrossOverParents(
