@@ -343,7 +343,19 @@ namespace Evolutionary
 
         private CandidateSolution<T, S> RouletteSelectParent()
         {
-            throw new NotImplementedException();
+            // using Roulette Wheel Selection, we grab a possibility proportionate to it's fitness compared to
+            // the total fitnesses of all possibilities
+            double randomValue = Randomizer.GetDoubleFromZeroToOne() * totalFitness;
+            for (int i = 0; i < PopulationSize; i++)
+            {
+                randomValue -= currentGeneration[i].Fitness;
+                if (randomValue <= 0)
+                {
+                    return currentGeneration[i];
+                }
+            }
+
+            return currentGeneration[PopulationSize - 1];
         }
 
         //--------------------------------------------------------------------------------

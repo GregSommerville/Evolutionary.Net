@@ -24,4 +24,4 @@ Engine
 --------------------------
 Blackjack Example
 --------------------------
-- UI for #nochange, min/max tree depth, min/max generations
+- UI for #nochange, min/max tree depth, min/max generations, selection style
