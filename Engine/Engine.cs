@@ -10,8 +10,8 @@ namespace Evolutionary
     {
         // the engine parameters
         private int TourneySize                             = EngineParameterDefaults.TourneySize;
-        private int StagnantGenerationLimit   = EngineParameterDefaults.StagnantGenerationLimit;
-        private int ElitismPercentage           = EngineParameterDefaults.ElitismPercentage;
+        private int StagnantGenerationLimit                 = EngineParameterDefaults.StagnantGenerationLimit;
+        private double ElitismRate                          = EngineParameterDefaults.ElitismRate;
         private int PopulationSize                          = EngineParameterDefaults.PopulationSize;
         private bool IsLowerFitnessBetter                   = EngineParameterDefaults.IsLowerFitnessBetter;
         private double CrossoverRate                        = EngineParameterDefaults.CrossoverRate;
@@ -20,7 +20,7 @@ namespace Evolutionary
         private int RandomTreeMaxDepth                      = EngineParameterDefaults.RandomTreeMaxDepth;
         private int MinGenerations                          = EngineParameterDefaults.MinGenerations;
         private int MaxGenerations                          = EngineParameterDefaults.MaxGenerations;
-        private CrossoverSelectionStyle SelectionStyle      = EngineParameterDefaults.SelectionStyle;
+        private SelectionStyle SelectionStyle               = EngineParameterDefaults.SelectionStyle;
 
         // object to store all available node contents (functions, constants, variables, etc.)
         private EngineComponents<T> primitiveSet = new EngineComponents<T>();
@@ -43,7 +43,7 @@ namespace Evolutionary
         public Engine(EngineParameters userParams)
         {
             if (userParams.CrossoverRate.HasValue)                          CrossoverRate = userParams.CrossoverRate.Value;
-            if (userParams.ElitismPercentage.HasValue)          ElitismPercentage = userParams.ElitismPercentage.Value;
+            if (userParams.ElitismRate.HasValue)                            ElitismRate = userParams.ElitismRate.Value;
             if (userParams.IsLowerFitnessBetter.HasValue)                   IsLowerFitnessBetter = userParams.IsLowerFitnessBetter.Value;
             if (userParams.MaxGenerations.HasValue)                         MaxGenerations = userParams.MaxGenerations.Value;
             if (userParams.MinGenerations.HasValue)                         MinGenerations = userParams.MinGenerations.Value;
@@ -65,13 +65,13 @@ namespace Evolutionary
             int bestSolutionGenerationNumber = 0, bestAverageFitnessGenerationNumber = 0;
 
             // elitism
-            int numElitesToAdd = (ElitismPercentage * PopulationSize) / 100;
+            int numElitesToAdd = (int)(ElitismRate * PopulationSize);
 
             // depending on whether elitism is used, or the selection type, we may need to sort candidates by fitness (which is slower)
             bool needToSortByFitness =
-                SelectionStyle == CrossoverSelectionStyle.RouletteWheel ||
-                SelectionStyle == CrossoverSelectionStyle.Ranked ||
-                ElitismPercentage > 0;
+                SelectionStyle == SelectionStyle.RouletteWheel ||
+                SelectionStyle == SelectionStyle.Ranked ||
+                ElitismRate > 0;
 
             Stopwatch timer = new Stopwatch();
 
@@ -206,13 +206,13 @@ namespace Evolutionary
                     CandidateSolution<T, S> parent1 = null, parent2 = null;
                     switch(SelectionStyle)
                     {
-                        case CrossoverSelectionStyle.Tourney:
+                        case SelectionStyle.Tourney:
                             parent1 = TournamentSelectParent();
                             parent2 = TournamentSelectParent();
                             break;
 
-                        case CrossoverSelectionStyle.RouletteWheel:
-                        case CrossoverSelectionStyle.Ranked:
+                        case SelectionStyle.RouletteWheel:
+                        case SelectionStyle.Ranked:
                             parent1 = RouletteSelectParent();
                             parent2 = RouletteSelectParent();
                             break;
@@ -247,7 +247,7 @@ namespace Evolutionary
             // if doing ranked, adjust the fitness scores to be the ranking, with 0 = worst, (N-1) = best.
             // this style is good if the fitness scores for different candidates in the same generation would vary widely, especially
             // in early generations.  It smooths out those differences, which allows more genetic diversity
-            if (SelectionStyle == CrossoverSelectionStyle.Ranked)
+            if (SelectionStyle == SelectionStyle.Ranked)
             {
                 float fitness = currentGeneration.Count - 1;
                 foreach (var candidate in currentGeneration)
@@ -257,7 +257,7 @@ namespace Evolutionary
             // and calc total and highest fitness for two kinds of selections
             totalFitness = 0;
             float largestFitness = float.MinValue;
-            if (SelectionStyle == CrossoverSelectionStyle.RouletteWheel || SelectionStyle == CrossoverSelectionStyle.Ranked)
+            if (SelectionStyle == SelectionStyle.RouletteWheel || SelectionStyle == SelectionStyle.Ranked)
             {
                 foreach (var candidate in currentGeneration)
                 {
@@ -269,7 +269,7 @@ namespace Evolutionary
             }  
 
             // if it's roulette wheel, but lower fitness scores are better, adjust by subtract each fitness from the largest
-            if (SelectionStyle == CrossoverSelectionStyle.RouletteWheel && IsLowerFitnessBetter)
+            if (SelectionStyle == SelectionStyle.RouletteWheel && IsLowerFitnessBetter)
             {
                 foreach (var candidate in currentGeneration)
                     candidate.Fitness = largestFitness - candidate.Fitness;

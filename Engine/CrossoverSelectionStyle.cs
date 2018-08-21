@@ -1,4 +1,4 @@
 ﻿namespace Evolutionary
 {
-    public enum CrossoverSelectionStyle { Tourney, RouletteWheel, Ranked };
+    public enum SelectionStyle { Tourney, RouletteWheel, Ranked };
 }

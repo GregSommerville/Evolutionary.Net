@@ -31,16 +31,16 @@ namespace BlackjackStrategy
             var populationSize = (int)populationSizeSlider.Value;
             var crossoverPercentage = (int)crossoverPctSlider.Value;
             var mutationPercentage = Convert.ToDouble(txtMutationPct.Text);
-            var elitismPercentage = (int)elitismPercentageSlider.Value;
+            var ElitismPercentage = (int)ElitismSlider.Value;
             var tourneySize = (int)tourneySizeSlider.Value;
 
             gaResultTB.Text = "Creating solution, please wait...";
 
             // Finding the solution takes a while, so kick off a thread for it
-            Task.Factory.StartNew(() => AsyncCall(populationSize, crossoverPercentage, mutationPercentage, elitismPercentage, tourneySize));
+            Task.Factory.StartNew(() => AsyncCall(populationSize, crossoverPercentage, mutationPercentage, ElitismPercentage, tourneySize));
         }
 
-        private void AsyncCall(int populationSize, int crossoverPercentage, double mutationPercentage, int elitismPercentage, int tourneySize)
+        private void AsyncCall(int populationSize, int crossoverPercentage, double mutationPercentage, int ElitismPercentage, int tourneySize)
         {
             // create a solution for each upcard 
             for (var upcard = 2; upcard < 12; upcard++)
@@ -57,8 +57,8 @@ namespace BlackjackStrategy
                 solutionFinder.BuildProgram(
                     populationSize, 
                     crossoverPercentage, 
-                    mutationPercentage, 
-                    elitismPercentage, 
+                    mutationPercentage,
+                    ElitismPercentage, 
                     tourneySize, 
                     DisplayCurrentStatus, 
                     currentRank);

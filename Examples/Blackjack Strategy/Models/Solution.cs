@@ -16,8 +16,12 @@ namespace BlackjackStrategy.Models
         private string dealerUpcardRank;
 
         public void BuildProgram(
-            int populationSize, int crossoverPercentage, 
-            double mutationPercentage, int elitismPercentage, int tourneySize, Action<string> currentStatusCallback,
+            int populationSize, 
+            int crossoverPercentage, 
+            double mutationPercentage, 
+            int ElitismPercentage, 
+            int tourneySize, 
+            Action<string> currentStatusCallback,
             string dealerUpcardRankToUse)
         {
             displayGenerationCallback = currentStatusCallback;
@@ -27,7 +31,7 @@ namespace BlackjackStrategy.Models
             var engineParams = new EngineParameters()
             {
                 CrossoverRate = crossoverPercentage / 100F,
-                ElitismPercentage = elitismPercentage,
+                ElitismRate = ElitismPercentage / 100F,
                 IsLowerFitnessBetter = false,
                 MutationRate = mutationPercentage / 100F,
                 PopulationSize = populationSize,
