@@ -10,8 +10,8 @@ namespace Evolutionary
     {
         // the engine parameters
         private int TourneySize                             = EngineParameterDefaults.TourneySize;
-        private int NoChangeGenerationCountForTermination   = EngineParameterDefaults.NoChangeGenerationCountForTermination;
-        private int ElitismPercentageOfPopulation           = EngineParameterDefaults.ElitismPercentageOfPopulation;
+        private int StagnantGenerationLimit   = EngineParameterDefaults.StagnantGenerationLimit;
+        private int ElitismPercentage           = EngineParameterDefaults.ElitismPercentage;
         private int PopulationSize                          = EngineParameterDefaults.PopulationSize;
         private bool IsLowerFitnessBetter                   = EngineParameterDefaults.IsLowerFitnessBetter;
         private double CrossoverRate                        = EngineParameterDefaults.CrossoverRate;
@@ -43,12 +43,12 @@ namespace Evolutionary
         public Engine(EngineParameters userParams)
         {
             if (userParams.CrossoverRate.HasValue)                          CrossoverRate = userParams.CrossoverRate.Value;
-            if (userParams.ElitismPercentageOfPopulation.HasValue)          ElitismPercentageOfPopulation = userParams.ElitismPercentageOfPopulation.Value;
+            if (userParams.ElitismPercentage.HasValue)          ElitismPercentage = userParams.ElitismPercentage.Value;
             if (userParams.IsLowerFitnessBetter.HasValue)                   IsLowerFitnessBetter = userParams.IsLowerFitnessBetter.Value;
             if (userParams.MaxGenerations.HasValue)                         MaxGenerations = userParams.MaxGenerations.Value;
             if (userParams.MinGenerations.HasValue)                         MinGenerations = userParams.MinGenerations.Value;
             if (userParams.MutationRate.HasValue)                           MutationRate = userParams.MutationRate.Value;
-            if (userParams.NoChangeGenerationCountForTermination.HasValue)  NoChangeGenerationCountForTermination = userParams.NoChangeGenerationCountForTermination.Value;
+            if (userParams.StagnantGenerationLimit.HasValue)  StagnantGenerationLimit = userParams.StagnantGenerationLimit.Value;
             if (userParams.PopulationSize.HasValue)                         PopulationSize = userParams.PopulationSize.Value;
             if (userParams.RandomTreeMaxDepth.HasValue)                     RandomTreeMaxDepth = userParams.RandomTreeMaxDepth.Value;
             if (userParams.RandomTreeMinDepth.HasValue)                     RandomTreeMinDepth = userParams.RandomTreeMinDepth.Value;
@@ -65,13 +65,13 @@ namespace Evolutionary
             int bestSolutionGenerationNumber = 0, bestAverageFitnessGenerationNumber = 0;
 
             // elitism
-            int numElitesToAdd = (ElitismPercentageOfPopulation * PopulationSize) / 100;
+            int numElitesToAdd = (ElitismPercentage * PopulationSize) / 100;
 
             // depending on whether elitism is used, or the selection type, we may need to sort candidates by fitness (which is slower)
             bool needToSortByFitness =
                 SelectionStyle == CrossoverSelectionStyle.RouletteWheel ||
                 SelectionStyle == CrossoverSelectionStyle.Ranked ||
-                ElitismPercentageOfPopulation > 0;
+                ElitismPercentage > 0;
 
             Stopwatch timer = new Stopwatch();
 
@@ -169,7 +169,7 @@ namespace Evolutionary
                 {
                     // exit the loop if we're not making any progress in our average fitness score
                     if ((currentGenerationNumber - bestAverageFitnessGenerationNumber)
-                        >= NoChangeGenerationCountForTermination)
+                        >= StagnantGenerationLimit)
                         break;
 
                     // maxed out?

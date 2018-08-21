@@ -27,7 +27,7 @@ namespace BlackjackStrategy.Models
             var engineParams = new EngineParameters()
             {
                 CrossoverRate = crossoverPercentage / 100F,
-                ElitismPercentageOfPopulation = elitismPercentage,
+                ElitismPercentage = elitismPercentage,
                 IsLowerFitnessBetter = false,
                 MutationRate = mutationPercentage / 100F,
                 PopulationSize = populationSize,
