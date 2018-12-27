@@ -8,6 +8,8 @@ using System;
 
 namespace BlackjackStrategy.Models
 {
+    enum ActionToTake {  Stand, Hit, Double, Split };
+
     class Solution
     {
         // a place to store the best solution, once we find it
@@ -58,6 +60,7 @@ namespace BlackjackStrategy.Models
             engine.AddStatefulFunction(HitIf, "HitIf");
             engine.AddStatefulFunction(StandIf, "StandIf");
             engine.AddStatefulFunction(DoubleIf, "DoubleIf");
+            engine.AddStatefulFunction(SplitIf, "SplitIf");
 
             // terminal functions to look at game state
             // first, player holding ace?
@@ -224,8 +227,22 @@ namespace BlackjackStrategy.Models
 
         private  bool DoubleIf(bool value, ProblemState state)
         {
-            // pass through the value, but register the vote
-            if (value) state.VotesForDoubleDown++;
+            // double down only legal when holding 2 cards
+            if (state.PlayerHand.Cards.Count == 2)
+            {
+                if (value) state.VotesForDoubleDown++;
+            }
+            return value;
+        }
+
+        private bool SplitIf(bool value, ProblemState state)
+        {
+            // only legal when holding a pair 
+            if ((state.PlayerHand.Cards.Count == 2) &&
+                (state.PlayerHand.Cards[0].Rank == state.PlayerHand.Cards[1].Rank))
+            {
+                if (value) state.VotesForSplit++;
+            }
             return value;
         }
 
@@ -251,121 +268,139 @@ namespace BlackjackStrategy.Models
                 dealerHand.AddCard(deck.DealCard());
 
                 // save the cards in state, and reset the votes for this hand
-                candidate.StateData.PlayerHand = playerHand;
-
-                // loop until the hand is done
-                var currentHandState = TestConditions.GameState.PlayerDrawing;
+                candidate.StateData.PlayerHands.Clear();
+                candidate.StateData.PlayerHands.Add(playerHand);
 
                 // do the intial wager
                 int totalBetAmount = TestConditions.BetSize;
                 playerChips -= TestConditions.BetSize;
 
-                // check for player having a blackjack, which is an instant win
-                if (playerHand.HandValue() == 21)
+                // outer loop is for each hand the player holds.  Obviously this only happens when they've split a hand
+                foreach (var currentHand in candidate.StateData.PlayerHands)
                 {
-                    // if the dealer also has 21, then it's a tie
-                    if (dealerHand.HandValue() != 21)
+                    // specify if we're looking at the second hand.  This controls the return value of PlayerHand
+                    candidate.StateData.UsingFirstHand = (currentHand == candidate.StateData.PlayerHands[0]);
+
+                    // loop until the hand is done
+                    var currentHandState = TestConditions.GameState.PlayerDrawing;
+
+                    // check for player having a blackjack, which is an instant win
+                    if (playerHand.HandValue() == 21)
                     {
-                        currentHandState = TestConditions.GameState.PlayerBlackjack;
-                        playerChips += TestConditions.BlackjackPayoffSize;
-                    }
-                    else
-                    {
-                        // a tie means we just ignore it and drop through
-                        currentHandState = TestConditions.GameState.HandComparison;
-                    }
-                }
-
-                // check for dealer having blackjack, which is either instant loss or tie 
-                if (dealerHand.HandValue() == 21) currentHandState = TestConditions.GameState.HandComparison;
-
-                // player draws 
-                while (currentHandState == TestConditions.GameState.PlayerDrawing)
-                {
-                    // get the decision
-                    candidate.StateData.VotesForDoubleDown = 0;
-                    candidate.StateData.VotesForHit = 0;
-                    candidate.StateData.VotesForStand = 0;
-                    candidate.Evaluate();   // throw away the result, because it's meaningless
-
-                    // look at the votes to see what to do
-                    string action = GetAction(candidate.StateData);
-
-                    // if the vote is for doubledown, that's only valid for the first move
-                    if (action == "D" && playerHand.Cards.Count > 2) action = "H";  // do a hit instead, if that's the case
-
-                    switch (action)
-                    {
-                        case "H":
-                            // hit me
-                            playerHand.AddCard(deck.DealCard());
-                            // if we're at 21, we're done
-                            if (playerHand.HandValue() == 21)
-                                currentHandState = TestConditions.GameState.DealerDrawing;
-                            // did we bust?
-                            if (playerHand.HandValue() > 21)
-                                currentHandState = TestConditions.GameState.PlayerBusted;
-                            break;
-
-                        case "S":
-                            // if player stands, it's the dealer's turn to draw
-                            currentHandState = TestConditions.GameState.DealerDrawing;
-                            break;
-
-                        case "D":
-                            // double down means bet another chip, and get one and only card card
-                            playerChips -= TestConditions.BetSize;
-                            totalBetAmount += TestConditions.BetSize;
-                            playerHand.AddCard(deck.DealCard());
-                            if (playerHand.HandValue() > 21)
-                                currentHandState = TestConditions.GameState.PlayerBusted;
-                            else
-                                currentHandState = TestConditions.GameState.DealerDrawing;
-                            break;
-                    }
-                }
-
-                // if the player busted, nothing to do, since chips have already been consumed.  Just go on to the next hand
-                // on the other hand, if the player hasn't busted, then we need to play the hand for the dealer
-                while (currentHandState == TestConditions.GameState.DealerDrawing)
-                {
-                    // if player didn't bust or blackjack, dealer hits until they have 17+ (hits on soft 17)
-                    if (dealerHand.HandValue() < 17)
-                    {
-                        dealerHand.AddCard(deck.DealCard());
-                        if (dealerHand.HandValue() > 21)
+                        // if the dealer also has 21, then it's a tie
+                        if (dealerHand.HandValue() != 21)
                         {
-                            currentHandState = TestConditions.GameState.DealerBusted;
-                            playerChips += totalBetAmount * 2;  // the original bet and a matching amount
-                        }
-                    }
-                    else
-                    {
-                        // dealer hand is 17+, so we're done
-                        currentHandState = TestConditions.GameState.HandComparison;
-                    }
-                }
-
-                if (currentHandState == TestConditions.GameState.HandComparison)
-                {
-                    int playerHandValue = playerHand.HandValue();
-                    int dealerHandValue = dealerHand.HandValue();
-
-                    // if it's a tie, give the player his bet back
-                    if (playerHandValue == dealerHandValue)
-                    {
-                        playerChips += totalBetAmount;
-                    }
-                    else
-                    {
-                        if (playerHandValue > dealerHandValue)
-                        {
-                            // player won
-                            playerChips += totalBetAmount * 2;  // the original bet and a matching amount
+                            currentHandState = TestConditions.GameState.PlayerBlackjack;
+                            playerChips += TestConditions.BlackjackPayoffSize;
                         }
                         else
                         {
-                            // player lost, nothing to do since the chips have already been decremented
+                            // a tie means we just ignore it and drop through
+                            currentHandState = TestConditions.GameState.HandComparison;
+                        }
+                    }
+
+                    // check for dealer having blackjack, which is either instant loss or tie 
+                    if (dealerHand.HandValue() == 21) currentHandState = TestConditions.GameState.HandComparison;
+
+                    // player draws 
+                    while (currentHandState == TestConditions.GameState.PlayerDrawing)
+                    {
+                        // get the decision
+                        candidate.StateData.VotesForDoubleDown = 0;
+                        candidate.StateData.VotesForHit = 0;
+                        candidate.StateData.VotesForStand = 0;
+                        candidate.StateData.VotesForSplit = 0;
+                        candidate.Evaluate();   // throw away the result, because it's meaningless
+
+                        // look at the votes to see what to do
+                        var action = GetAction(candidate.StateData);
+                        switch (action)
+                        {
+                            case ActionToTake.Hit:
+                                // hit me
+                                playerHand.AddCard(deck.DealCard());
+                                // if we're at 21, we're done
+                                if (playerHand.HandValue() == 21)
+                                    currentHandState = TestConditions.GameState.DealerDrawing;
+                                // did we bust?
+                                if (playerHand.HandValue() > 21)
+                                    currentHandState = TestConditions.GameState.PlayerBusted;
+                                break;
+
+                            case ActionToTake.Stand:
+                                // if player stands, it's the dealer's turn to draw
+                                currentHandState = TestConditions.GameState.DealerDrawing;
+                                break;
+
+                            case ActionToTake.Double:
+                                // double down means bet another chip, and get one and only card card
+                                playerChips -= TestConditions.BetSize;
+                                totalBetAmount += TestConditions.BetSize;
+                                playerHand.AddCard(deck.DealCard());
+                                if (playerHand.HandValue() > 21)
+                                    currentHandState = TestConditions.GameState.PlayerBusted;
+                                else
+                                    currentHandState = TestConditions.GameState.DealerDrawing;
+                                break;
+
+                            case ActionToTake.Split:
+                                // do the split and add the hand to our collection
+                                var newHand = new Hand();
+                                newHand.AddCard(playerHand.Cards[1]);
+                                playerHand.Cards[1] = deck.DealCard();
+                                newHand.AddCard(deck.DealCard());
+                                candidate.StateData.PlayerHands.Add(newHand);
+                                // our extra bet
+                                playerChips -= TestConditions.BetSize;
+                                // we don't adjust totalBetAmount because each bet pays off individually, so the total is right 
+                                //totalBetAmount += TestConditions.BetSize;
+                                break;
+                        }
+                    }
+
+                    // if the player busted, nothing to do, since chips have already been consumed.  Just go on to the next hand
+                    // on the other hand, if the player hasn't busted, then we need to play the hand for the dealer
+                    while (currentHandState == TestConditions.GameState.DealerDrawing)
+                    {
+                        // if player didn't bust or blackjack, dealer hits until they have 17+ (hits on soft 17)
+                        if (dealerHand.HandValue() < 17)
+                        {
+                            dealerHand.AddCard(deck.DealCard());
+                            if (dealerHand.HandValue() > 21)
+                            {
+                                currentHandState = TestConditions.GameState.DealerBusted;
+                                playerChips += totalBetAmount * 2;  // the original bet and a matching amount
+                            }
+                        }
+                        else
+                        {
+                            // dealer hand is 17+, so we're done
+                            currentHandState = TestConditions.GameState.HandComparison;
+                        }
+                    }
+
+                    if (currentHandState == TestConditions.GameState.HandComparison)
+                    {
+                        int playerHandValue = playerHand.HandValue();
+                        int dealerHandValue = dealerHand.HandValue();
+
+                        // if it's a tie, give the player his bet back
+                        if (playerHandValue == dealerHandValue)
+                        {
+                            playerChips += totalBetAmount;
+                        }
+                        else
+                        {
+                            if (playerHandValue > dealerHandValue)
+                            {
+                                // player won
+                                playerChips += totalBetAmount * 2;  // the original bet and a matching amount
+                            }
+                            else
+                            {
+                                // player lost, nothing to do since the chips have already been decremented
+                            }
                         }
                     }
                 }
@@ -382,6 +417,7 @@ namespace BlackjackStrategy.Models
                 "  Plr: " + candidate.StateData.PlayerHand + 
                 "  H: " + candidate.StateData.VotesForHit +
                 "  S: " + candidate.StateData.VotesForStand +
+                "  P: " + candidate.StateData.VotesForSplit + 
                 "  D: " + candidate.StateData.VotesForDoubleDown;
             Debug.WriteLine(debug);
         }
@@ -403,15 +439,20 @@ namespace BlackjackStrategy.Models
             return keepRunning;
         }
 
-        public static string GetAction(ProblemState stateData)
+        public static ActionToTake GetAction(ProblemState stateData)
         {
             int votesForStand = stateData.VotesForStand;
             int votesForHit = stateData.VotesForHit;
             int votesForDouble = stateData.VotesForDoubleDown;
+            int votesForSplit = stateData.VotesForSplit;
 
-            if ((votesForHit > votesForStand) && (votesForHit > votesForDouble)) return "H";
-            if ((votesForDouble > votesForHit) && (votesForDouble > votesForStand)) return "D";
-            return "S";
+            SortedList<int, ActionToTake> votes = new SortedList<int, ActionToTake>();
+            votes.Add(votesForStand, ActionToTake.Stand);
+            votes.Add(votesForHit, ActionToTake.Hit);
+            votes.Add(votesForDouble, ActionToTake.Double);
+            votes.Add(votesForSplit, ActionToTake.Split);
+
+            return votes.Values[votes.Count -1];
         }
     }
 }

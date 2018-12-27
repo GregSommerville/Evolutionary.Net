@@ -126,28 +126,30 @@ namespace BlackjackStrategy
                     Debug.Assert(playerHand.HandValue() == hardTotal);
 
                     // get strategy and display
-                    best.StateData.PlayerHand = playerHand;
+                    best.StateData.PlayerHands.Clear();
+                    best.StateData.PlayerHands.Add(playerHand);
                     best.StateData.VotesForDoubleDown = 0;
                     best.StateData.VotesForHit = 0;
                     best.StateData.VotesForStand = 0;
+                    best.StateData.VotesForSplit = 0;
 
                     best.Evaluate();    // get the decision
                     //Solution.DebugDisplayStrategy(best, "Final");
 
-                    string action = Solution.GetAction(best.StateData);
+                    var action = Solution.GetAction(best.StateData);
 
                     // Now draw the box
                     switch (action)
                     {
-                        case "H":
+                        case ActionToTake.Hit:
                             AddColorBox(Colors.Green, "H", x, y);
                             break;
 
-                        case "S":
+                        case ActionToTake.Stand:
                             AddColorBox(Colors.Red, "S", x, y);
                             break;
 
-                        case "D":
+                        case ActionToTake.Double:
                             AddColorBox(Colors.Yellow, "D", x, y);
                             break;
                     }
