@@ -284,7 +284,7 @@ namespace BlackjackStrategy
                             break;
 
                         case ActionToTake.Split:
-                            AddColorBox(Colors.Lavender, "P", x, y);
+                            AddColorBox(Colors.LightBlue, "P", x, y);
                             break;
                     }
                     y++;

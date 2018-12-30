@@ -7,13 +7,9 @@ Blackjack Example
 --------------------------
 - Refactor the results display code 
 - Increase height of display (or make dynamic)
-- When calculating display for results, eliminate total of 4 (since it's a pair of 2s), 
-	present pairs separately, and make sure main grid does not include them
-	- display 22, 33, 44, 55, 66, 77, 88, 99, TT/JJ/QQ/KK, AA - remove AA from Ace section
-
 - UI for #nochange, min/max tree depth, min/max generations, selection style
-- Engine.AddAutoDefinedFunction(numParams)
 
+- Engine.AddAutoDefinedFunction(numParams)
 
 
 --------------------------
