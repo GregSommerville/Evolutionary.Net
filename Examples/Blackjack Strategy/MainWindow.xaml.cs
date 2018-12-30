@@ -224,7 +224,7 @@ namespace BlackjackStrategy
             }
 
             // finally, a grid for pairs
-            int startY = y + 2;
+            int startY = y + 1;
             AddColorBox(Colors.White, "", leftColumnForAces, 0);
             x = leftColumnForAces + 1;
             for (int upcardRank = 2; upcardRank < 12; upcardRank++)
@@ -298,7 +298,7 @@ namespace BlackjackStrategy
             // easy to do constants when the screen isn't meant to resize
             const int 
                 columnWidth = 38, 
-                rowHeight = 30,
+                rowHeight = 28,
                 startX = 20,
                 startY = 20;
 

@@ -240,6 +240,7 @@ namespace BlackjackStrategy.Models
 
         internal void RemoveCard(string rank, string suit)
         {
+            if (rank == "10") rank = "T";
             var foundCard = Cards.First(c => c.Rank == rank && c.Suit == suit);
             Cards.Remove(foundCard);
         }
