@@ -93,18 +93,17 @@ namespace BlackjackStrategy
             // clear the screen
             canvas.Children.Clear();
 
-            // display a grid for hands without an ace.  One column for each possible dealer upcard
+            // display a grid for non-paired hands without an ace.  One column for each possible dealer upcard
             AddColorBox(Colors.White, "", 0, 0);
-            int x = 1;
+            int x = 1, y = 0;
             for (int upcardRank = 2; upcardRank < 12; upcardRank++)
             {
                 string upcardRankName = (upcardRank == 11) ? "A" : upcardRank.ToString();
                 AddColorBox(Colors.White, upcardRankName, x, 0);
-                int y = 1;
+                y = 1;
 
                 var best = solutionByUpcard[upcardRankName];
-
-                for (int hardTotal = 20; hardTotal > 3; hardTotal--)
+                for (int hardTotal = 20; hardTotal > 4; hardTotal--)
                 {
                     // add a white box with the total
                     AddColorBox(Colors.White, hardTotal.ToString(), 0, y);
@@ -167,15 +166,14 @@ namespace BlackjackStrategy
             {
                 string upcardRankName = (upcardRank == 11) ? "A" : upcardRank.ToString();
                 AddColorBox(Colors.White, upcardRankName, x, 0);
-                int y = 1;
+                y = 1;
 
                 var best = solutionByUpcard[upcardRankName];
 
-                for (int otherCard = 11; otherCard > 1; otherCard--)
+                // we don't start with Ace, because that would be AA, which is handled in the pair zone
+                // we also don't start with 10, since that's blackjack.  So 9 is our starting point
+                for (int otherCard = 9; otherCard > 1; otherCard--)
                 {
-                    // a-10 should be a blackjack, so there's no strategy needed
-                    if (otherCard == 10) continue;
-
                     string otherCardRank = (otherCard == 11) ? "A" : otherCard.ToString();
 
                     // add a white box with the player hand: "A-x"
@@ -191,10 +189,11 @@ namespace BlackjackStrategy
                     Hand playerHand = new Hand();
                     // first card is an ace, second card is looped over
                     playerHand.AddCard(new Card("AH")); // ace of hearts
-                    playerHand.AddCard(new Card(otherCardRank, "S")); 
+                    playerHand.AddCard(new Card(otherCardRank, "S"));
 
                     // get strategy and display
-                    best.StateData.PlayerHand = playerHand;
+                    best.StateData.PlayerHands.Clear();
+                    best.StateData.PlayerHands.Add(playerHand);
                     best.StateData.VotesForDoubleDown = 0;
                     best.StateData.VotesForHit = 0;
                     best.StateData.VotesForStand = 0;
@@ -202,21 +201,90 @@ namespace BlackjackStrategy
                     best.Evaluate();    // get the decision
                     //Solution.DebugDisplayStrategy(best, "Final");
 
-                    string action = Solution.GetAction(best.StateData);
+                    var action = Solution.GetAction(best.StateData);
 
                     // Now draw the box
                     switch (action)
                     {
-                        case "H":
+                        case ActionToTake.Hit:
                             AddColorBox(Colors.Green, "H", x, y);
                             break;
 
-                        case "S":
+                        case ActionToTake.Stand:
                             AddColorBox(Colors.Red, "S", x, y);
                             break;
 
-                        case "D":
+                        case ActionToTake.Double:
                             AddColorBox(Colors.Yellow, "D", x, y);
+                            break;
+                    }
+                    y++;
+                }
+                x++;
+            }
+
+            // finally, a grid for pairs
+            int startY = y + 2;
+            AddColorBox(Colors.White, "", leftColumnForAces, 0);
+            x = leftColumnForAces + 1;
+            for (int upcardRank = 2; upcardRank < 12; upcardRank++)
+            {
+                string upcardRankName = (upcardRank == 11) ? "A" : upcardRank.ToString();
+                AddColorBox(Colors.White, upcardRankName, x, 0);
+                y = startY;
+
+                var best = solutionByUpcard[upcardRankName];
+
+                for (int pairedCard = 11; pairedCard > 1; pairedCard--)
+                {
+                    string pairedCardRank = (pairedCard == 11) ? "A" : pairedCard.ToString();
+
+                    // add a white box with the player hand: "x-x"
+                    AddColorBox(Colors.White, pairedCardRank + "-" + pairedCardRank, leftColumnForAces, y);
+
+                    var deck = new MultiDeck(TestConditions.NumDecks);
+                    deck.RemoveCard(pairedCardRank, "H");
+                    deck.RemoveCard(pairedCardRank, "S");
+                    deck.RemoveCard(upcardRankName, "D");
+
+                    // build dealer hand
+                    Hand dealerHand = new Hand();
+                    dealerHand.AddCard(new Card(upcardRankName, "D"));
+
+                    // build player hand
+                    Hand playerHand = new Hand();
+                    playerHand.AddCard(new Card(pairedCardRank, "H")); // X of hearts
+                    playerHand.AddCard(new Card(pairedCardRank, "S")); // X of spades
+
+                    // get strategy and display
+                    best.StateData.PlayerHands.Clear();
+                    best.StateData.PlayerHands.Add(playerHand);
+                    best.StateData.VotesForDoubleDown = 0;
+                    best.StateData.VotesForHit = 0;
+                    best.StateData.VotesForStand = 0;
+
+                    best.Evaluate();    // get the decision
+                    //Solution.DebugDisplayStrategy(best, "Final");
+
+                    var action = Solution.GetAction(best.StateData);
+
+                    // Now draw the box
+                    switch (action)
+                    {
+                        case ActionToTake.Hit:
+                            AddColorBox(Colors.Green, "H", x, y);
+                            break;
+
+                        case ActionToTake.Stand:
+                            AddColorBox(Colors.Red, "S", x, y);
+                            break;
+
+                        case ActionToTake.Double:
+                            AddColorBox(Colors.Yellow, "D", x, y);
+                            break;
+
+                        case ActionToTake.Split:
+                            AddColorBox(Colors.Lavender, "P", x, y);
                             break;
                     }
                     y++;

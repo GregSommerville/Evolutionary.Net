@@ -6,7 +6,7 @@ namespace BlackjackStrategy.Models
     class ProblemState
     {
         // Before evaluating a candidate, we load the state data with the current hand
-        public List<Hand> PlayerHands{ get; set; }
+        public List<Hand> PlayerHands { get; set; } = new List<Hand>();
         public bool UsingFirstHand { get; set; } = true;
         public Hand PlayerHand
         {

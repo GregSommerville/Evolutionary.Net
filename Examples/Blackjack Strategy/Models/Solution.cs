@@ -5,10 +5,22 @@ using System.Windows.Controls;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using System;
+using System.Data;
+using System.Linq;
 
 namespace BlackjackStrategy.Models
 {
     enum ActionToTake {  Stand, Hit, Double, Split };
+    class ActionWithVotes
+    {
+        public int NumVotes;
+        public ActionToTake Action;
+        public ActionWithVotes(int numVotes, ActionToTake action)
+        {
+            NumVotes = numVotes;
+            Action = action;
+        }
+    }
 
     class Solution
     {
@@ -257,14 +269,14 @@ namespace BlackjackStrategy.Models
             {
                 // for each hand, we generate a random deck.  Blackjack is often played with multiple decks to improve the house edge
                 MultiDeck deck = new MultiDeck(TestConditions.NumDecks);
+                // always use the designated dealer upcard (of hearts), so we need to remove from the deck so it doesn't get used twice
+                deck.RemoveCard(dealerUpcardRank, "H");
+
                 Hand dealerHand = new Hand();
                 Hand playerHand = new Hand();
-
                 playerHand.AddCard(deck.DealCard());
+                dealerHand.AddCard(new Card(dealerUpcardRank, "H"));
                 playerHand.AddCard(deck.DealCard());
-
-                // always use the designated dealer upcard (of hearts)
-                dealerHand.AddCard(new Card(dealerUpcardRank, "H"));    
                 dealerHand.AddCard(deck.DealCard());
 
                 // save the cards in state, and reset the votes for this hand
@@ -276,8 +288,10 @@ namespace BlackjackStrategy.Models
                 playerChips -= TestConditions.BetSize;
 
                 // outer loop is for each hand the player holds.  Obviously this only happens when they've split a hand
-                foreach (var currentHand in candidate.StateData.PlayerHands)
+                for (int handIndex = 0; handIndex < candidate.StateData.PlayerHands.Count; handIndex++)
                 {
+                    var currentHand = candidate.StateData.PlayerHands[handIndex];
+
                     // specify if we're looking at the second hand.  This controls the return value of PlayerHand
                     candidate.StateData.UsingFirstHand = (currentHand == candidate.StateData.PlayerHands[0]);
 
@@ -446,13 +460,14 @@ namespace BlackjackStrategy.Models
             int votesForDouble = stateData.VotesForDoubleDown;
             int votesForSplit = stateData.VotesForSplit;
 
-            SortedList<int, ActionToTake> votes = new SortedList<int, ActionToTake>();
-            votes.Add(votesForStand, ActionToTake.Stand);
-            votes.Add(votesForHit, ActionToTake.Hit);
-            votes.Add(votesForDouble, ActionToTake.Double);
-            votes.Add(votesForSplit, ActionToTake.Split);
+            List<ActionWithVotes> votes = new List<ActionWithVotes>();
+            votes.Add(new ActionWithVotes(votesForDouble, ActionToTake.Double));
+            votes.Add(new ActionWithVotes(votesForStand, ActionToTake.Stand));
+            votes.Add(new ActionWithVotes(votesForHit, ActionToTake.Hit));
+            votes.Add(new ActionWithVotes(votesForDouble, ActionToTake.Double));
+            votes.Add(new ActionWithVotes(votesForSplit, ActionToTake.Split));
 
-            return votes.Values[votes.Count -1];
+            return votes.OrderByDescending(v => v.NumVotes).First().Action;
         }
     }
 }

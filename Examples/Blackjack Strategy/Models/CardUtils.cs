@@ -227,6 +227,12 @@ namespace BlackjackStrategy.Models
             // bad code - it doesn't deal with running out of cards
             return Cards[currentCard++];
         }
+
+        internal void RemoveCard(string rank, string suit)
+        {
+            var foundCard = Cards.First(c => c.Rank == rank && c.Suit == suit);
+            Cards.Remove(foundCard);
+        }
     }
 
     class CardUtils
