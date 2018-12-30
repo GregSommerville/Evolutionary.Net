@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace BlackjackStrategy.Models
@@ -168,6 +169,12 @@ namespace BlackjackStrategy.Models
             return hand + " = " + HandValue().ToString();
         }
 
+        public bool IsPair()
+        {
+            if (Cards.Count > 2) return false;
+            return (Cards[0].Rank == Cards[1].Rank);
+        }
+
         public int HandValue()
         {
             // the best score possible
@@ -224,6 +231,9 @@ namespace BlackjackStrategy.Models
 
         public Card DealCard()
         {
+            //Debug.WriteLine("Dealing card from " + this.ToString());
+            Debug.Assert(currentCard < Cards.Count, "Ran out of cards to deal");
+
             // bad code - it doesn't deal with running out of cards
             return Cards[currentCard++];
         }
@@ -232,6 +242,19 @@ namespace BlackjackStrategy.Models
         {
             var foundCard = Cards.First(c => c.Rank == rank && c.Suit == suit);
             Cards.Remove(foundCard);
+        }
+
+        public int CardsRemaining {
+            get
+            {
+                return Cards.Count - currentCard;
+            }
+        }
+
+        public override string ToString()
+        {
+            return CardsRemaining + " remaining, first cards are " +
+                Cards[0].ToString() + " " + Cards[1].ToString() + " " + Cards[2].ToString();
         }
     }
 

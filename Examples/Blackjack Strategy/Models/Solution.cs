@@ -290,10 +290,8 @@ namespace BlackjackStrategy.Models
                 // outer loop is for each hand the player holds.  Obviously this only happens when they've split a hand
                 for (int handIndex = 0; handIndex < candidate.StateData.PlayerHands.Count; handIndex++)
                 {
-                    var currentHand = candidate.StateData.PlayerHands[handIndex];
-
-                    // specify if we're looking at the second hand.  This controls the return value of PlayerHand
-                    candidate.StateData.UsingFirstHand = (currentHand == candidate.StateData.PlayerHands[0]);
+                    candidate.StateData.HandIndex = handIndex;
+                    playerHand = candidate.StateData.PlayerHand; // gets the current hand, based on index
 
                     // loop until the hand is done
                     var currentHandState = TestConditions.GameState.PlayerDrawing;
@@ -329,6 +327,17 @@ namespace BlackjackStrategy.Models
 
                         // look at the votes to see what to do
                         var action = GetAction(candidate.StateData);
+
+                        // if there's an attempt to double-down with more than 2 cards, turn into a hit
+                        if (action == ActionToTake.Double && playerHand.Cards.Count > 2)
+                            action = ActionToTake.Hit;
+
+                        // if we're trying to split, but don't have a pair, turn that into a stand?
+                        if (action == ActionToTake.Split && !playerHand.IsPair())
+                        {
+                            Debug.Assert(false, "Vote for split without a pair");
+                        }
+
                         switch (action)
                         {
                             case ActionToTake.Hit:
@@ -365,6 +374,11 @@ namespace BlackjackStrategy.Models
                                 playerHand.Cards[1] = deck.DealCard();
                                 newHand.AddCard(deck.DealCard());
                                 candidate.StateData.PlayerHands.Add(newHand);
+
+                                //Debug.WriteLine("TID " + AppDomain.GetCurrentThreadId() + " " +
+                                //    "is splitting and has " + candidate.StateData.PlayerHands.Count + " hands");
+                                Debug.Assert(candidate.StateData.PlayerHands.Count < 5, "Too many hands for player");
+
                                 // our extra bet
                                 playerChips -= TestConditions.BetSize;
                                 // we don't adjust totalBetAmount because each bet pays off individually, so the total is right 

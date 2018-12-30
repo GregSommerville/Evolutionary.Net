@@ -7,12 +7,12 @@ namespace BlackjackStrategy.Models
     {
         // Before evaluating a candidate, we load the state data with the current hand
         public List<Hand> PlayerHands { get; set; } = new List<Hand>();
-        public bool UsingFirstHand { get; set; } = true;
+        public int HandIndex { get; set; } = 0;
         public Hand PlayerHand
         {
             get
             {
-                return UsingFirstHand ? PlayerHands[0] : PlayerHands[1];
+                return PlayerHands[HandIndex];
             }
         }
        
