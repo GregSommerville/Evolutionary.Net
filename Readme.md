@@ -177,6 +177,14 @@ The Blackjack example available for download shows how to use state information 
 Here's a screenshot of the resulting strategy for a run of the Blackjack program:
 
 ![blackjack strategy program screenshot](images/blackjack_screenshot1.png)
+
+There are three tables shown.  The table on the left is for non-paired hard hand totals - that is, hands that are not paired and do not contain an Ace that can be 1 or 11.  If an Ace can be only 1 or 11 (due to the other cards), then you may use this table.  
+
+The top table on the right side shows how to play a "soft" hand, which is a hard that contains an Ace that can be either 1 or 11.
+
+The bottom table on the right side shows how to play a paired hand.  
+
+For all of the tables, the values along the top (the column headers) are the dealer's upcard.  The cells in the tables contain "H" when you should Hit, "D" when you should Double-Down (only valid when holding two cards), "S" when you should Stand, and "P" when you should split (only valid when holding a pair). 
  
  
 ## Contributing

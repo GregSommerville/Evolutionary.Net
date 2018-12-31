@@ -77,6 +77,8 @@ namespace BlackjackStrategy.Models
             // terminal functions to look at game state
             // first, player holding ace?
             engine.AddTerminalFunction(HasAce, "HasAce");
+            engine.AddTerminalFunction(HasPair, "HasPair");
+
             // player hand totals
             engine.AddTerminalFunction(HandVal4, "Has4");
             engine.AddTerminalFunction(HandVal5, "Has5");
@@ -119,7 +121,14 @@ namespace BlackjackStrategy.Models
             return false;
         }
 
-        private  bool HandVal4(ProblemState stateData)
+        private bool HasPair(ProblemState stateData)
+        {
+            if (stateData.PlayerHand.Cards.Count > 2) return false;
+            return stateData.PlayerHand.Cards[0].Rank == stateData.PlayerHand.Cards[1].Rank;
+        }
+
+        // all the ones relating to hand total value
+        private bool HandVal4(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 4;
         }
@@ -204,7 +213,7 @@ namespace BlackjackStrategy.Models
             return stateData.PlayerHand.HandValue() == 20;
         }
 
-
+        // how many cards I've got
         private  bool Holding2Cards(ProblemState stateData)
         {
             return stateData.PlayerHand.Cards.Count == 2;
