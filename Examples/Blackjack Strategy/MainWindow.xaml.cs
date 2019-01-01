@@ -9,7 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Threading;
-
+using System.IO;
 namespace BlackjackStrategy
 {
     /// <summary>
@@ -63,8 +63,14 @@ namespace BlackjackStrategy
                     DisplayCurrentStatus, 
                     currentRank);
 
-                // save the solution 
+                // save the solution in memory
                 solutionByUpcard[currentRank] = solutionFinder.BestSolution;
+
+                // and on disk
+                SaveSolutionToDisk(
+                    "upcard" + currentRank + "solution.txt", 
+                    solutionByUpcard[currentRank].ToString()
+                    );
             }
 
             // then display the final results
@@ -74,6 +80,11 @@ namespace BlackjackStrategy
                 ShowPlayableHands();
             }),
             DispatcherPriority.Background);
+        }
+
+        private void SaveSolutionToDisk(string fileName, string solution)
+        {
+            File.WriteAllText(fileName, solution);
         }
 
         private void DisplayCurrentStatus(string status)
