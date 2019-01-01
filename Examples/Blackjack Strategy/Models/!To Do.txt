@@ -5,9 +5,12 @@ TO DO
 --------------------------
 Blackjack Example
 --------------------------
+- New class BJStrategy, which contains data that indicates how to play for all possible combinations (like the displayed charts)
+	- This class should implement the display function, given a canvas to draw on
+	- Redo EvaluateCandidate so it loads a BJStrategy object, and then we run it using a BJStrategyEvaluator
+= Class BJStrategyEvaluator, which is given 1+ strategies and tests them by running and returning data about performance
+
 - Solution.LoadFromFile() .SaveToFile(), .LoadFromString()
-- Add a testing project that uses the strategies and compares to other ones (like Beat the Dealer chart)
-	- Auto-loads all *.bjstrat files, compares against each other
 - Increase height of display (or make dynamic)
 - UI for #nochange, min/max tree depth, min/max generations, selection style
 
