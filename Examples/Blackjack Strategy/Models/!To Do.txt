@@ -5,6 +5,9 @@ TO DO
 --------------------------
 Blackjack Example
 --------------------------
+- Solution.LoadFromFile() .SaveToFile(), .LoadFromString()
+- Add a testing project that uses the strategies and compares to other ones (like Beat the Dealer chart)
+	- Auto-loads all *.bjstrat files, compares against each other
 - Increase height of display (or make dynamic)
 - UI for #nochange, min/max tree depth, min/max generations, selection style
 
@@ -22,8 +25,6 @@ Engine
 
 - .AddDeferredFunction - calls
 	<T> functionName (List<Node<T,S> parameterNodes, S state) - good for boolean shortcircuiting
-
-- .LoadSolution(solutionName, expressionString) : deserializes, opposite of solution.ToString()
 
 - WPF app to load and display any expression tree 
 

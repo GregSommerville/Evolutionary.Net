@@ -74,10 +74,24 @@ namespace BlackjackStrategy.Models
             engine.AddStatefulFunction(DoubleIf, "DoubleIf");
             engine.AddStatefulFunction(SplitIf, "SplitIf");
 
+            //----------------------------------------------
             // terminal functions to look at game state
+            //----------------------------------------------
+
             // first, player holding ace?
             engine.AddTerminalFunction(HasAce, "HasAce");
-            engine.AddTerminalFunction(HasPair, "HasPair");
+
+            // specific pairs
+            engine.AddTerminalFunction(HasPairTwos, "HasPair2");
+            engine.AddTerminalFunction(HasPairThrees, "HasPair3");
+            engine.AddTerminalFunction(HasPairFours, "HasPair4");
+            engine.AddTerminalFunction(HasPairFives, "HasPair5");
+            engine.AddTerminalFunction(HasPairSixes, "HasPair6");
+            engine.AddTerminalFunction(HasPairSevens, "HasPair7");
+            engine.AddTerminalFunction(HasPairEights, "HasPair8");
+            engine.AddTerminalFunction(HasPairNines, "HasPair9");
+            engine.AddTerminalFunction(HasPairTens, "HasPairT");
+            engine.AddTerminalFunction(HasPairAces, "HasPairA");
 
             // player hand totals
             engine.AddTerminalFunction(HandVal4, "Has4");
@@ -97,6 +111,7 @@ namespace BlackjackStrategy.Models
             engine.AddTerminalFunction(HandVal18, "Has18");
             engine.AddTerminalFunction(HandVal19, "Has19");
             engine.AddTerminalFunction(HandVal20, "Has20");
+
             // num cards held
             engine.AddTerminalFunction(Holding2Cards, "Hold2");
             engine.AddTerminalFunction(Holding3Cards, "Hold3");
@@ -121,10 +136,95 @@ namespace BlackjackStrategy.Models
             return false;
         }
 
-        private bool HasPair(ProblemState stateData)
+
+        private bool HasPairTwos(ProblemState stateData)
         {
-            if (stateData.PlayerHand.Cards.Count > 2) return false;
-            return stateData.PlayerHand.Cards[0].Rank == stateData.PlayerHand.Cards[1].Rank;
+            string rankNeeded = "2";
+            return 
+                (stateData.PlayerHand.Cards.Count == 2) &&
+                (stateData.PlayerHand.Cards[0].Rank == rankNeeded) &&
+                (stateData.PlayerHand.Cards[1].Rank == rankNeeded);
+        }
+
+        private bool HasPairThrees(ProblemState stateData)
+        {
+            string rankNeeded = "3";
+            return
+                (stateData.PlayerHand.Cards.Count == 2) &&
+                (stateData.PlayerHand.Cards[0].Rank == rankNeeded) &&
+                (stateData.PlayerHand.Cards[1].Rank == rankNeeded);
+        }
+
+        private bool HasPairFours(ProblemState stateData)
+        {
+            string rankNeeded = "4";
+            return
+                (stateData.PlayerHand.Cards.Count == 2) &&
+                (stateData.PlayerHand.Cards[0].Rank == rankNeeded) &&
+                (stateData.PlayerHand.Cards[1].Rank == rankNeeded);
+        }
+
+        private bool HasPairFives(ProblemState stateData)
+        {
+            string rankNeeded = "5";
+            return
+                (stateData.PlayerHand.Cards.Count == 2) &&
+                (stateData.PlayerHand.Cards[0].Rank == rankNeeded) &&
+                (stateData.PlayerHand.Cards[1].Rank == rankNeeded);
+        }
+
+        private bool HasPairSixes(ProblemState stateData)
+        {
+            string rankNeeded = "6";
+            return
+                (stateData.PlayerHand.Cards.Count == 2) &&
+                (stateData.PlayerHand.Cards[0].Rank == rankNeeded) &&
+                (stateData.PlayerHand.Cards[1].Rank == rankNeeded);
+        }
+
+        private bool HasPairSevens(ProblemState stateData)
+        {
+            string rankNeeded = "7";
+            return
+                (stateData.PlayerHand.Cards.Count == 2) &&
+                (stateData.PlayerHand.Cards[0].Rank == rankNeeded) &&
+                (stateData.PlayerHand.Cards[1].Rank == rankNeeded);
+        }
+
+        private bool HasPairEights(ProblemState stateData)
+        {
+            string rankNeeded = "8";
+            return
+                (stateData.PlayerHand.Cards.Count == 2) &&
+                (stateData.PlayerHand.Cards[0].Rank == rankNeeded) &&
+                (stateData.PlayerHand.Cards[1].Rank == rankNeeded);
+        }
+
+        private bool HasPairNines(ProblemState stateData)
+        {
+            string rankNeeded = "9";
+            return
+                (stateData.PlayerHand.Cards.Count == 2) &&
+                (stateData.PlayerHand.Cards[0].Rank == rankNeeded) &&
+                (stateData.PlayerHand.Cards[1].Rank == rankNeeded);
+        }
+
+        private bool HasPairTens(ProblemState stateData)
+        {
+            // covers tens, jacks, queens and kings
+            return
+                (stateData.PlayerHand.Cards.Count == 2) &&
+                (stateData.PlayerHand.Cards[0].RankValueHigh == 10) &&
+                (stateData.PlayerHand.Cards[1].RankValueHigh == 10);
+        }
+
+        private bool HasPairAces(ProblemState stateData)
+        {
+            string rankNeeded = "A";
+            return
+                (stateData.PlayerHand.Cards.Count == 2) &&
+                (stateData.PlayerHand.Cards[0].Rank == rankNeeded) &&
+                (stateData.PlayerHand.Cards[1].Rank == rankNeeded);
         }
 
         // all the ones relating to hand total value
@@ -212,6 +312,7 @@ namespace BlackjackStrategy.Models
         {
             return stateData.PlayerHand.HandValue() == 20;
         }
+
 
         // how many cards I've got
         private  bool Holding2Cards(ProblemState stateData)
@@ -487,7 +588,6 @@ namespace BlackjackStrategy.Models
             votes.Add(new ActionWithVotes(votesForDouble, ActionToTake.Double));
             votes.Add(new ActionWithVotes(votesForStand, ActionToTake.Stand));
             votes.Add(new ActionWithVotes(votesForHit, ActionToTake.Hit));
-            votes.Add(new ActionWithVotes(votesForDouble, ActionToTake.Double));
             votes.Add(new ActionWithVotes(votesForSplit, ActionToTake.Split));
 
             return votes.OrderByDescending(v => v.NumVotes).First().Action;

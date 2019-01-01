@@ -141,6 +141,7 @@ namespace BlackjackStrategy
                     switch (action)
                     {
                         case ActionToTake.Hit:
+                        case ActionToTake.Split:    // for this non-paired table, any split turns into a hit
                             AddColorBox(Colors.Green, "H", x, y);
                             break;
 
