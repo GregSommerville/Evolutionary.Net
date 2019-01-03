@@ -73,6 +73,7 @@
     <Compile Include="Models\Randomizer.cs" />
     <Compile Include="Models\Solution.cs" />
     <Compile Include="Models\CandidateStateData.cs" />
+    <Compile Include="Models\Strategy.cs" />
     <Compile Include="Models\TestConditions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>

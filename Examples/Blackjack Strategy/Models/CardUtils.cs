@@ -145,6 +145,8 @@ namespace BlackjackStrategy.Models
         }
     }
 
+    //=======================================================================
+
     class Hand
     {
         public Hand()
@@ -169,10 +171,28 @@ namespace BlackjackStrategy.Models
             return hand + " = " + HandValue().ToString();
         }
 
+        public string ToRankOnlyString()
+        {
+            string result = "";
+            foreach (var card in Cards)
+                result += card.Rank;
+            return result;
+        }
+
         public bool IsPair()
         {
             if (Cards.Count > 2) return false;
             return (Cards[0].Rank == Cards[1].Rank);
+        }
+
+        public bool HasSoftAce()
+        {
+            // first, we need to have an ace
+            if (!Cards.Any(c => c.Rank == "A")) return false;
+
+            // and if it counts as 11 and we have a valid hand, then we have a soft ace
+            int highTotal = Cards.Sum(c => c.RankValueHigh);
+            return (highTotal <= 21);
         }
 
         public int HandValue()
@@ -214,6 +234,8 @@ namespace BlackjackStrategy.Models
             return highValue;
         }
     }
+
+    //=======================================================================
 
     class MultiDeck
     {
@@ -258,6 +280,8 @@ namespace BlackjackStrategy.Models
                 Cards[0].ToString() + " " + Cards[1].ToString() + " " + Cards[2].ToString();
         }
     }
+
+    //=======================================================================
 
     class CardUtils
     {
@@ -309,6 +333,7 @@ namespace BlackjackStrategy.Models
             }
             return cards;
         }
-
     }
+
+    //=======================================================================
 }
