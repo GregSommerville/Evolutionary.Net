@@ -171,14 +171,6 @@ namespace BlackjackStrategy.Models
             return hand + " = " + HandValue().ToString();
         }
 
-        public string ToRankOnlyString()
-        {
-            string result = "";
-            foreach (var card in Cards)
-                result += card.Rank;
-            return result;
-        }
-
         public bool IsPair()
         {
             if (Cards.Count > 2) return false;
