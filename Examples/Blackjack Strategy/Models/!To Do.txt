@@ -5,7 +5,7 @@ TO DO
 --------------------------
 Blackjack Example
 --------------------------
-- New class BJStrategy, which contains data that indicates how to play for all possible combinations (like the displayed charts)
+- OverallStrategy class:
 	- This class should implement the display function, given a canvas to draw on
 	- Redo EvaluateCandidate so it loads a BJStrategy object, and then we run it using a BJStrategyEvaluator
 = Class BJStrategyEvaluator, which is given 1+ strategies and tests them by running and returning data about performance
