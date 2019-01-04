@@ -5,11 +5,6 @@ TO DO
 --------------------------
 Blackjack Example
 --------------------------
-- OverallStrategy class:
-	- This class should implement the display function, given a canvas to draw on
-	- Redo EvaluateCandidate so it loads a BJStrategy object, and then we run it using a BJStrategyEvaluator
-= Class BJStrategyEvaluator, which is given 1+ strategies and tests them by running and returning data about performance
-
 - Solution.LoadFromFile() .SaveToFile(), .LoadFromString()
 - Increase height of display (or make dynamic)
 - UI for #nochange, min/max tree depth, min/max generations, selection style

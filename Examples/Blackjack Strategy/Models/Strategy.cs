@@ -110,12 +110,14 @@ namespace BlackjackStrategy.Models
 
         public void AddPairStrategy(string pairRank, string dealerUpcardRank, ActionToTake action)
         {
+            if (pairRank == "10") pairRank = "T";
             pairsStrategy[pairRank + dealerUpcardRank] = action;
         }
 
         public void AddSoftStrategy(string secondaryCardRank, string dealerUpcardRank, ActionToTake action)
         {
             // secondary rank is the non-Ace
+            if (secondaryCardRank == "10") secondaryCardRank = "T";
             softStrategy[secondaryCardRank + dealerUpcardRank] = action;
         }
 
@@ -129,18 +131,24 @@ namespace BlackjackStrategy.Models
 
         public ActionToTake GetAction(Hand hand, string dealerUpcardRank)
         {
+            if (hand.HandValue() >= 21) return ActionToTake.Stand;
+
             if (hand.IsPair())
             {
                 string rank = hand.Cards[0].Rank;
+                if (rank == "J" || rank == "Q" || rank == "K") rank = "T";  // we only stored one value for the tens
                 return pairsStrategy[rank + dealerUpcardRank];
             }
 
             if (hand.HasSoftAce())
             {
-                string secondaryCardRank = hand.Cards
-                    .Single(c => c.Rank != "A")
-                    .Rank;
-                return softStrategy[secondaryCardRank + dealerUpcardRank];
+                // we want the total other than the high ace
+                int howManyAces = hand.Cards.Count(c => c.Rank == "A");
+                int total = hand.Cards.Where(c => c.Rank != "A").Sum(c => c.RankValueHigh) + (howManyAces - 1);
+
+                // and then collapse that total down into a single "other card" rank
+                string rank = (total == 10) ? "T" : total.ToString();
+                return softStrategy[rank + dealerUpcardRank];
             }
 
             return hardStrategy[hand.HandValue() + dealerUpcardRank];

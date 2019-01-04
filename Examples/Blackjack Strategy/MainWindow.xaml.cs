@@ -122,12 +122,6 @@ namespace BlackjackStrategy
                     // add a white box with the total
                     AddColorBox(Colors.White, hardTotal.ToString(), 0, y);
 
-                    var deck = new MultiDeck(TestConditions.NumDecks);
-
-                    // build dealer hand
-                    Hand dealerHand = new Hand();
-                    dealerHand.AddCard(new Card(upcardRankName, "S"));
-
                     // build player hand
                     Hand playerHand = new Hand();
                     // divide by 2 if it's even, else add one and divide by two
@@ -136,22 +130,8 @@ namespace BlackjackStrategy
                     playerHand.AddCard(new Card(firstCardRank, "D"));
                     playerHand.AddCard(new Card(secondCardRank, "S"));
 
-                    Debug.Assert(playerHand.HandValue() == hardTotal);
-
                     // get strategy and display
-                    best.StateData.PlayerHands.Clear();
-                    best.StateData.PlayerHands.Add(playerHand);
-                    best.StateData.VotesForDoubleDown = 0;
-                    best.StateData.VotesForHit = 0;
-                    best.StateData.VotesForStand = 0;
-                    best.StateData.VotesForSplit = 0;
-
-                    best.Evaluate();    // get the decision
-                    //Solution.DebugDisplayStrategy(best, "Final");
-
-                    var action = Solution.GetAction(best.StateData);
-
-                    // Now draw the box
+                    var action = strategy.GetAction(playerHand, upcardRankName);
                     switch (action)
                     {
                         case ActionToTake.Hit:
@@ -184,6 +164,7 @@ namespace BlackjackStrategy
                 y = 1;
 
                 var best = solutionByUpcard[upcardRankName];
+                var strategy = new OverallStrategy(best);
 
                 // we don't start with Ace, because that would be AA, which is handled in the pair zone
                 // we also don't start with 10, since that's blackjack.  So 9 is our starting point
@@ -194,12 +175,6 @@ namespace BlackjackStrategy
                     // add a white box with the player hand: "A-x"
                     AddColorBox(Colors.White, "A-" + otherCardRank, leftColumnForAces, y);
 
-                    var deck = new MultiDeck(TestConditions.NumDecks);
-
-                    // build dealer hand
-                    Hand dealerHand = new Hand();
-                    dealerHand.AddCard(new Card(upcardRankName, "S"));
-
                     // build player hand
                     Hand playerHand = new Hand();
                     // first card is an ace, second card is looped over
@@ -207,18 +182,7 @@ namespace BlackjackStrategy
                     playerHand.AddCard(new Card(otherCardRank, "S"));
 
                     // get strategy and display
-                    best.StateData.PlayerHands.Clear();
-                    best.StateData.PlayerHands.Add(playerHand);
-                    best.StateData.VotesForDoubleDown = 0;
-                    best.StateData.VotesForHit = 0;
-                    best.StateData.VotesForStand = 0;
-
-                    best.Evaluate();    // get the decision
-                    //Solution.DebugDisplayStrategy(best, "Final");
-
-                    var action = Solution.GetAction(best.StateData);
-
-                    // Now draw the box
+                    var action = strategy.GetAction(playerHand, upcardRankName);
                     switch (action)
                     {
                         case ActionToTake.Hit:
@@ -249,6 +213,7 @@ namespace BlackjackStrategy
                 y = startY;
 
                 var best = solutionByUpcard[upcardRankName];
+                var strategy = new OverallStrategy(best);
 
                 for (int pairedCard = 11; pairedCard > 1; pairedCard--)
                 {
@@ -257,33 +222,13 @@ namespace BlackjackStrategy
                     // add a white box with the player hand: "x-x"
                     AddColorBox(Colors.White, pairedCardRank + "-" + pairedCardRank, leftColumnForAces, y);
 
-                    var deck = new MultiDeck(TestConditions.NumDecks);
-                    deck.RemoveCard(pairedCardRank, "H");
-                    deck.RemoveCard(pairedCardRank, "S");
-                    deck.RemoveCard(upcardRankName, "D");
-
-                    // build dealer hand
-                    Hand dealerHand = new Hand();
-                    dealerHand.AddCard(new Card(upcardRankName, "D"));
-
                     // build player hand
                     Hand playerHand = new Hand();
                     playerHand.AddCard(new Card(pairedCardRank, "H")); // X of hearts
                     playerHand.AddCard(new Card(pairedCardRank, "S")); // X of spades
 
                     // get strategy and display
-                    best.StateData.PlayerHands.Clear();
-                    best.StateData.PlayerHands.Add(playerHand);
-                    best.StateData.VotesForDoubleDown = 0;
-                    best.StateData.VotesForHit = 0;
-                    best.StateData.VotesForStand = 0;
-
-                    best.Evaluate();    // get the decision
-                    //Solution.DebugDisplayStrategy(best, "Final");
-
-                    var action = Solution.GetAction(best.StateData);
-
-                    // Now draw the box
+                    var action = strategy.GetAction(playerHand, upcardRankName);
                     switch (action)
                     {
                         case ActionToTake.Hit:
@@ -307,23 +252,6 @@ namespace BlackjackStrategy
                 x++;
             }
         }
-
-        public static ActionToTake GetAction(ProblemState stateData)
-        {
-            int votesForStand = stateData.VotesForStand;
-            int votesForHit = stateData.VotesForHit;
-            int votesForDouble = stateData.VotesForDoubleDown;
-            int votesForSplit = stateData.VotesForSplit;
-
-            List<ActionWithVotes> votes = new List<ActionWithVotes>();
-            votes.Add(new ActionWithVotes(votesForDouble, ActionToTake.Double));
-            votes.Add(new ActionWithVotes(votesForStand, ActionToTake.Stand));
-            votes.Add(new ActionWithVotes(votesForHit, ActionToTake.Hit));
-            votes.Add(new ActionWithVotes(votesForSplit, ActionToTake.Split));
-
-            return votes.OrderByDescending(v => v.NumVotes).First().Action;
-        }
-
 
         private void AddColorBox(Color color, string label, int x, int y)
         {
