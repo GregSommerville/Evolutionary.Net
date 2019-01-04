@@ -373,94 +373,13 @@ namespace BlackjackStrategy.Models
         //-------------------------------------------------------------------------
         private float EvaluateCandidate(CandidateSolution<bool, ProblemState> candidate)
         {
-            OverallStrategy strategy = CreateStrategyForCandidate(candidate);
+            // test every possible situation and store the candidate's resulting action in the strategy object
+            OverallStrategy strategy = new OverallStrategy(candidate);
+
+            // then test that strategy and return the total money lost/made
             var strategyTester = new StrategyTester(strategy);
             return strategyTester.GetStrategyScore(dealerUpcardRank);
         }
-
-        private void SetupStateData(ProblemState stateData, Hand hand)
-        {
-            // prepare for testing
-            stateData.PlayerHands.Clear();
-            stateData.PlayerHands.Add(hand);
-            stateData.VotesForDoubleDown = 0;
-            stateData.VotesForHit = 0;
-            stateData.VotesForStand = 0;
-        }
-
-        private OverallStrategy CreateStrategyForCandidate(CandidateSolution<bool, ProblemState> candidate)
-        {
-            var result = new OverallStrategy();
-
-            // cycle over all of the possible upcards
-            for (int upcardRank = 2; upcardRank < 12; upcardRank++)
-            {
-                // do pairs
-                string upcardRankName = (upcardRank == 11) ? "A" : upcardRank.ToString();
-                for (int pairedCard = 11; pairedCard > 1; pairedCard--)
-                {
-                    string pairedCardRank = (pairedCard == 11) ? "A" : pairedCard.ToString();
-
-                    // build player hand
-                    Hand playerHand = new Hand();
-                    playerHand.AddCard(new Card(pairedCardRank, "H")); // X of hearts
-                    playerHand.AddCard(new Card(pairedCardRank, "S")); // X of spades
-
-                    // find strategy 
-                    SetupStateData(candidate.StateData, playerHand);
-                    candidate.Evaluate();    
-
-                    // get the decision and store in the strategy object
-                    var action = GetAction(candidate.StateData);
-                    result.AddPairStrategy(pairedCardRank, dealerUpcardRank, action);
-                }
-
-                // then soft hands
-                // we don't start with Ace, because that would be AA, which is handled in the pair zone
-                // we also don't start with 10, since that's blackjack.  So 9 is our starting point
-                for (int otherCard = 9; otherCard > 1; otherCard--)
-                {
-                    string otherCardRank = (otherCard == 11) ? "A" : otherCard.ToString();
-
-                    // build player hand
-                    Hand playerHand = new Hand();
-                    // first card is an ace, second card is looped over
-                    playerHand.AddCard(new Card("AH")); // ace of hearts
-                    playerHand.AddCard(new Card(otherCardRank, "S"));
-
-                    // find strategy 
-                    SetupStateData(candidate.StateData, playerHand);
-                    candidate.Evaluate();
-
-                    // get the decision and store in the strategy object
-                    var action = GetAction(candidate.StateData);
-                    result.AddSoftStrategy(otherCardRank, dealerUpcardRank, action);
-                }
-                
-                // hard hands
-                for (int hardTotal = 20; hardTotal > 4; hardTotal--)
-                {
-                    // build player hand
-                    Hand playerHand = new Hand();
-                    // divide by 2 if it's even, else add one and divide by two
-                    int firstCardRank = ((hardTotal % 2) != 0) ? (hardTotal + 1) / 2 : hardTotal / 2;
-                    int secondCardRank = hardTotal - firstCardRank;
-                    playerHand.AddCard(new Card(firstCardRank, "D"));
-                    playerHand.AddCard(new Card(secondCardRank, "S"));
-
-                    // find strategy 
-                    SetupStateData(candidate.StateData, playerHand);
-                    candidate.Evaluate();
-
-                    // get the decision and store in the strategy object
-                    var action = GetAction(candidate.StateData);
-                    result.AddHardStrategy(hardTotal, dealerUpcardRank, action);
-                }
-            }
-
-            return result;
-        }
-
 
         public static void DebugDisplayStrategy(CandidateSolution<bool, ProblemState> candidate, string prefixText)
         {
@@ -490,22 +409,6 @@ namespace BlackjackStrategy.Models
             // return true to keep going, false to halt the system
             bool keepRunning = true;
             return keepRunning;
-        }
-
-        public static ActionToTake GetAction(ProblemState stateData)
-        {
-            int votesForStand = stateData.VotesForStand;
-            int votesForHit = stateData.VotesForHit;
-            int votesForDouble = stateData.VotesForDoubleDown;
-            int votesForSplit = stateData.VotesForSplit;
-
-            List<ActionWithVotes> votes = new List<ActionWithVotes>();
-            votes.Add(new ActionWithVotes(votesForDouble, ActionToTake.Double));
-            votes.Add(new ActionWithVotes(votesForStand, ActionToTake.Stand));
-            votes.Add(new ActionWithVotes(votesForHit, ActionToTake.Hit));
-            votes.Add(new ActionWithVotes(votesForSplit, ActionToTake.Split));
-
-            return votes.OrderByDescending(v => v.NumVotes).First().Action;
         }
     }
 }

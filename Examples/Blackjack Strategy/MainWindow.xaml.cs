@@ -113,7 +113,10 @@ namespace BlackjackStrategy
                 AddColorBox(Colors.White, upcardRankName, x, 0);
                 y = 1;
 
+                // get the strategy
                 var best = solutionByUpcard[upcardRankName];
+                var strategy = new OverallStrategy(best);
+
                 for (int hardTotal = 20; hardTotal > 4; hardTotal--)
                 {
                     // add a white box with the total
@@ -304,6 +307,23 @@ namespace BlackjackStrategy
                 x++;
             }
         }
+
+        public static ActionToTake GetAction(ProblemState stateData)
+        {
+            int votesForStand = stateData.VotesForStand;
+            int votesForHit = stateData.VotesForHit;
+            int votesForDouble = stateData.VotesForDoubleDown;
+            int votesForSplit = stateData.VotesForSplit;
+
+            List<ActionWithVotes> votes = new List<ActionWithVotes>();
+            votes.Add(new ActionWithVotes(votesForDouble, ActionToTake.Double));
+            votes.Add(new ActionWithVotes(votesForStand, ActionToTake.Stand));
+            votes.Add(new ActionWithVotes(votesForHit, ActionToTake.Hit));
+            votes.Add(new ActionWithVotes(votesForSplit, ActionToTake.Split));
+
+            return votes.OrderByDescending(v => v.NumVotes).First().Action;
+        }
+
 
         private void AddColorBox(Color color, string label, int x, int y)
         {

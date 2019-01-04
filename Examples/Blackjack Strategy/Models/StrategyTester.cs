@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BlackjackStrategy.Models
 {
@@ -19,10 +15,10 @@ namespace BlackjackStrategy.Models
 
     class StrategyTester
     {
-        private OverallStrategy Strategy;
+        private OverallStrategy strategy;
         public StrategyTester(OverallStrategy strategy)
         {
-            Strategy = strategy;
+            this.strategy = strategy;
         }
 
         public int GetStrategyScore(string dealerUpcardRank)
@@ -81,7 +77,7 @@ namespace BlackjackStrategy.Models
                     // player draws 
                     while (currentHandState == GameState.PlayerDrawing)
                     {
-                        var action = Strategy.GetAction(playerHand, dealerUpcardRank);
+                        var action = strategy.GetAction(playerHand, dealerUpcardRank);
 
                         // if there's an attempt to double-down with more than 2 cards, turn into a hit
                         if (action == ActionToTake.Double && playerHand.Cards.Count > 2)
