@@ -77,7 +77,7 @@ namespace BlackjackStrategy.Models
                     // player draws 
                     while (currentHandState == GameState.PlayerDrawing)
                     {
-                        var action = strategy.GetAction(playerHand, dealerUpcardRank);
+                        var action = strategy.GetActionForHand(playerHand, dealerUpcardRank);
 
                         // if there's an attempt to double-down with more than 2 cards, turn into a hit
                         if (action == ActionToTake.Double && playerHand.Cards.Count > 2)

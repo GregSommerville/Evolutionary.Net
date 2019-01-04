@@ -131,7 +131,7 @@ namespace BlackjackStrategy
                     playerHand.AddCard(new Card(secondCardRank, "S"));
 
                     // get strategy and display
-                    var action = strategy.GetAction(playerHand, upcardRankName);
+                    var action = strategy.GetActionForHand(playerHand, upcardRankName);
                     switch (action)
                     {
                         case ActionToTake.Hit:
@@ -182,7 +182,7 @@ namespace BlackjackStrategy
                     playerHand.AddCard(new Card(otherCardRank, "S"));
 
                     // get strategy and display
-                    var action = strategy.GetAction(playerHand, upcardRankName);
+                    var action = strategy.GetActionForHand(playerHand, upcardRankName);
                     switch (action)
                     {
                         case ActionToTake.Hit:
@@ -228,7 +228,7 @@ namespace BlackjackStrategy
                     playerHand.AddCard(new Card(pairedCardRank, "S")); // X of spades
 
                     // get strategy and display
-                    var action = strategy.GetAction(playerHand, upcardRankName);
+                    var action = strategy.GetActionForHand(playerHand, upcardRankName);
                     switch (action)
                     {
                         case ActionToTake.Hit:

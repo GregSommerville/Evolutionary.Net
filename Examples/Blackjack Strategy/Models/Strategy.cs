@@ -1,5 +1,6 @@
 ﻿using Evolutionary;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace BlackjackStrategy.Models
@@ -32,7 +33,7 @@ namespace BlackjackStrategy.Models
                     candidate.Evaluate();
 
                     // get the decision and store in the strategy object
-                    var action = GetAction(candidate.StateData);
+                    var action = GetActionFromCandidate(candidate.StateData);
                     AddPairStrategy(pairedCardRank, upcardRankName, action);
                 }
 
@@ -54,18 +55,37 @@ namespace BlackjackStrategy.Models
                     candidate.Evaluate();
 
                     // get the decision and store in the strategy object
-                    var action = GetAction(candidate.StateData);
+                    var action = GetActionFromCandidate(candidate.StateData);
                     AddSoftStrategy(otherCardRank, upcardRankName, action);
                 }
 
-                // hard hands
+                // hard hands.  
                 for (int hardTotal = 20; hardTotal > 4; hardTotal--)
                 {
                     // build player hand
                     Hand playerHand = new Hand();
+
                     // divide by 2 if it's even, else add one and divide by two
                     int firstCardRank = ((hardTotal % 2) != 0) ? (hardTotal + 1) / 2 : hardTotal / 2;
                     int secondCardRank = hardTotal - firstCardRank;
+
+                    // 20 is always TT, which is a pair, so we handle that by building a 3 card hand
+                    if (hardTotal == 20)
+                    {
+                        playerHand.AddCard(new Card("TD")); // ten of diamonds
+                        firstCardRank = 6;
+                        secondCardRank = 4;
+                    }
+
+                    // we don't want pairs, so check for that
+                    if (firstCardRank == secondCardRank)
+                    {
+                        firstCardRank++;
+                        secondCardRank--;
+                    }
+
+                    Debug.Assert(firstCardRank != secondCardRank, "Build pair for hard hand");
+
                     playerHand.AddCard(new Card(firstCardRank, "D"));
                     playerHand.AddCard(new Card(secondCardRank, "S"));
 
@@ -74,7 +94,7 @@ namespace BlackjackStrategy.Models
                     candidate.Evaluate();
 
                     // get the decision and store in the strategy object
-                    var action = GetAction(candidate.StateData);
+                    var action = GetActionFromCandidate(candidate.StateData);
                     AddHardStrategy(hardTotal, upcardRankName, action);
                 }
             }
@@ -83,19 +103,27 @@ namespace BlackjackStrategy.Models
         private void SetupStateData(ProblemState stateData, Hand hand)
         {
             // prepare for testing
-            stateData.PlayerHands.Clear();
-            stateData.PlayerHands.Add(hand);
+            stateData.PlayerHand = hand;
             stateData.VotesForDoubleDown = 0;
             stateData.VotesForHit = 0;
             stateData.VotesForStand = 0;
+            stateData.VotesForSplit = 0;
         }
 
-        private ActionToTake GetAction(ProblemState stateData)
+        private ActionToTake GetActionFromCandidate(ProblemState stateData)
         {
             int votesForStand = stateData.VotesForStand;
             int votesForHit = stateData.VotesForHit;
             int votesForDouble = stateData.VotesForDoubleDown;
             int votesForSplit = stateData.VotesForSplit;
+
+            // splitting is only valid with pairs, so if we don't have one, eliminate that possibility
+            if (stateData.PlayerHand.IsPair() == false)
+                votesForSplit = int.MinValue;
+
+            // doubling is only valid with 2 cards
+            if (stateData.PlayerHand.Cards.Count > 2)
+                votesForDouble = int.MinValue;
 
             List<ActionWithVotes> votes = new List<ActionWithVotes>();
             votes.Add(new ActionWithVotes(votesForDouble, ActionToTake.Double));
@@ -103,7 +131,8 @@ namespace BlackjackStrategy.Models
             votes.Add(new ActionWithVotes(votesForHit, ActionToTake.Hit));
             votes.Add(new ActionWithVotes(votesForSplit, ActionToTake.Split));
 
-            return votes.OrderByDescending(v => v.NumVotes).First().Action;
+            var result = votes.OrderByDescending(v => v.NumVotes).First().Action;
+            return result;
         }
 
         //-------------------------------------------------------------------------------------------
@@ -123,20 +152,23 @@ namespace BlackjackStrategy.Models
 
         public void AddHardStrategy(int handTotal, string dealerUpcardRank, ActionToTake action)
         {
+            Debug.Assert(action != ActionToTake.Split, "Split found for non-pair");
+
             // handTotal goes from 5 (since a total of 4 means a pair of 2s) to 20
             hardStrategy[handTotal + dealerUpcardRank] = action;
         }
 
         //-------------------------------------------------------------------------------------------
 
-        public ActionToTake GetAction(Hand hand, string dealerUpcardRank)
+        public ActionToTake GetActionForHand(Hand hand, string dealerUpcardRank)
         {
             if (hand.HandValue() >= 21) return ActionToTake.Stand;
 
             if (hand.IsPair())
             {
                 string rank = hand.Cards[0].Rank;
-                if (rank == "J" || rank == "Q" || rank == "K") rank = "T";  // we only stored one value for the tens
+                if (rank == "J" || rank == "Q" || rank == "K")
+                    rank = "T";  // we only stored one value for the tens
                 return pairsStrategy[rank + dealerUpcardRank];
             }
 

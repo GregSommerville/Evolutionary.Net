@@ -98,6 +98,10 @@ namespace Evolutionary
                     candidate.Fitness = fitness;
                 });
 
+                // single-threaded approach, for debugging
+                //foreach (var candidate in currentGeneration)
+                //    candidate.Fitness = myFitnessFunction(candidate);
+
                 // now check if we have a new best
                 float bestFitnessScoreThisGeneration = (IsLowerFitnessBetter ? float.MaxValue : float.MinValue);
                 CandidateSolution<T, S> bestTreeThisGeneration = null;
