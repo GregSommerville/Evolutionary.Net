@@ -1,12 +1,6 @@
 ﻿using Evolutionary;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Windows.Controls;
-using System.Threading.Tasks;
-using System.Windows.Threading;
 using System;
-using System.Data;
-using System.Linq;
+using System.Diagnostics;
 
 namespace BlackjackStrategy.Models
 {
@@ -79,7 +73,7 @@ namespace BlackjackStrategy.Models
             //----------------------------------------------
 
             // first, player holding ace?
-            engine.AddTerminalFunction(HasAce, "HasAce");
+            engine.AddTerminalFunction(HasSoftAce, "HasSoftAce");
 
             // specific pairs
             engine.AddTerminalFunction(HasPairTwos, "HasPair2");
@@ -129,102 +123,69 @@ namespace BlackjackStrategy.Models
         // Now terminal functions to get information about the player's hand
         //-------------------------------------------------------------------------
 
-        private  bool HasAce(ProblemState stateData)
+        private  bool HasSoftAce(ProblemState stateData)
         {
-            foreach (var card in stateData.PlayerHand.Cards)
-                if (card.Rank == "A") return true;
-            return false;
+            return stateData.PlayerHand.HasSoftAce();
         }
 
+        private bool HasPairOf(string rankNeeded, Hand hand)
+        {
+            return (hand.Cards.Count == 2) &&
+                (hand.Cards[0].Rank == rankNeeded) &&
+                (hand.Cards[1].Rank == rankNeeded);
+        }
 
         private bool HasPairTwos(ProblemState stateData)
         {
-            string rankNeeded = "2";
-            return 
-                (stateData.PlayerHand.Cards.Count == 2) &&
-                (stateData.PlayerHand.Cards[0].Rank == rankNeeded) &&
-                (stateData.PlayerHand.Cards[1].Rank == rankNeeded);
+            return HasPairOf("2", stateData.PlayerHand);
         }
 
         private bool HasPairThrees(ProblemState stateData)
         {
-            string rankNeeded = "3";
-            return
-                (stateData.PlayerHand.Cards.Count == 2) &&
-                (stateData.PlayerHand.Cards[0].Rank == rankNeeded) &&
-                (stateData.PlayerHand.Cards[1].Rank == rankNeeded);
+            return HasPairOf("3", stateData.PlayerHand);
         }
 
         private bool HasPairFours(ProblemState stateData)
         {
-            string rankNeeded = "4";
-            return
-                (stateData.PlayerHand.Cards.Count == 2) &&
-                (stateData.PlayerHand.Cards[0].Rank == rankNeeded) &&
-                (stateData.PlayerHand.Cards[1].Rank == rankNeeded);
+            return HasPairOf("4", stateData.PlayerHand);
         }
 
         private bool HasPairFives(ProblemState stateData)
         {
-            string rankNeeded = "5";
-            return
-                (stateData.PlayerHand.Cards.Count == 2) &&
-                (stateData.PlayerHand.Cards[0].Rank == rankNeeded) &&
-                (stateData.PlayerHand.Cards[1].Rank == rankNeeded);
+            return HasPairOf("5", stateData.PlayerHand);
         }
 
         private bool HasPairSixes(ProblemState stateData)
         {
-            string rankNeeded = "6";
-            return
-                (stateData.PlayerHand.Cards.Count == 2) &&
-                (stateData.PlayerHand.Cards[0].Rank == rankNeeded) &&
-                (stateData.PlayerHand.Cards[1].Rank == rankNeeded);
+            return HasPairOf("6", stateData.PlayerHand);
         }
 
         private bool HasPairSevens(ProblemState stateData)
         {
-            string rankNeeded = "7";
-            return
-                (stateData.PlayerHand.Cards.Count == 2) &&
-                (stateData.PlayerHand.Cards[0].Rank == rankNeeded) &&
-                (stateData.PlayerHand.Cards[1].Rank == rankNeeded);
+            return HasPairOf("7", stateData.PlayerHand);
         }
 
         private bool HasPairEights(ProblemState stateData)
         {
-            string rankNeeded = "8";
-            return
-                (stateData.PlayerHand.Cards.Count == 2) &&
-                (stateData.PlayerHand.Cards[0].Rank == rankNeeded) &&
-                (stateData.PlayerHand.Cards[1].Rank == rankNeeded);
+            return HasPairOf("8", stateData.PlayerHand);
         }
 
         private bool HasPairNines(ProblemState stateData)
         {
-            string rankNeeded = "9";
-            return
-                (stateData.PlayerHand.Cards.Count == 2) &&
-                (stateData.PlayerHand.Cards[0].Rank == rankNeeded) &&
-                (stateData.PlayerHand.Cards[1].Rank == rankNeeded);
+            return HasPairOf("9", stateData.PlayerHand);
         }
 
         private bool HasPairTens(ProblemState stateData)
         {
             // covers tens, jacks, queens and kings
-            return
-                (stateData.PlayerHand.Cards.Count == 2) &&
+            return (stateData.PlayerHand.Cards.Count == 2) &&
                 (stateData.PlayerHand.Cards[0].RankValueHigh == 10) &&
                 (stateData.PlayerHand.Cards[1].RankValueHigh == 10);
         }
 
         private bool HasPairAces(ProblemState stateData)
         {
-            string rankNeeded = "A";
-            return
-                (stateData.PlayerHand.Cards.Count == 2) &&
-                (stateData.PlayerHand.Cards[0].Rank == rankNeeded) &&
-                (stateData.PlayerHand.Cards[1].Rank == rankNeeded);
+            return HasPairOf("A", stateData.PlayerHand);
         }
 
         // all the ones relating to hand total value
@@ -373,7 +334,7 @@ namespace BlackjackStrategy.Models
         //-------------------------------------------------------------------------
         private float EvaluateCandidate(CandidateSolution<bool, ProblemState> candidate)
         {
-            // test every possible situation and store the candidate's resulting action in the strategy object
+            // test every possible situation and store the candidate's suggested action in the strategy object
             OverallStrategy strategy = new OverallStrategy(candidate);
 
             // then test that strategy and return the total money lost/made

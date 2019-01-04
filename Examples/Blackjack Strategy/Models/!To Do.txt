@@ -5,9 +5,6 @@ TO DO
 --------------------------
 Blackjack Example
 --------------------------
-- BUG: 
-	- It's splitting too much, which results in too many hands in PlayerHands
-	- State should only hold a single hand.  No need to have all in the state data, since it's stored locally
 - Solution.LoadFromFile() .SaveToFile(), .LoadFromString()
 - Increase height of display (or make dynamic)
 - UI for #nochange, min/max tree depth, min/max generations, selection style
