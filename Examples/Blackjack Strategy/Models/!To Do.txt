@@ -5,6 +5,9 @@ TO DO
 --------------------------
 Blackjack Example
 --------------------------
+- Write resulting times to text file for comparisons
+- for looping while constructing strategy from candidate, use rank enums when possible
+- Use WPF property grid instead of custom stuff
 - Solution.LoadFromFile() .SaveToFile(), .LoadFromString()
 - Increase height of display (or make dynamic)
 - UI for #nochange, min/max tree depth, min/max generations, selection style

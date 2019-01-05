@@ -2,14 +2,14 @@
 using Evolutionary;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Threading;
-using System.IO;
+
 namespace BlackjackStrategy
 {
     /// <summary>
@@ -76,7 +76,17 @@ namespace BlackjackStrategy
             // then display the final results
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                gaResultTB.Text = "Found solution";
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("Scores by dealer upcard:");
+                for (var upcard = 2; upcard < 12; upcard++)
+                {
+                    // set the dealer upcard to use
+                    currentRank = upcard.ToString();
+                    if (upcard == 11) currentRank = "A";
+                    sb.AppendLine(currentRank + " score: " + solutionByUpcard[currentRank].Fitness.ToString());
+                }
+                gaResultTB.Text = sb.ToString();
+
                 ShowPlayableHands();
             }),
             DispatcherPriority.Background);
@@ -135,7 +145,6 @@ namespace BlackjackStrategy
                     switch (action)
                     {
                         case ActionToTake.Hit:
-                        case ActionToTake.Split:    // for this non-paired table, any split turns into a hit
                             AddColorBox(Colors.Green, "H", x, y);
                             break;
 

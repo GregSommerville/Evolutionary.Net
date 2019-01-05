@@ -31,7 +31,9 @@ namespace BlackjackStrategy.Models
                 IsLowerFitnessBetter = false,
                 MutationRate = mutationPercentage / 100F,
                 PopulationSize = populationSize,
-                TourneySize = tourneySize
+                StagnantGenerationLimit = 8,
+                SelectionStyle = SelectionStyle.Tourney,
+                TourneySize = tourneySize,
             };
 
             // create the engine.  each tree (and node within the tree) will return a bool.
@@ -93,10 +95,6 @@ namespace BlackjackStrategy.Models
             engine.AddTerminalFunction(HandVal18, "Has18");
             engine.AddTerminalFunction(HandVal19, "Has19");
             engine.AddTerminalFunction(HandVal20, "Has20");
-
-            // num cards held
-            engine.AddTerminalFunction(Holding2Cards, "Hold2");
-            engine.AddTerminalFunction(Holding3Cards, "Hold3");
 
             // pass a fitness evaluation function and run
             engine.AddFitnessFunction((t) => EvaluateCandidate(t));
@@ -262,23 +260,6 @@ namespace BlackjackStrategy.Models
             return stateData.PlayerHand.HandValue() == 20;
         }
 
-
-        // how many cards I've got
-        private  bool Holding2Cards(ProblemState stateData)
-        {
-            return stateData.PlayerHand.Cards.Count == 2;
-        }
-
-        private  bool Holding3Cards(ProblemState stateData)
-        {
-            return stateData.PlayerHand.Cards.Count == 3;
-        }
-
-        private  bool Holding4PlusCards(ProblemState stateData)
-        {
-            return stateData.PlayerHand.Cards.Count >= 4;
-        }
-
         //-------------------------------------------------------------------------
         // then functions to steer the strategy via storing to state
         //-------------------------------------------------------------------------
@@ -299,21 +280,16 @@ namespace BlackjackStrategy.Models
         private  bool DoubleIf(bool value, ProblemState state)
         {
             // double down only legal when holding 2 cards
-            if (state.PlayerHand.Cards.Count == 2)
-            {
-                if (value) state.VotesForDoubleDown++;
-            }
+            if (value && (state.PlayerHand.Cards.Count == 2))
+                state.VotesForDoubleDown++;
             return value;
         }
 
         private bool SplitIf(bool value, ProblemState state)
         {
             // only legal when holding a pair 
-            if ((state.PlayerHand.Cards.Count == 2) &&
-                (state.PlayerHand.Cards[0].Rank == state.PlayerHand.Cards[1].Rank))
-            {
-                if (value) state.VotesForSplit++;
-            }
+            if (value && (state.PlayerHand.Cards[0].Rank == state.PlayerHand.Cards[1].Rank) && (state.PlayerHand.Cards.Count == 2))
+                state.VotesForSplit++;
             return value;
         }
 
@@ -328,19 +304,6 @@ namespace BlackjackStrategy.Models
             // then test that strategy and return the total money lost/made
             var strategyTester = new StrategyTester(strategy);
             return strategyTester.GetStrategyScore(dealerUpcardRank);
-        }
-
-        public static void DebugDisplayStrategy(CandidateSolution<bool, ProblemState> candidate, string prefixText)
-        {
-            string debug = 
-                prefixText + 
-                (String.IsNullOrWhiteSpace(prefixText) ? "" : "  ") +
-                "  Plr: " + candidate.StateData.PlayerHand + 
-                "  H: " + candidate.StateData.VotesForHit +
-                "  S: " + candidate.StateData.VotesForStand +
-                "  P: " + candidate.StateData.VotesForSplit + 
-                "  D: " + candidate.StateData.VotesForDoubleDown;
-            Debug.WriteLine(debug);
         }
 
         //-------------------------------------------------------------------------

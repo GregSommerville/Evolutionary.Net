@@ -87,8 +87,6 @@ namespace BlackjackStrategy.Models
                         secondCardRank--;
                     }
 
-                    Debug.Assert(firstCardRank != secondCardRank, "Build pair for hard hand");
-
                     playerHand.AddCard(new Card(firstCardRank, "D"));
                     playerHand.AddCard(new Card(secondCardRank, "S"));
 
@@ -120,6 +118,11 @@ namespace BlackjackStrategy.Models
             int votesForDouble = stateData.VotesForDoubleDown;
             int votesForSplit = stateData.VotesForSplit;
 
+            // there are times when all votes = 0, in which case double or split could be erroneously selected.
+            // this code handles that situation so they never get selected
+            if (stateData.PlayerHand.IsPair() == false) votesForSplit = int.MinValue;
+            if (stateData.PlayerHand.Cards.Count > 2) votesForDouble = int.MinValue;
+
             List<Tuple<int, ActionToTake>> votes = new List<Tuple<int, ActionToTake>>();
             votes.Add(new Tuple<int, ActionToTake>(votesForDouble, ActionToTake.Double));
             votes.Add(new Tuple<int, ActionToTake>(votesForStand, ActionToTake.Stand));
@@ -127,16 +130,6 @@ namespace BlackjackStrategy.Models
             votes.Add(new Tuple<int, ActionToTake>(votesForSplit, ActionToTake.Split));
 
             var result = votes.OrderByDescending(v => v.Item1).First().Item2;
-
-            // make sure we've selected Split only when it's valid
-            if ((result == ActionToTake.Split) && (stateData.PlayerHand.IsPair() == false)) {
-                Debug.Assert(false, "Recommended action is split on a non-pair");
-            }
-            if ((result == ActionToTake.Double) && (stateData.PlayerHand.Cards.Count != 2))
-            {
-                Debug.Assert(false, "Recommended action is double with more than 2 cards");
-            }
-
             return result;
         }
 
