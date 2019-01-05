@@ -1,10 +1,13 @@
 ﻿using Evolutionary;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
 namespace BlackjackStrategy.Models
 {
+    enum ActionToTake { Stand, Hit, Double, Split };
+
     // encapsulates one complete strategy to play Blackjack
     class OverallStrategy
     {
@@ -117,13 +120,13 @@ namespace BlackjackStrategy.Models
             int votesForDouble = stateData.VotesForDoubleDown;
             int votesForSplit = stateData.VotesForSplit;
 
-            List<ActionWithVotes> votes = new List<ActionWithVotes>();
-            votes.Add(new ActionWithVotes(votesForDouble, ActionToTake.Double));
-            votes.Add(new ActionWithVotes(votesForStand, ActionToTake.Stand));
-            votes.Add(new ActionWithVotes(votesForHit, ActionToTake.Hit));
-            votes.Add(new ActionWithVotes(votesForSplit, ActionToTake.Split));
+            List<Tuple<int, ActionToTake>> votes = new List<Tuple<int, ActionToTake>>();
+            votes.Add(new Tuple<int, ActionToTake>(votesForDouble, ActionToTake.Double));
+            votes.Add(new Tuple<int, ActionToTake>(votesForStand, ActionToTake.Stand));
+            votes.Add(new Tuple<int, ActionToTake>(votesForHit, ActionToTake.Hit));
+            votes.Add(new Tuple<int, ActionToTake>(votesForSplit, ActionToTake.Split));
 
-            var result = votes.OrderByDescending(v => v.NumVotes).First().Action;
+            var result = votes.OrderByDescending(v => v.Item1).First().Item2;
 
             // make sure we've selected Split only when it's valid
             if ((result == ActionToTake.Split) && (stateData.PlayerHand.IsPair() == false)) {

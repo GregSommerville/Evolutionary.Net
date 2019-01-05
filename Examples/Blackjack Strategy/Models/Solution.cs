@@ -4,18 +4,6 @@ using System.Diagnostics;
 
 namespace BlackjackStrategy.Models
 {
-    enum ActionToTake {  Stand, Hit, Double, Split };
-    class ActionWithVotes
-    {
-        public int NumVotes;
-        public ActionToTake Action;
-        public ActionWithVotes(int numVotes, ActionToTake action)
-        {
-            NumVotes = numVotes;
-            Action = action;
-        }
-    }
-
     class Solution
     {
         // a place to store the best solution, once we find it
