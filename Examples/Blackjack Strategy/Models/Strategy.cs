@@ -117,14 +117,6 @@ namespace BlackjackStrategy.Models
             int votesForDouble = stateData.VotesForDoubleDown;
             int votesForSplit = stateData.VotesForSplit;
 
-            // splitting is only valid with pairs, so if we don't have one, eliminate that possibility
-            if (stateData.PlayerHand.IsPair() == false)
-                votesForSplit = int.MinValue;
-
-            // doubling is only valid with 2 cards
-            if (stateData.PlayerHand.Cards.Count > 2)
-                votesForDouble = int.MinValue;
-
             List<ActionWithVotes> votes = new List<ActionWithVotes>();
             votes.Add(new ActionWithVotes(votesForDouble, ActionToTake.Double));
             votes.Add(new ActionWithVotes(votesForStand, ActionToTake.Stand));
@@ -132,6 +124,16 @@ namespace BlackjackStrategy.Models
             votes.Add(new ActionWithVotes(votesForSplit, ActionToTake.Split));
 
             var result = votes.OrderByDescending(v => v.NumVotes).First().Action;
+
+            // make sure we've selected Split only when it's valid
+            if ((result == ActionToTake.Split) && (stateData.PlayerHand.IsPair() == false)) {
+                Debug.Assert(false, "Recommended action is split on a non-pair");
+            }
+            if ((result == ActionToTake.Double) && (stateData.PlayerHand.Cards.Count != 2))
+            {
+                Debug.Assert(false, "Recommended action is double with more than 2 cards");
+            }
+
             return result;
         }
 
@@ -146,7 +148,8 @@ namespace BlackjackStrategy.Models
         public void AddSoftStrategy(string secondaryCardRank, string dealerUpcardRank, ActionToTake action)
         {
             // secondary rank is the non-Ace
-            if (secondaryCardRank == "10") secondaryCardRank = "T";
+            if (secondaryCardRank == "10" || secondaryCardRank == "J" || secondaryCardRank == "Q" || secondaryCardRank == "K")
+                secondaryCardRank = "T";  // we only stored one value for the tens
             softStrategy[secondaryCardRank + dealerUpcardRank] = action;
         }
 
@@ -167,7 +170,7 @@ namespace BlackjackStrategy.Models
             if (hand.IsPair())
             {
                 string rank = hand.Cards[0].Rank;
-                if (rank == "J" || rank == "Q" || rank == "K")
+                if (rank == "10" || rank == "J" || rank == "Q" || rank == "K")
                     rank = "T";  // we only stored one value for the tens
                 return pairsStrategy[rank + dealerUpcardRank];
             }
