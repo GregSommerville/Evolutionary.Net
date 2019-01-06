@@ -5,8 +5,12 @@ TO DO
 --------------------------
 Blackjack Example
 --------------------------
+- Record results of single algorithm with varying parameters
+
 - Loop over each possible holding (of 34)
+
 - finish code for starting hands
+
 - set up rules based on starting hand category
 
 - Write resulting times to text file for comparisons

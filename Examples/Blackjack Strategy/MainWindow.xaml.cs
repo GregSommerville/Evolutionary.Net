@@ -42,12 +42,12 @@ namespace BlackjackStrategy
 
         private void AsyncCall(int populationSize, int crossoverPercentage, double mutationPercentage, int ElitismPercentage, int tourneySize)
         {
-            // create a solution for each upcard 
-            for (var upcard = 2; upcard < 12; upcard++)
-            {
-                // set the dealer upcard to use
-                currentRank = upcard.ToString();
-                if (upcard == 11) currentRank = "A";
+            //// create a solution for each upcard 
+            //for (var upcard = 2; upcard < 12; upcard++)
+            //{
+            //    // set the dealer upcard to use
+            //    currentRank = upcard.ToString();
+            //    if (upcard == 11) currentRank = "A";
                 
                 // reset the progress messages
                 progressSoFar = new List<string>();
@@ -62,32 +62,34 @@ namespace BlackjackStrategy
                     tourneySize, 
                     DisplayCurrentStatus);
 
-                // save the solution in memory
-                solutionByUpcard[currentRank] = solutionFinder.BestSolution;
+            //    // save the solution in memory
+            //    solutionByUpcard[currentRank] = solutionFinder.BestSolution;
 
-                // and on disk
-                SaveSolutionToDisk(
-                    "upcard" + currentRank + "solution.txt", 
-                    solutionByUpcard[currentRank].ToString()
-                    );
-            }
+            //    // and on disk
+            //    SaveSolutionToDisk(
+            //        "upcard" + currentRank + "solution.txt", 
+            //        solutionByUpcard[currentRank].ToString()
+            //        );
+            //}
 
             // then display the final results
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                StringBuilder sb = new StringBuilder();
-                sb.AppendLine("Scores by dealer upcard:");
-                for (var upcard = 2; upcard < 12; upcard++)
-                {
-                    // set the dealer upcard to use
-                    currentRank = upcard.ToString();
-                    if (upcard == 11) currentRank = "A";
+                //StringBuilder sb = new StringBuilder();
+                //sb.AppendLine("Scores by dealer upcard:");
+                //for (var upcard = 2; upcard < 12; upcard++)
+                //{
+                //    // set the dealer upcard to use
+                //    currentRank = upcard.ToString();
+                //    if (upcard == 11) currentRank = "A";
 
-                    sb.AppendLine(currentRank + " score: " + solutionByUpcard[currentRank].Fitness.ToString());
-                }
-                gaResultTB.Text = sb.ToString();
+                //    sb.AppendLine(currentRank + " score: " + solutionByUpcard[currentRank].Fitness.ToString());
+                //}
+                //gaResultTB.Text = sb.ToString();
 
-                ShowPlayableHands();
+                gaResultTB.Text = "Solution found.  Final Score: " + solutionFinder.BestSolution.Fitness.ToString();
+
+                ShowPlayableHands(solutionFinder.BestSolution);
             }),
             DispatcherPriority.Background);
         }
@@ -104,13 +106,15 @@ namespace BlackjackStrategy
 
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                gaResultTB.Text = "Dealer upcard: " + currentRank + "\n" + allStatuses;
+                gaResultTB.Text = allStatuses;
             }),
             DispatcherPriority.Background);
         }
 
-        private void ShowPlayableHands()
+        private void ShowPlayableHands(CandidateSolution<bool, ProblemState> solution)
         {
+            var strategy = new OverallStrategy(solution);
+
             // clear the screen
             canvas.Children.Clear();
 
@@ -126,8 +130,7 @@ namespace BlackjackStrategy
                 y = 1;
 
                 // get the strategy
-                var best = solutionByUpcard[upcardRankName];
-                var strategy = new OverallStrategy(best);
+                //var best = solutionByUpcard[upcardRankName];
 
                 for (int hardTotal = 20; hardTotal > 4; hardTotal--)
                 {
@@ -176,8 +179,8 @@ namespace BlackjackStrategy
                 AddColorBox(Colors.White, upcardRankName, x, 0);
                 y = 1;
 
-                var best = solutionByUpcard[upcardRankName];
-                var strategy = new OverallStrategy(best);
+                //var best = solutionByUpcard[upcardRankName];
+                //var strategy = new OverallStrategy(best);
 
                 // we don't start with Ace, because that would be AA, which is handled in the pair zone
                 // we also don't start with 10, since that's blackjack.  So 9 is our starting point
@@ -227,8 +230,8 @@ namespace BlackjackStrategy
                 AddColorBox(Colors.White, upcardRankName, x, 0);
                 y = startY;
 
-                var best = solutionByUpcard[upcardRankName];
-                var strategy = new OverallStrategy(best);
+                //var best = solutionByUpcard[upcardRankName];
+                //var strategy = new OverallStrategy(best);
 
                 for (int pairedCard = 11; pairedCard > 1; pairedCard--)
                 {

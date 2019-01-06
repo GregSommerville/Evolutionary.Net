@@ -33,11 +33,11 @@ namespace BlackjackStrategy.Models
             this.strategy = strategy;
         }
 
-        public int GetStrategyScore()
+        public int GetStrategyScore(int numHandsToPlay)
         {
             int playerChips = 0;
 
-            for (int handNum = 0; handNum < TestConditions.NumHandsToPlay; handNum++)
+            for (int handNum = 0; handNum < numHandsToPlay; handNum++)
             {
                 // for each hand, we generate a random deck.  Blackjack is often played with multiple decks to improve the house edge
                 MultiDeck deck = new MultiDeck(TestConditions.NumDecks);

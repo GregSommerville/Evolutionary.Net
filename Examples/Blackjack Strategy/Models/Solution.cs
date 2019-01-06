@@ -59,10 +59,10 @@ namespace BlackjackStrategy.Models
             // terminal functions to look at game state
             //----------------------------------------------
 
-            // first, player holding ace?
+            // soft hands
             engine.AddTerminalFunction(HasSoftAce, "HasSoftAce");
 
-            // specific pairs
+            // pairs
             engine.AddTerminalFunction(HasPairTwos, "HasPair2");
             engine.AddTerminalFunction(HasPairThrees, "HasPair3");
             engine.AddTerminalFunction(HasPairFours, "HasPair4");
@@ -74,24 +74,24 @@ namespace BlackjackStrategy.Models
             engine.AddTerminalFunction(HasPairTens, "HasPairT");
             engine.AddTerminalFunction(HasPairAces, "HasPairA");
 
-            // player hand totals
-            engine.AddTerminalFunction(HandVal4, "Has4");
-            engine.AddTerminalFunction(HandVal5, "Has5");
-            engine.AddTerminalFunction(HandVal6, "Has6");
-            engine.AddTerminalFunction(HandVal7, "Has7");
-            engine.AddTerminalFunction(HandVal8, "Has8");
-            engine.AddTerminalFunction(HandVal9, "Has9");
-            engine.AddTerminalFunction(HandVal10, "Has10");
-            engine.AddTerminalFunction(HandVal11, "Has11");
-            engine.AddTerminalFunction(HandVal12, "Has12");
-            engine.AddTerminalFunction(HandVal13, "Has13");
-            engine.AddTerminalFunction(HandVal14, "Has14");
-            engine.AddTerminalFunction(HandVal15, "Has15");
-            engine.AddTerminalFunction(HandVal16, "Has16");
-            engine.AddTerminalFunction(HandVal17, "Has17");
-            engine.AddTerminalFunction(HandVal18, "Has18");
-            engine.AddTerminalFunction(HandVal19, "Has19");
-            engine.AddTerminalFunction(HandVal20, "Has20");
+            // hard hand totals
+            engine.AddTerminalFunction(HandVal4, "Hard4");
+            engine.AddTerminalFunction(HandVal5, "Hard5");
+            engine.AddTerminalFunction(HandVal6, "Hard6");
+            engine.AddTerminalFunction(HandVal7, "Hard7");
+            engine.AddTerminalFunction(HandVal8, "Hard8");
+            engine.AddTerminalFunction(HandVal9, "Hard9");
+            engine.AddTerminalFunction(HandVal10, "Hard10");
+            engine.AddTerminalFunction(HandVal11, "Hard11");
+            engine.AddTerminalFunction(HandVal12, "Hard12");
+            engine.AddTerminalFunction(HandVal13, "Hard13");
+            engine.AddTerminalFunction(HandVal14, "Hard14");
+            engine.AddTerminalFunction(HandVal15, "Hard15");
+            engine.AddTerminalFunction(HandVal16, "Hard16");
+            engine.AddTerminalFunction(HandVal17, "Hard17");
+            engine.AddTerminalFunction(HandVal18, "Hard18");
+            engine.AddTerminalFunction(HandVal19, "Hard19");
+            engine.AddTerminalFunction(HandVal20, "Hard20");
 
             // upcards
             engine.AddTerminalFunction(DealerShows2, "Dlr2");
@@ -329,17 +329,15 @@ namespace BlackjackStrategy.Models
 
         private  bool DoubleIf(bool value, ProblemState state)
         {
-            // double down only legal when holding 2 cards
-            if (value && (state.PlayerHand.Cards.Count == 2))
-                state.VotesForDoubleDown++;
+            // we don't check for validity here, since it's handled when retrieving the action
+            if (value) state.VotesForDoubleDown++;
             return value;
         }
 
         private bool SplitIf(bool value, ProblemState state)
         {
-            // only legal when holding a pair 
-            if (value && (state.PlayerHand.Cards[0].Rank == state.PlayerHand.Cards[1].Rank) && (state.PlayerHand.Cards.Count == 2))
-                state.VotesForSplit++;
+            // we don't check for validity here, since it's handled when retrieving the action
+            if (value) state.VotesForSplit++;
             return value;
         }
 
@@ -353,7 +351,7 @@ namespace BlackjackStrategy.Models
 
             // then test that strategy and return the total money lost/made
             var strategyTester = new StrategyTester(strategy);
-            return strategyTester.GetStrategyScore();
+            return strategyTester.GetStrategyScore(TestConditions.NumHandsToPlay);
         }
 
         //-------------------------------------------------------------------------
