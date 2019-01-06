@@ -7,7 +7,9 @@ namespace BlackjackStrategy.Models
     class Solution
     {
         // a place to store the best solution, once we find it
-        public CandidateSolution<bool, ProblemState> BestSolution { get; set; }
+        public CandidateSolution<bool, ProblemState> BestSolution { get; private set; }
+        public int NumGenerationsNeeded { get; private set; }
+
         private Action<string> displayGenerationCallback;
 
         public void BuildProgram(
@@ -365,6 +367,9 @@ namespace BlackjackStrategy.Models
 
             displayGenerationCallback(summary);
             Debug.WriteLine(summary);
+
+            // keep track of how many gens we've searched
+            NumGenerationsNeeded = progress.GenerationNumber;
 
             // return true to keep going, false to halt the system
             bool keepRunning = true;

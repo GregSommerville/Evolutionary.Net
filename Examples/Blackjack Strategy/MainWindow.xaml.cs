@@ -87,7 +87,10 @@ namespace BlackjackStrategy
                 //}
                 //gaResultTB.Text = sb.ToString();
 
-                gaResultTB.Text = "Solution found.  Final Score: " + solutionFinder.BestSolution.Fitness.ToString();
+                var best = solutionFinder.BestSolution;
+
+                gaResultTB.Text = "Solution found.  Final Score: " + best.Fitness.ToString() + "\n" +
+                    "Generations needed to find: " + solutionFinder.NumGenerationsNeeded;
 
                 ShowPlayableHands(solutionFinder.BestSolution);
             }),
