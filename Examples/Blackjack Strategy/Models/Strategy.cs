@@ -20,8 +20,10 @@ namespace BlackjackStrategy.Models
             // cycle over all of the possible upcards
             for (int upcardRank = 2; upcardRank < 12; upcardRank++)
             {
-                // do pairs
                 string upcardRankName = (upcardRank == 11) ? "A" : upcardRank.ToString();
+                Card dealerCard = new Card(upcardRankName, "D");
+
+                    // do pairs
                 for (int pairedCard = 11; pairedCard > 1; pairedCard--)
                 {
                     string pairedCardRank = (pairedCard == 11) ? "A" : pairedCard.ToString();
@@ -32,12 +34,12 @@ namespace BlackjackStrategy.Models
                     playerHand.AddCard(new Card(pairedCardRank, "S")); // X of spades
 
                     // find strategy 
-                    SetupStateData(candidate.StateData, playerHand);
+                    SetupStateData(candidate.StateData, playerHand, dealerCard);
                     candidate.Evaluate();
 
                     // get the decision and store in the strategy object
                     var action = GetActionFromCandidate(candidate.StateData);
-                    AddPairStrategy(pairedCardRank, upcardRankName, action);
+                    AddPairStrategy(pairedCardRank, action, dealerCard);
                 }
 
                 // then soft hands
@@ -54,12 +56,12 @@ namespace BlackjackStrategy.Models
                     playerHand.AddCard(new Card(otherCardRank, "S"));
 
                     // find strategy 
-                    SetupStateData(candidate.StateData, playerHand);
+                    SetupStateData(candidate.StateData, playerHand, dealerCard);
                     candidate.Evaluate();
 
                     // get the decision and store in the strategy object
                     var action = GetActionFromCandidate(candidate.StateData);
-                    AddSoftStrategy(otherCardRank, upcardRankName, action);
+                    AddSoftStrategy(otherCardRank, action, dealerCard);
                 }
 
                 // hard hands.  
@@ -91,20 +93,22 @@ namespace BlackjackStrategy.Models
                     playerHand.AddCard(new Card(secondCardRank, "S"));
 
                     // find strategy 
-                    SetupStateData(candidate.StateData, playerHand);
+                    SetupStateData(candidate.StateData, playerHand, dealerCard);
                     candidate.Evaluate();
 
                     // get the decision and store in the strategy object
                     var action = GetActionFromCandidate(candidate.StateData);
-                    AddHardStrategy(hardTotal, upcardRankName, action);
+                    AddHardStrategy(hardTotal, action, dealerCard);
                 }
             }
         }
 
-        private void SetupStateData(ProblemState stateData, Hand hand)
+        private void SetupStateData(ProblemState stateData, Hand hand, Card dealerUpcard)
         {
             // prepare for testing
             stateData.PlayerHand = hand;
+            stateData.DealerUpcard = dealerUpcard;
+
             stateData.VotesForDoubleDown = 0;
             stateData.VotesForHit = 0;
             stateData.VotesForStand = 0;
@@ -135,31 +139,31 @@ namespace BlackjackStrategy.Models
 
         //-------------------------------------------------------------------------------------------
 
-        public void AddPairStrategy(string pairRank, string dealerUpcardRank, ActionToTake action)
+        public void AddPairStrategy(string pairRank, ActionToTake action, Card dealerUpcard)
         {
             if (pairRank == "10") pairRank = "T";
-            pairsStrategy[pairRank + dealerUpcardRank] = action;
+            pairsStrategy[pairRank + dealerUpcard.Rank] = action;
         }
 
-        public void AddSoftStrategy(string secondaryCardRank, string dealerUpcardRank, ActionToTake action)
+        public void AddSoftStrategy(string secondaryCardRank, ActionToTake action, Card dealerUpcard)
         {
             // secondary rank is the non-Ace
             if (secondaryCardRank == "10" || secondaryCardRank == "J" || secondaryCardRank == "Q" || secondaryCardRank == "K")
                 secondaryCardRank = "T";  // we only stored one value for the tens
-            softStrategy[secondaryCardRank + dealerUpcardRank] = action;
+            softStrategy[secondaryCardRank + dealerUpcard.Rank] = action;
         }
 
-        public void AddHardStrategy(int handTotal, string dealerUpcardRank, ActionToTake action)
+        public void AddHardStrategy(int handTotal, ActionToTake action, Card dealerUpcard)
         {
             Debug.Assert(action != ActionToTake.Split, "Split found for non-pair");
 
             // handTotal goes from 5 (since a total of 4 means a pair of 2s) to 20
-            hardStrategy[handTotal + dealerUpcardRank] = action;
+            hardStrategy[handTotal + dealerUpcard.Rank] = action;
         }
 
         //-------------------------------------------------------------------------------------------
 
-        public ActionToTake GetActionForHand(Hand hand, string dealerUpcardRank)
+        public ActionToTake GetActionForHand(Hand hand, Card dealerUpcard)
         {
             if (hand.HandValue() >= 21) return ActionToTake.Stand;
 
@@ -168,7 +172,7 @@ namespace BlackjackStrategy.Models
                 string rank = hand.Cards[0].Rank;
                 if (rank == "10" || rank == "J" || rank == "Q" || rank == "K")
                     rank = "T";  // we only stored one value for the tens
-                return pairsStrategy[rank + dealerUpcardRank];
+                return pairsStrategy[rank + dealerUpcard.Rank];
             }
 
             if (hand.HasSoftAce())
@@ -179,10 +183,10 @@ namespace BlackjackStrategy.Models
 
                 // and then collapse that total down into a single "other card" rank
                 string rank = (total == 10) ? "T" : total.ToString();
-                return softStrategy[rank + dealerUpcardRank];
+                return softStrategy[rank + dealerUpcard.Rank];
             }
 
-            return hardStrategy[hand.HandValue() + dealerUpcardRank];
+            return hardStrategy[hand.HandValue() + dealerUpcard.Rank];
         }
     }
 }

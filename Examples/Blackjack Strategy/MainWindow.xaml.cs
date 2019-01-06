@@ -60,8 +60,7 @@ namespace BlackjackStrategy
                     mutationPercentage,
                     ElitismPercentage, 
                     tourneySize, 
-                    DisplayCurrentStatus, 
-                    currentRank);
+                    DisplayCurrentStatus);
 
                 // save the solution in memory
                 solutionByUpcard[currentRank] = solutionFinder.BestSolution;
@@ -83,6 +82,7 @@ namespace BlackjackStrategy
                     // set the dealer upcard to use
                     currentRank = upcard.ToString();
                     if (upcard == 11) currentRank = "A";
+
                     sb.AppendLine(currentRank + " score: " + solutionByUpcard[currentRank].Fitness.ToString());
                 }
                 gaResultTB.Text = sb.ToString();
@@ -120,6 +120,8 @@ namespace BlackjackStrategy
             for (int upcardRank = 2; upcardRank < 12; upcardRank++)
             {
                 string upcardRankName = (upcardRank == 11) ? "A" : upcardRank.ToString();
+                Card dealerUpcard = new Card(upcardRankName, "D");
+
                 AddColorBox(Colors.White, upcardRankName, x, 0);
                 y = 1;
 
@@ -141,7 +143,7 @@ namespace BlackjackStrategy
                     playerHand.AddCard(new Card(secondCardRank, "S"));
 
                     // get strategy and display
-                    var action = strategy.GetActionForHand(playerHand, upcardRankName);
+                    var action = strategy.GetActionForHand(playerHand, dealerUpcard);
                     switch (action)
                     {
                         case ActionToTake.Hit:
@@ -169,6 +171,8 @@ namespace BlackjackStrategy
             for (int upcardRank = 2; upcardRank < 12; upcardRank++)
             {
                 string upcardRankName = (upcardRank == 11) ? "A" : upcardRank.ToString();
+                Card dealerUpcard = new Card(upcardRankName, "D");
+
                 AddColorBox(Colors.White, upcardRankName, x, 0);
                 y = 1;
 
@@ -191,7 +195,7 @@ namespace BlackjackStrategy
                     playerHand.AddCard(new Card(otherCardRank, "S"));
 
                     // get strategy and display
-                    var action = strategy.GetActionForHand(playerHand, upcardRankName);
+                    var action = strategy.GetActionForHand(playerHand, dealerUpcard);
                     switch (action)
                     {
                         case ActionToTake.Hit:
@@ -218,6 +222,8 @@ namespace BlackjackStrategy
             for (int upcardRank = 2; upcardRank < 12; upcardRank++)
             {
                 string upcardRankName = (upcardRank == 11) ? "A" : upcardRank.ToString();
+                Card dealerUpcard = new Card(upcardRankName, "D");
+
                 AddColorBox(Colors.White, upcardRankName, x, 0);
                 y = startY;
 
@@ -237,7 +243,7 @@ namespace BlackjackStrategy
                     playerHand.AddCard(new Card(pairedCardRank, "S")); // X of spades
 
                     // get strategy and display
-                    var action = strategy.GetActionForHand(playerHand, upcardRankName);
+                    var action = strategy.GetActionForHand(playerHand, dealerUpcard);
                     switch (action)
                     {
                         case ActionToTake.Hit:

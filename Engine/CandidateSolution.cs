@@ -205,6 +205,7 @@ namespace Evolutionary
 
             // and all of the nodes in the tree
             newTree.Root = Root.Clone(null);
+            newTree.Fitness = this.Fitness;
             return newTree;
         }
 

@@ -13,15 +13,27 @@ namespace BlackjackStrategy.Models
         HandComparison
     }
 
+    public enum StartingHandStyle
+    {
+        Random,
+        Pair2,Pair3,Pair4,Pair5,Pair6,Pair7,Pair8,Pair9,Pair10,PairA,
+        Ace2,Ace3,Ace4,Ace5,Ace6,Ace7,Ace8,Ace9,
+        Hard5, Hard6, Hard7, Hard8, Hard9, Hard10, Hard11, Hard12, Hard13, Hard14, Hard15, Hard16, Hard17, Hard18, Hard19, Hard20
+    }
+
     class StrategyTester
     {
+        public StartingHandStyle PlayerStartingHand { get; set; } = StartingHandStyle.Random;
+        public string DealerUpcardRank { get; set; } = "";
+
         private OverallStrategy strategy;
+        
         public StrategyTester(OverallStrategy strategy)
         {
             this.strategy = strategy;
         }
 
-        public int GetStrategyScore(string dealerUpcardRank)
+        public int GetStrategyScore()
         {
             int playerChips = 0;
 
@@ -29,15 +41,45 @@ namespace BlackjackStrategy.Models
             {
                 // for each hand, we generate a random deck.  Blackjack is often played with multiple decks to improve the house edge
                 MultiDeck deck = new MultiDeck(TestConditions.NumDecks);
-                // always use the designated dealer upcard (of hearts), so we need to remove from the deck so it doesn't get used twice
-                deck.RemoveCard(dealerUpcardRank, "H");
-
                 Hand dealerHand = new Hand();
                 Hand playerHand = new Hand();
-                playerHand.AddCard(deck.DealCard());
-                dealerHand.AddCard(new Card(dealerUpcardRank, "H"));
-                playerHand.AddCard(deck.DealCard());
+
+                if (DealerUpcardRank != "")
+                {
+                    // always use the designated dealer upcard (of hearts), so we need to remove from the deck so it doesn't get used twice
+                    deck.RemoveCard(DealerUpcardRank, "H");
+                    dealerHand.AddCard(new Card(DealerUpcardRank, "H"));
+                }
+                else
+                    dealerHand.AddCard(deck.DealCard());
                 dealerHand.AddCard(deck.DealCard());
+
+                bool isPair = PlayerStartingHand >= StartingHandStyle.Pair2 && PlayerStartingHand <= StartingHandStyle.PairA;
+                bool isSoftAce = PlayerStartingHand >= StartingHandStyle.Ace2 && PlayerStartingHand <= StartingHandStyle.Ace9;
+                bool isHardHand = PlayerStartingHand >= StartingHandStyle.Hard5 && PlayerStartingHand <= StartingHandStyle.Hard20;
+
+                // starting hand: completely random
+                if (!isPair && !isSoftAce && !isHardHand)
+                {
+                    playerHand.AddCard(deck.DealCard());
+                    playerHand.AddCard(deck.DealCard());
+                }
+
+                if (isPair)
+                {
+                    // deal out a starting pair, with the right rank
+                }
+
+                if (isSoftAce)
+                {
+                    // deal an ace and another card or two
+                }
+
+                if (isHardHand)
+                {
+                    // deal two cards that total (that aren't a pair)
+                }
+
 
                 // save the cards in state, and reset the votes for this hand
                 List<Hand> playerHands = new List<Hand>();
@@ -77,7 +119,7 @@ namespace BlackjackStrategy.Models
                     // player draws 
                     while (currentHandState == GameState.PlayerDrawing)
                     {
-                        var action = strategy.GetActionForHand(playerHand, dealerUpcardRank);
+                        var action = strategy.GetActionForHand(playerHand, dealerHand.Cards[0]);
 
                         // if there's an attempt to double-down with more than 2 cards, turn into a hit
                         if (action == ActionToTake.Double && playerHand.Cards.Count > 2)
@@ -119,11 +161,6 @@ namespace BlackjackStrategy.Models
                                 playerHand.Cards[1] = deck.DealCard();
                                 newHand.AddCard(deck.DealCard());
                                 playerHands.Add(newHand);
-
-                                //Debug.WriteLine("TID " + AppDomain.GetCurrentThreadId() + " " +
-                                //    "is splitting and has " + playerHands.Count + " hands");
-                                Debug.Assert(playerHands.Count < 5, "Too many hands for player");
-
                                 // our extra bet
                                 playerChips -= TestConditions.BetSize;
                                 // we don't adjust totalBetAmount because each bet pays off individually, so the total is right 

@@ -5,6 +5,10 @@ TO DO
 --------------------------
 Blackjack Example
 --------------------------
+- Loop over each possible holding (of 34)
+- finish code for starting hands
+- set up rules based on starting hand category
+
 - Write resulting times to text file for comparisons
 - for looping while constructing strategy from candidate, use rank enums when possible
 - Use WPF property grid instead of custom stuff

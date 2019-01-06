@@ -5,8 +5,9 @@ namespace BlackjackStrategy.Models
 {
     class ProblemState
     {
-        // Before evaluating a candidate, we load the state data with the current hand
+        // Before evaluating a candidate, we load the state data with the current hand and dealer card (all we know)
         public Hand PlayerHand { get; set; }
+        public Card DealerUpcard { get; set; }
        
         // Each candidate expression tree will have stateful functions that indicate a strategy (stand, hit, etc.)  
         // Since a given candidate could potentially have several of these in the tree, each time such a function 

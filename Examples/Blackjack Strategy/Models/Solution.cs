@@ -9,7 +9,6 @@ namespace BlackjackStrategy.Models
         // a place to store the best solution, once we find it
         public CandidateSolution<bool, ProblemState> BestSolution { get; set; }
         private Action<string> displayGenerationCallback;
-        private string dealerUpcardRank;
 
         public void BuildProgram(
             int populationSize, 
@@ -17,11 +16,9 @@ namespace BlackjackStrategy.Models
             double mutationPercentage, 
             int ElitismPercentage, 
             int tourneySize, 
-            Action<string> currentStatusCallback,
-            string dealerUpcardRankToUse)
+            Action<string> currentStatusCallback)
         {
             displayGenerationCallback = currentStatusCallback;
-            dealerUpcardRank = dealerUpcardRankToUse;
 
             // just some values, leave the rest as defaults
             var engineParams = new EngineParameters()
@@ -95,6 +92,18 @@ namespace BlackjackStrategy.Models
             engine.AddTerminalFunction(HandVal18, "Has18");
             engine.AddTerminalFunction(HandVal19, "Has19");
             engine.AddTerminalFunction(HandVal20, "Has20");
+
+            // upcards
+            engine.AddTerminalFunction(DealerShows2, "Dlr2");
+            engine.AddTerminalFunction(DealerShows3, "Dlr3");
+            engine.AddTerminalFunction(DealerShows4, "Dlr4");
+            engine.AddTerminalFunction(DealerShows5, "Dlr5");
+            engine.AddTerminalFunction(DealerShows6, "Dlr6");
+            engine.AddTerminalFunction(DealerShows7, "Dlr7");
+            engine.AddTerminalFunction(DealerShows8, "Dlr8");
+            engine.AddTerminalFunction(DealerShows9, "Dlr9");
+            engine.AddTerminalFunction(DealerShows10, "Dlr10");
+            engine.AddTerminalFunction(DealerShowsA, "DlrA");
 
             // pass a fitness evaluation function and run
             engine.AddFitnessFunction((t) => EvaluateCandidate(t));
@@ -260,10 +269,51 @@ namespace BlackjackStrategy.Models
             return stateData.PlayerHand.HandValue() == 20;
         }
 
+        private bool DealerShows2(ProblemState stateData)
+        {
+            return stateData.DealerUpcard.Rank == "2";
+        }
+        private bool DealerShows3(ProblemState stateData)
+        {
+            return stateData.DealerUpcard.Rank == "3";
+        }
+        private bool DealerShows4(ProblemState stateData)
+        {
+            return stateData.DealerUpcard.Rank == "4";
+        }
+        private bool DealerShows5(ProblemState stateData)
+        {
+            return stateData.DealerUpcard.Rank == "5";
+        }
+        private bool DealerShows6(ProblemState stateData)
+        {
+            return stateData.DealerUpcard.Rank == "6";
+        }
+        private bool DealerShows7(ProblemState stateData)
+        {
+            return stateData.DealerUpcard.Rank == "7";
+        }
+        private bool DealerShows8(ProblemState stateData)
+        {
+            return stateData.DealerUpcard.Rank == "8";
+        }
+        private bool DealerShows9(ProblemState stateData)
+        {
+            return stateData.DealerUpcard.Rank == "9";
+        }
+        private bool DealerShows10(ProblemState stateData)
+        {
+            return stateData.DealerUpcard.RankValueHigh == 10;
+        }
+        private bool DealerShowsA(ProblemState stateData)
+        {
+            return stateData.DealerUpcard.Rank == "A";
+        }
+
         //-------------------------------------------------------------------------
         // then functions to steer the strategy via storing to state
         //-------------------------------------------------------------------------
-        private  bool HitIf(bool value, ProblemState state)
+        private bool HitIf(bool value, ProblemState state)
         {
             // pass through the value, but register the vote
             if (value) state.VotesForHit++;
@@ -303,7 +353,7 @@ namespace BlackjackStrategy.Models
 
             // then test that strategy and return the total money lost/made
             var strategyTester = new StrategyTester(strategy);
-            return strategyTester.GetStrategyScore(dealerUpcardRank);
+            return strategyTester.GetStrategyScore();
         }
 
         //-------------------------------------------------------------------------
