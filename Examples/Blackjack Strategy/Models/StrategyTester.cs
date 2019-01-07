@@ -15,15 +15,15 @@ namespace BlackjackStrategy.Models
 
     public enum StartingHandStyle
     {
-        Random,
-        Pair2,Pair3,Pair4,Pair5,Pair6,Pair7,Pair8,Pair9,Pair10,PairA,
-        Ace2,Ace3,Ace4,Ace5,Ace6,Ace7,Ace8,Ace9,
-        Hard5, Hard6, Hard7, Hard8, Hard9, Hard10, Hard11, Hard12, Hard13, Hard14, Hard15, Hard16, Hard17, Hard18, Hard19, Hard20
+        Random, Pairs, SoftAces, HardHands
+        //Pair2,Pair3,Pair4,Pair5,Pair6,Pair7,Pair8,Pair9,Pair10,PairA,
+        //Ace2,Ace3,Ace4,Ace5,Ace6,Ace7,Ace8,Ace9,
+        //Hard5, Hard6, Hard7, Hard8, Hard9, Hard10, Hard11, Hard12, Hard13, Hard14, Hard15, Hard16, Hard17, Hard18, Hard19, Hard20
     }
 
     class StrategyTester
     {
-        public StartingHandStyle PlayerStartingHand { get; set; } = StartingHandStyle.Random;
+        public StartingHandStyle PlayerStartingHandType { get; set; } = StartingHandStyle.Random;
         public string DealerUpcardRank { get; set; } = "";
 
         private OverallStrategy strategy;
@@ -54,9 +54,9 @@ namespace BlackjackStrategy.Models
                     dealerHand.AddCard(deck.DealCard());
                 dealerHand.AddCard(deck.DealCard());
 
-                bool isPair = PlayerStartingHand >= StartingHandStyle.Pair2 && PlayerStartingHand <= StartingHandStyle.PairA;
-                bool isSoftAce = PlayerStartingHand >= StartingHandStyle.Ace2 && PlayerStartingHand <= StartingHandStyle.Ace9;
-                bool isHardHand = PlayerStartingHand >= StartingHandStyle.Hard5 && PlayerStartingHand <= StartingHandStyle.Hard20;
+                bool isPair = PlayerStartingHandType == StartingHandStyle.Pairs;
+                bool isSoftAce = PlayerStartingHandType == StartingHandStyle.SoftAces;
+                bool isHardHand = PlayerStartingHandType == StartingHandStyle.HardHands;
 
                 // starting hand: completely random
                 if (!isPair && !isSoftAce && !isHardHand)
@@ -68,16 +68,35 @@ namespace BlackjackStrategy.Models
                 if (isPair)
                 {
                     // deal out a starting pair, with the right rank
+                    playerHand.AddCard(deck.DealCard());
+                    playerHand.AddCard(deck.DealNextOfRank(playerHand.Cards[0].Rank));
                 }
 
                 if (isSoftAce)
                 {
                     // deal an ace and another card or two
+                    playerHand.AddCard(deck.DealNextOfRank("A"));
+                    playerHand.AddCard(deck.DealNextNotOfRank("A"));
                 }
 
                 if (isHardHand)
                 {
                     // deal two cards that total (that aren't a pair)
+                    int hardTotal = Randomizer.IntBetween(5, 20);   // hard 4 is actually 2 twos, and 21 is a win
+                                                                    
+                    // divide by 2 if it's even, else add one and divide by two
+                    int firstCardRank = ((hardTotal % 2) != 0) ? (hardTotal + 1) / 2 : hardTotal / 2;
+                    int secondCardRank = hardTotal - firstCardRank;
+
+                    if (firstCardRank == 11)
+                    {
+                        // hard 20 needs to be three cards, so in this case 9, 4, 7
+                        firstCardRank = 4;
+                        playerHand.AddCard(new Card("7D"));
+                    }
+
+                    playerHand.AddCard(new Card(firstCardRank, "D"));
+                    playerHand.AddCard(new Card(secondCardRank, "S"));
                 }
 
 

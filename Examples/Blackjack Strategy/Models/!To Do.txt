@@ -5,18 +5,14 @@ TO DO
 --------------------------
 Blackjack Example
 --------------------------
-- Loop over each possible holding (of 34)
-
-- finish code for starting hands
-
-- set up rules based on starting hand category
-
+- Implement a solution per holding (34)
+- Implement a solution per holding/upcard combo
+- Each solution should run a set of tests on the final result, and report on performance numbers
 - Write resulting times to text file for comparisons
+
 - for looping while constructing strategy from candidate, use rank enums when possible
-- Use WPF property grid instead of custom stuff
 - Solution.LoadFromFile() .SaveToFile(), .LoadFromString()
 - Increase height of display (or make dynamic)
-- UI for #nochange, min/max tree depth, min/max generations, selection style
 
 - Engine.AddAutoDefinedFunction(numParams)
 

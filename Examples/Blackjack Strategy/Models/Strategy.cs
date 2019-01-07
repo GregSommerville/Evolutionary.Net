@@ -15,6 +15,97 @@ namespace BlackjackStrategy.Models
         private Dictionary<string, ActionToTake> softStrategy = new Dictionary<string, ActionToTake>();
         private Dictionary<string, ActionToTake> hardStrategy = new Dictionary<string, ActionToTake>();
 
+        public OverallStrategy(
+            CandidateSolution<bool, ProblemState> pairsCandidate,
+            CandidateSolution<bool, ProblemState> softHandsCandidate,
+            CandidateSolution<bool, ProblemState> hardHandsCandidate)
+        {
+            // cycle over all of the possible upcards
+            for (int upcardRank = 2; upcardRank < 12; upcardRank++)
+            {
+                string upcardRankName = (upcardRank == 11) ? "A" : upcardRank.ToString();
+                Card dealerCard = new Card(upcardRankName, "D");
+
+                // do pairs
+                for (int pairedCard = 11; pairedCard > 1; pairedCard--)
+                {
+                    string pairedCardRank = (pairedCard == 11) ? "A" : pairedCard.ToString();
+
+                    // build player hand
+                    Hand playerHand = new Hand();
+                    playerHand.AddCard(new Card(pairedCardRank, "H")); // X of hearts
+                    playerHand.AddCard(new Card(pairedCardRank, "S")); // X of spades
+
+                    // find strategy 
+                    SetupStateData(pairsCandidate.StateData, playerHand, dealerCard);
+                    pairsCandidate.Evaluate();
+
+                    // get the decision and store in the strategy object
+                    var action = GetActionFromCandidate(pairsCandidate.StateData);
+                    AddPairStrategy(pairedCardRank, action, dealerCard);
+                }
+
+                // then soft hands
+                // we don't start with Ace, because that would be AA, which is handled in the pair zone
+                // we also don't start with 10, since that's blackjack.  So 9 is our starting point
+                for (int otherCard = 9; otherCard > 1; otherCard--)
+                {
+                    string otherCardRank = (otherCard == 11) ? "A" : otherCard.ToString();
+
+                    // build player hand
+                    Hand playerHand = new Hand();
+                    // first card is an ace, second card is looped over
+                    playerHand.AddCard(new Card("AH")); // ace of hearts
+                    playerHand.AddCard(new Card(otherCardRank, "S"));
+
+                    // find strategy 
+                    SetupStateData(softHandsCandidate.StateData, playerHand, dealerCard);
+                    softHandsCandidate.Evaluate();
+
+                    // get the decision and store in the strategy object
+                    var action = GetActionFromCandidate(softHandsCandidate.StateData);
+                    AddSoftStrategy(otherCardRank, action, dealerCard);
+                }
+
+                // hard hands.  
+                for (int hardTotal = 20; hardTotal > 4; hardTotal--)
+                {
+                    // build player hand
+                    Hand playerHand = new Hand();
+
+                    // divide by 2 if it's even, else add one and divide by two
+                    int firstCardRank = ((hardTotal % 2) != 0) ? (hardTotal + 1) / 2 : hardTotal / 2;
+                    int secondCardRank = hardTotal - firstCardRank;
+
+                    // 20 is always TT, which is a pair, so we handle that by building a 3 card hand
+                    if (hardTotal == 20)
+                    {
+                        playerHand.AddCard(new Card("TD")); // ten of diamonds
+                        firstCardRank = 6;
+                        secondCardRank = 4;
+                    }
+
+                    // we don't want pairs, so check for that
+                    if (firstCardRank == secondCardRank)
+                    {
+                        firstCardRank++;
+                        secondCardRank--;
+                    }
+
+                    playerHand.AddCard(new Card(firstCardRank, "D"));
+                    playerHand.AddCard(new Card(secondCardRank, "S"));
+
+                    // find strategy 
+                    SetupStateData(hardHandsCandidate.StateData, playerHand, dealerCard);
+                    hardHandsCandidate.Evaluate();
+
+                    // get the decision and store in the strategy object
+                    var action = GetActionFromCandidate(hardHandsCandidate.StateData);
+                    AddHardStrategy(hardTotal, action, dealerCard);
+                }
+            }
+        }
+
         public OverallStrategy(CandidateSolution<bool, ProblemState> candidate)
         {
             // cycle over all of the possible upcards

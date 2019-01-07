@@ -2,6 +2,7 @@
 using Evolutionary;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,9 +18,25 @@ namespace BlackjackStrategy
     /// </summary>
     public partial class MainWindow : Window
     {
+        // This parameters object is bound to the UI, for editing
+        public EngineParameters EngineParameters { get; set; } = new EngineParameters()
+        {
+            TourneySize = 4,
+            MinGenerations = 25,
+            MaxGenerations = 100,
+            StagnantGenerationLimit = 8,
+            ElitismRate = 0.15,
+            PopulationSize = 250,
+            IsLowerFitnessBetter = false,
+            CrossoverRate = 1.00,
+            MutationRate = 0.08,
+            RandomTreeMinDepth = 6,
+            RandomTreeMaxDepth = 10,
+            SelectionStyle = SelectionStyle.Tourney,
+        };
+
+        // each callback adds a progress string here 
         private List<string> progressSoFar = new List<string>();
-        private string currentRank = "";
-        private Dictionary<string, CandidateSolution<bool, ProblemState>> solutionByUpcard = new Dictionary<string, CandidateSolution<bool, ProblemState>>();
 
         public MainWindow()
         {
@@ -28,71 +45,29 @@ namespace BlackjackStrategy
 
         private void btnSolve_Click(object sender, RoutedEventArgs e)
         {
-            var populationSize = (int)populationSizeSlider.Value;
-            var crossoverPercentage = (int)crossoverPctSlider.Value;
-            var mutationPercentage = Convert.ToDouble(txtMutationPct.Text);
-            var ElitismPercentage = (int)ElitismSlider.Value;
-            var tourneySize = (int)tourneySizeSlider.Value;
-
             gaResultTB.Text = "Creating solution, please wait...";
 
             // Finding the solution takes a while, so kick off a thread for it
-            Task.Factory.StartNew(() => AsyncCall(populationSize, crossoverPercentage, mutationPercentage, ElitismPercentage, tourneySize));
+            Task.Factory.StartNew(() => AsyncCall());
         }
 
-        private void AsyncCall(int populationSize, int crossoverPercentage, double mutationPercentage, int ElitismPercentage, int tourneySize)
+        private void AsyncCall()
         {
-            //// create a solution for each upcard 
-            //for (var upcard = 2; upcard < 12; upcard++)
-            //{
-            //    // set the dealer upcard to use
-            //    currentRank = upcard.ToString();
-            //    if (upcard == 11) currentRank = "A";
-                
-                // reset the progress messages
-                progressSoFar = new List<string>();
+            // reset the progress messages
+            progressSoFar = new List<string>();
 
-                // find the solution for this dealer upcard
-                var solutionFinder = new Solution();
-                solutionFinder.BuildProgram(
-                    populationSize, 
-                    crossoverPercentage, 
-                    mutationPercentage,
-                    ElitismPercentage, 
-                    tourneySize, 
-                    DisplayCurrentStatus);
-
-            //    // save the solution in memory
-            //    solutionByUpcard[currentRank] = solutionFinder.BestSolution;
-
-            //    // and on disk
-            //    SaveSolutionToDisk(
-            //        "upcard" + currentRank + "solution.txt", 
-            //        solutionByUpcard[currentRank].ToString()
-            //        );
-            //}
+            // one overall solution
+            var solutionFinder = new SolutionByCategory();  // new SolutionSingle();
+            solutionFinder.BuildProgram(EngineParameters, DisplayCurrentStatus);
 
             // then display the final results
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                //StringBuilder sb = new StringBuilder();
-                //sb.AppendLine("Scores by dealer upcard:");
-                //for (var upcard = 2; upcard < 12; upcard++)
-                //{
-                //    // set the dealer upcard to use
-                //    currentRank = upcard.ToString();
-                //    if (upcard == 11) currentRank = "A";
+                gaResultTB.Text = "Solution found.\n" + solutionFinder.FinalStatus;
 
-                //    sb.AppendLine(currentRank + " score: " + solutionByUpcard[currentRank].Fitness.ToString());
-                //}
-                //gaResultTB.Text = sb.ToString();
-
-                var best = solutionFinder.BestSolution;
-
-                gaResultTB.Text = "Solution found.  Final Score: " + best.Fitness.ToString() + "\n" +
-                    "Generations needed to find: " + solutionFinder.NumGenerationsNeeded;
-
-                ShowPlayableHands(solutionFinder.BestSolution);
+                var strategy = solutionFinder.GetStrategy();
+                ShowPlayableHands(strategy);
+                //SaveSolutionToDisk("single-solution.txt", solutionFinder.Solution.ToString());
             }),
             DispatcherPriority.Background);
         }
@@ -114,10 +89,8 @@ namespace BlackjackStrategy
             DispatcherPriority.Background);
         }
 
-        private void ShowPlayableHands(CandidateSolution<bool, ProblemState> solution)
+        private void ShowPlayableHands(OverallStrategy strategy)
         {
-            var strategy = new OverallStrategy(solution);
-
             // clear the screen
             canvas.Children.Clear();
 
@@ -132,9 +105,6 @@ namespace BlackjackStrategy
                 AddColorBox(Colors.White, upcardRankName, x, 0);
                 y = 1;
 
-                // get the strategy
-                //var best = solutionByUpcard[upcardRankName];
-
                 for (int hardTotal = 20; hardTotal > 4; hardTotal--)
                 {
                     // add a white box with the total
@@ -142,9 +112,23 @@ namespace BlackjackStrategy
 
                     // build player hand
                     Hand playerHand = new Hand();
+
                     // divide by 2 if it's even, else add one and divide by two
                     int firstCardRank = ((hardTotal % 2) != 0) ? (hardTotal + 1) / 2 : hardTotal / 2;
                     int secondCardRank = hardTotal - firstCardRank;
+                    if (firstCardRank == secondCardRank)
+                    {
+                        firstCardRank++;
+                        secondCardRank--;
+
+                        if (firstCardRank == 11)
+                        {
+                            // hard 20 needs to be three cards, so in this case 9, 4, 7
+                            firstCardRank = 4;
+                            playerHand.AddCard(new Card("7D"));
+                        }
+                    }
+
                     playerHand.AddCard(new Card(firstCardRank, "D"));
                     playerHand.AddCard(new Card(secondCardRank, "S"));
 
@@ -181,9 +165,6 @@ namespace BlackjackStrategy
 
                 AddColorBox(Colors.White, upcardRankName, x, 0);
                 y = 1;
-
-                //var best = solutionByUpcard[upcardRankName];
-                //var strategy = new OverallStrategy(best);
 
                 // we don't start with Ace, because that would be AA, which is handled in the pair zone
                 // we also don't start with 10, since that's blackjack.  So 9 is our starting point
@@ -232,9 +213,6 @@ namespace BlackjackStrategy
 
                 AddColorBox(Colors.White, upcardRankName, x, 0);
                 y = startY;
-
-                //var best = solutionByUpcard[upcardRankName];
-                //var strategy = new OverallStrategy(best);
 
                 for (int pairedCard = 11; pairedCard > 1; pairedCard--)
                 {

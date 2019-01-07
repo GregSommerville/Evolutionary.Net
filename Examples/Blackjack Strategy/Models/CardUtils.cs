@@ -252,6 +252,24 @@ namespace BlackjackStrategy.Models
             return Cards[currentCard++];
         }
 
+        internal Card DealNextOfRank(string rank)
+        {
+            int index = currentCard;
+            while (Cards[index].Rank != rank) index++;
+            var card = Cards[index];
+            Cards.Remove(card);
+            return card;
+        }
+
+        internal Card DealNextNotOfRank(string rank)
+        {
+            int index = currentCard;
+            while (Cards[index].Rank == rank) index++;
+            var card = Cards[index];
+            Cards.Remove(card);
+            return card;
+        }
+
         internal void RemoveCard(string rank, string suit)
         {
             if (rank == "10") rank = "T";
@@ -271,6 +289,7 @@ namespace BlackjackStrategy.Models
             return CardsRemaining + " remaining, first cards are " +
                 Cards[0].ToString() + " " + Cards[1].ToString() + " " + Cards[2].ToString();
         }
+
     }
 
     //=======================================================================

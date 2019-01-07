@@ -89,8 +89,10 @@
   <ItemGroup>
     <Compile Include="Models\CardUtils.cs" />
     <Compile Include="Models\Randomizer.cs" />
-    <Compile Include="Models\Solution.cs" />
+    <Compile Include="Models\SolutionByCategory.cs" />
+    <Compile Include="Models\SolutionSingle.cs" />
     <Compile Include="Models\CandidateStateData.cs" />
+    <Compile Include="Models\SolutionBase.cs" />
     <Compile Include="Models\Strategy.cs" />
     <Compile Include="Models\StrategyTester.cs" />
     <Compile Include="Models\TestConditions.cs" />

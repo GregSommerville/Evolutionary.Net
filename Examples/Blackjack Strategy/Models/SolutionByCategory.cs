@@ -4,45 +4,45 @@ using System.Diagnostics;
 
 namespace BlackjackStrategy.Models
 {
-    class Solution
+    class SolutionByCategory : SolutionBase
     {
-        // a place to store the best solution, once we find it
-        public CandidateSolution<bool, ProblemState> BestSolution { get; private set; }
-        public int NumGenerationsNeeded { get; private set; }
+        private CandidateSolution<bool, ProblemState> BestSolutionForPairs;
+        private CandidateSolution<bool, ProblemState> BestSolutionForSoftHands;
+        private CandidateSolution<bool, ProblemState> BestSolutionForHardHands;
+        private OverallStrategy FinalStrategy;
 
-        private Action<string> displayGenerationCallback;
+        private int NumGenerationsNeeded = 0;
+        private Action<string> perGenerationCallback;
+        private EngineParameters engineParameters;
+        private StartingHandStyle startingHandStyle;
 
-        public void BuildProgram(
-            int populationSize, 
-            int crossoverPercentage, 
-            double mutationPercentage, 
-            int ElitismPercentage, 
-            int tourneySize, 
-            Action<string> currentStatusCallback)
+        public override OverallStrategy GetStrategy()
         {
-            displayGenerationCallback = currentStatusCallback;
+            return FinalStrategy;
+        }
 
-            // just some values, leave the rest as defaults
-            var engineParams = new EngineParameters()
-            {
-                CrossoverRate = crossoverPercentage / 100F,
-                ElitismRate = ElitismPercentage / 100F,
-                IsLowerFitnessBetter = false,
-                MutationRate = mutationPercentage / 100F,
-                PopulationSize = populationSize,
-                StagnantGenerationLimit = 8,
-                SelectionStyle = SelectionStyle.Tourney,
-                TourneySize = tourneySize,
-            };
+        public override void BuildProgram(EngineParameters engineParams, Action<string> callback)
+        {
+            this.engineParameters = engineParams;
+            this.perGenerationCallback = callback;
+
+            FindStrategyForPairs();
+            FindStrategyForSoftHands();
+            FindStrategyForHardHands();
+
+            FinalStatus = "Generations needed to find: " + NumGenerationsNeeded;
+
+            // combine the three to create a strategy object
+            FinalStrategy = new OverallStrategy(BestSolutionForPairs, BestSolutionForSoftHands, BestSolutionForHardHands);
+        }
+
+        private void FindStrategyForPairs()
+        {
+            startingHandStyle = StartingHandStyle.Pairs;
 
             // create the engine.  each tree (and node within the tree) will return a bool.
             // we also indicate the type of our problem state data (used by terminal functions and stateful functions)
-            var engine = new Engine<bool, ProblemState>(engineParams);
-
-            // no constants for this problem
-            
-            // no variables for this solution - we can't pass in information about our hand 
-            // via boolean variables, so we do it via some terminal functions instead
+            var engine = new Engine<bool, ProblemState>(engineParameters);
 
             // for a boolean tree, we use the standard operators
             engine.AddFunction((a, b) => a || b, "Or");
@@ -57,14 +57,7 @@ namespace BlackjackStrategy.Models
             engine.AddStatefulFunction(DoubleIf, "DoubleIf");
             engine.AddStatefulFunction(SplitIf, "SplitIf");
 
-            //----------------------------------------------
-            // terminal functions to look at game state
-            //----------------------------------------------
-
-            // soft hands
-            engine.AddTerminalFunction(HasSoftAce, "HasSoftAce");
-
-            // pairs
+            // details of pair
             engine.AddTerminalFunction(HasPairTwos, "HasPair2");
             engine.AddTerminalFunction(HasPairThrees, "HasPair3");
             engine.AddTerminalFunction(HasPairFours, "HasPair4");
@@ -76,8 +69,101 @@ namespace BlackjackStrategy.Models
             engine.AddTerminalFunction(HasPairTens, "HasPairT");
             engine.AddTerminalFunction(HasPairAces, "HasPairA");
 
+            // upcards
+            engine.AddTerminalFunction(DealerShows2, "Dlr2");
+            engine.AddTerminalFunction(DealerShows3, "Dlr3");
+            engine.AddTerminalFunction(DealerShows4, "Dlr4");
+            engine.AddTerminalFunction(DealerShows5, "Dlr5");
+            engine.AddTerminalFunction(DealerShows6, "Dlr6");
+            engine.AddTerminalFunction(DealerShows7, "Dlr7");
+            engine.AddTerminalFunction(DealerShows8, "Dlr8");
+            engine.AddTerminalFunction(DealerShows9, "Dlr9");
+            engine.AddTerminalFunction(DealerShows10, "Dlr10");
+            engine.AddTerminalFunction(DealerShowsA, "DlrA");
+
+            // pass a fitness evaluation function and run
+            engine.AddFitnessFunction((t) => EvaluateCandidate(t));
+
+            // and add something so we can track the progress
+            engine.AddProgressFunction((t) => PerGenerationCallback(t));
+
+            BestSolutionForPairs = engine.FindBestSolution();
+        }
+
+        private void FindStrategyForSoftHands()
+        {
+            startingHandStyle = StartingHandStyle.SoftAces;
+
+            var engine = new Engine<bool, ProblemState>(engineParameters);
+
+            engine.AddFunction((a, b) => a || b, "Or");
+            engine.AddFunction((a, b, c) => a || b || c, "Or3");
+            engine.AddFunction((a, b) => a && b, "And");
+            engine.AddFunction((a, b, c) => a && b && c, "And3");
+            engine.AddFunction((a) => !a, "Not");
+
+            engine.AddStatefulFunction(HitIf, "HitIf");
+            engine.AddStatefulFunction(StandIf, "StandIf");
+            engine.AddStatefulFunction(DoubleIf, "DoubleIf");
+
+            //----------------------------------------------
+            // terminal functions to look at game state
+            //----------------------------------------------
+
+            // terminal functions to indicate the other card's rank
+            engine.AddTerminalFunction(AcePlus2, "AcePlus2");
+            engine.AddTerminalFunction(AcePlus3, "AcePlus3");
+            engine.AddTerminalFunction(AcePlus4, "AcePlus4");
+            engine.AddTerminalFunction(AcePlus5, "AcePlus5");
+            engine.AddTerminalFunction(AcePlus6, "AcePlus6");
+            engine.AddTerminalFunction(AcePlus7, "AcePlus7");
+            engine.AddTerminalFunction(AcePlus8, "AcePlus8");
+            engine.AddTerminalFunction(AcePlus9, "AcePlus9");
+
+            // upcards
+            engine.AddTerminalFunction(DealerShows2, "Dlr2");
+            engine.AddTerminalFunction(DealerShows3, "Dlr3");
+            engine.AddTerminalFunction(DealerShows4, "Dlr4");
+            engine.AddTerminalFunction(DealerShows5, "Dlr5");
+            engine.AddTerminalFunction(DealerShows6, "Dlr6");
+            engine.AddTerminalFunction(DealerShows7, "Dlr7");
+            engine.AddTerminalFunction(DealerShows8, "Dlr8");
+            engine.AddTerminalFunction(DealerShows9, "Dlr9");
+            engine.AddTerminalFunction(DealerShows10, "Dlr10");
+            engine.AddTerminalFunction(DealerShowsA, "DlrA");
+
+            // pass a fitness evaluation function and run
+            engine.AddFitnessFunction((t) => EvaluateCandidate(t));
+
+            // and add something so we can track the progress
+            engine.AddProgressFunction((t) => PerGenerationCallback(t));
+
+            BestSolutionForSoftHands = engine.FindBestSolution();
+        }
+
+        private void FindStrategyForHardHands()
+        {
+            startingHandStyle = StartingHandStyle.HardHands;
+
+            var engine = new Engine<bool, ProblemState>(engineParameters);
+
+            engine.AddFunction((a, b) => a || b, "Or");
+            engine.AddFunction((a, b, c) => a || b || c, "Or3");
+            engine.AddFunction((a, b) => a && b, "And");
+            engine.AddFunction((a, b, c) => a && b && c, "And3");
+            engine.AddFunction((a) => !a, "Not");
+
+
+            // then add functions to indicate a strategy
+            engine.AddStatefulFunction(HitIf, "HitIf");
+            engine.AddStatefulFunction(StandIf, "StandIf");
+            engine.AddStatefulFunction(DoubleIf, "DoubleIf");
+
+            //----------------------------------------------
+            // terminal functions to look at game state
+            //----------------------------------------------
+
             // hard hand totals
-            engine.AddTerminalFunction(HandVal4, "Hard4");
             engine.AddTerminalFunction(HandVal5, "Hard5");
             engine.AddTerminalFunction(HandVal6, "Hard6");
             engine.AddTerminalFunction(HandVal7, "Hard7");
@@ -113,16 +199,45 @@ namespace BlackjackStrategy.Models
             // and add something so we can track the progress
             engine.AddProgressFunction((t) => PerGenerationCallback(t));
 
-            BestSolution = engine.FindBestSolution();
+            BestSolutionForHardHands = engine.FindBestSolution();
         }
 
         //-------------------------------------------------------------------------
         // Now terminal functions to get information about the player's hand
         //-------------------------------------------------------------------------
 
-        private  bool HasSoftAce(ProblemState stateData)
+        // since these are only used when dealing with a soft ace, we can simply subtract 11 for the high ace
+        private bool AcePlus2(ProblemState stateData)
         {
-            return stateData.PlayerHand.HasSoftAce();
+            return (stateData.PlayerHand.HandValue() - 11) == 2;
+        }
+        private bool AcePlus3(ProblemState stateData)
+        {
+            return (stateData.PlayerHand.HandValue() - 11) == 3;
+        }
+        private bool AcePlus4(ProblemState stateData)
+        {
+            return (stateData.PlayerHand.HandValue() - 11) == 4;
+        }
+        private bool AcePlus5(ProblemState stateData)
+        {
+            return (stateData.PlayerHand.HandValue() - 11) == 5;
+        }
+        private bool AcePlus6(ProblemState stateData)
+        {
+            return (stateData.PlayerHand.HandValue() - 11) == 6;
+        }
+        private bool AcePlus7(ProblemState stateData)
+        {
+            return (stateData.PlayerHand.HandValue() - 11) == 7;
+        }
+        private bool AcePlus8(ProblemState stateData)
+        {
+            return (stateData.PlayerHand.HandValue() - 11) == 8;
+        }
+        private bool AcePlus9(ProblemState stateData)
+        {
+            return (stateData.PlayerHand.HandValue() - 11) == 9;
         }
 
         private bool HasPairOf(string rankNeeded, Hand hand)
@@ -186,87 +301,82 @@ namespace BlackjackStrategy.Models
         }
 
         // all the ones relating to hand total value
-        private bool HandVal4(ProblemState stateData)
-        {
-            return stateData.PlayerHand.HandValue() == 4;
-        }
-
-        private  bool HandVal5(ProblemState stateData)
+        private bool HandVal5(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 5;
         }
 
-        private  bool HandVal6(ProblemState stateData)
+        private bool HandVal6(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 6;
         }
 
-        private  bool HandVal7(ProblemState stateData)
+        private bool HandVal7(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 7;
         }
 
-        private  bool HandVal8(ProblemState stateData)
+        private bool HandVal8(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 8;
         }
 
-        private  bool HandVal9(ProblemState stateData)
+        private bool HandVal9(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 9;
         }
 
-        private  bool HandVal10(ProblemState stateData)
+        private bool HandVal10(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 10;
         }
 
-        private  bool HandVal11(ProblemState stateData)
+        private bool HandVal11(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 11;
         }
 
-        private  bool HandVal12(ProblemState stateData)
+        private bool HandVal12(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 12;
         }
 
-        private  bool HandVal13(ProblemState stateData)
+        private bool HandVal13(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 13;
         }
 
-        private  bool HandVal14(ProblemState stateData)
+        private bool HandVal14(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 14;
         }
 
-        private  bool HandVal15(ProblemState stateData)
+        private bool HandVal15(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 15;
         }
 
-        private  bool HandVal16(ProblemState stateData)
+        private bool HandVal16(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 16;
         }
 
-        private  bool HandVal17(ProblemState stateData)
+        private bool HandVal17(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 17;
         }
 
-        private  bool HandVal18(ProblemState stateData)
+        private bool HandVal18(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 18;
         }
 
-        private  bool HandVal19(ProblemState stateData)
+        private bool HandVal19(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 19;
         }
 
-        private  bool HandVal20(ProblemState stateData)
+        private bool HandVal20(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 20;
         }
@@ -322,14 +432,14 @@ namespace BlackjackStrategy.Models
             return value;
         }
 
-        private  bool StandIf(bool value, ProblemState state)
+        private bool StandIf(bool value, ProblemState state)
         {
             // pass through the value, but register the vote
             if (value) state.VotesForStand++;
             return value;
         }
 
-        private  bool DoubleIf(bool value, ProblemState state)
+        private bool DoubleIf(bool value, ProblemState state)
         {
             // we don't check for validity here, since it's handled when retrieving the action
             if (value) state.VotesForDoubleDown++;
@@ -353,6 +463,8 @@ namespace BlackjackStrategy.Models
 
             // then test that strategy and return the total money lost/made
             var strategyTester = new StrategyTester(strategy);
+            strategyTester.PlayerStartingHandType = startingHandStyle;
+
             return strategyTester.GetStrategyScore(TestConditions.NumHandsToPlay);
         }
 
@@ -365,11 +477,11 @@ namespace BlackjackStrategy.Models
                 " best: " + progress.BestFitnessThisGen.ToString("0") +
                 " avg: " + progress.AvgFitnessThisGen.ToString("0");
 
-            displayGenerationCallback(summary);
+            perGenerationCallback(summary);
             Debug.WriteLine(summary);
 
             // keep track of how many gens we've searched
-            NumGenerationsNeeded = progress.GenerationNumber;
+            NumGenerationsNeeded++;
 
             // return true to keep going, false to halt the system
             bool keepRunning = true;
