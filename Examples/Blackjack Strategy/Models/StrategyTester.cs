@@ -10,7 +10,8 @@ namespace BlackjackStrategy.Models
         PlayerBusted,
         DealerDrawing,
         DealerBusted,
-        HandComparison
+        HandComparison,
+        RestartPlayerHand
     }
 
     public enum StartingHandStyle
@@ -46,9 +47,7 @@ namespace BlackjackStrategy.Models
 
                 if (DealerUpcardRank != "")
                 {
-                    // always use the designated dealer upcard (of hearts), so we need to remove from the deck so it doesn't get used twice
-                    deck.RemoveCard(DealerUpcardRank, "H");
-                    dealerHand.AddCard(new Card(DealerUpcardRank, "H"));
+                    dealerHand.AddCard(deck.DealNextOfRank(DealerUpcardRank));
                 }
                 else
                     dealerHand.AddCard(deck.DealCard());
@@ -58,60 +57,55 @@ namespace BlackjackStrategy.Models
                 bool isSoftAce = PlayerStartingHandType == StartingHandStyle.SoftAces;
                 bool isHardHand = PlayerStartingHandType == StartingHandStyle.HardHands;
 
-                // starting hand: completely random
-                if (!isPair && !isSoftAce && !isHardHand)
+                switch (PlayerStartingHandType)
                 {
-                    playerHand.AddCard(deck.DealCard());
-                    playerHand.AddCard(deck.DealCard());
+                    case StartingHandStyle.Random:
+                        playerHand.AddCard(deck.DealCard());
+                        playerHand.AddCard(deck.DealCard());
+                        break;
+
+                    case StartingHandStyle.Pairs:
+                        playerHand.AddCard(deck.DealCard());
+                        playerHand.AddCard(deck.DealNextOfRank(playerHand.Cards[0].Rank));
+                        break;
+
+                    case StartingHandStyle.SoftAces:
+                        playerHand.AddCard(deck.DealNextOfRank("A"));
+                        playerHand.AddCard(deck.DealNextNotOfRank("A"));
+                        break;
+
+                    case StartingHandStyle.HardHands:
+                        // deal two cards that total (that aren't a pair)
+                        int hardTotal = Randomizer.IntBetween(5, 20);   // hard 4 is actually 2 twos, and 21 is a win
+
+                        // divide by 2 if it's even, else add one and divide by two
+                        int firstCardRank = ((hardTotal % 2) != 0) ? (hardTotal + 1) / 2 : hardTotal / 2;
+                        int secondCardRank = hardTotal - firstCardRank;
+
+                        if (firstCardRank == 11)
+                        {
+                            // hard 20 needs to be three cards, so in this case 9, 4, 7
+                            firstCardRank = 4;
+                            playerHand.AddCard(new Card("7D"));
+                        }
+
+                        playerHand.AddCard(new Card(firstCardRank, "D"));
+                        playerHand.AddCard(new Card(secondCardRank, "S"));
+                        break;
                 }
-
-                if (isPair)
-                {
-                    // deal out a starting pair, with the right rank
-                    playerHand.AddCard(deck.DealCard());
-                    playerHand.AddCard(deck.DealNextOfRank(playerHand.Cards[0].Rank));
-                }
-
-                if (isSoftAce)
-                {
-                    // deal an ace and another card or two
-                    playerHand.AddCard(deck.DealNextOfRank("A"));
-                    playerHand.AddCard(deck.DealNextNotOfRank("A"));
-                }
-
-                if (isHardHand)
-                {
-                    // deal two cards that total (that aren't a pair)
-                    int hardTotal = Randomizer.IntBetween(5, 20);   // hard 4 is actually 2 twos, and 21 is a win
-                                                                    
-                    // divide by 2 if it's even, else add one and divide by two
-                    int firstCardRank = ((hardTotal % 2) != 0) ? (hardTotal + 1) / 2 : hardTotal / 2;
-                    int secondCardRank = hardTotal - firstCardRank;
-
-                    if (firstCardRank == 11)
-                    {
-                        // hard 20 needs to be three cards, so in this case 9, 4, 7
-                        firstCardRank = 4;
-                        playerHand.AddCard(new Card("7D"));
-                    }
-
-                    playerHand.AddCard(new Card(firstCardRank, "D"));
-                    playerHand.AddCard(new Card(secondCardRank, "S"));
-                }
-
 
                 // save the cards in state, and reset the votes for this hand
                 List<Hand> playerHands = new List<Hand>();
                 playerHands.Add(playerHand);
 
                 // do the intial wager
-                int totalBetAmount = TestConditions.BetSize;
                 playerChips -= TestConditions.BetSize;
 
-                // outer loop is for each hand the player holds.  Obviously this only happens when they've split a hand
+                // outer loop is for each hand the player holds.  This only happens when they've split a hand
                 for (int handIndex = 0; handIndex < playerHands.Count; handIndex++)
                 {
-                    playerHand = playerHands[handIndex]; 
+                    playerHand = playerHands[handIndex];
+                    int totalBetAmount = TestConditions.BetSize;
 
                     // loop until the hand is done
                     var currentHandState = GameState.PlayerDrawing;
@@ -174,16 +168,28 @@ namespace BlackjackStrategy.Models
                                 break;
 
                             case ActionToTake.Split:
+                                Debug.Assert(playerHand.IsPair(), "Split with non-pair!");
+
                                 // do the split and add the hand to our collection
                                 var newHand = new Hand();
                                 newHand.AddCard(playerHand.Cards[1]);
                                 playerHand.Cards[1] = deck.DealCard();
                                 newHand.AddCard(deck.DealCard());
                                 playerHands.Add(newHand);
+
+                                Debug.Assert(playerHands.Count < 5, "Too many hands");
+
                                 // our extra bet
-                                playerChips -= TestConditions.BetSize;
-                                // we don't adjust totalBetAmount because each bet pays off individually, so the total is right 
-                                //totalBetAmount += TestConditions.BetSize;
+                                playerChips -= TestConditions.BetSize;  // no need to adjust totalBetAmount 
+
+                                // is the new hand now 21?, if so, we're done
+                                if (playerHand.HandValue() == 21)
+                                    currentHandState = GameState.DealerDrawing;
+
+                                // did we bust?
+                                if (playerHand.HandValue() > 21)
+                                    currentHandState = GameState.PlayerBusted;
+
                                 break;
                         }
                     }

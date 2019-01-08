@@ -24,15 +24,15 @@ namespace BlackjackStrategy
             TourneySize = 4,
             MinGenerations = 25,
             MaxGenerations = 100,
-            StagnantGenerationLimit = 8,
+            StagnantGenerationLimit = 9,
             ElitismRate = 0.15,
-            PopulationSize = 250,
+            PopulationSize = 100,
             IsLowerFitnessBetter = false,
-            CrossoverRate = 1.00,
-            MutationRate = 0.08,
-            RandomTreeMinDepth = 6,
-            RandomTreeMaxDepth = 10,
-            SelectionStyle = SelectionStyle.Tourney,
+            CrossoverRate = 0.99,
+            MutationRate = 0.10,
+            RandomTreeMinDepth = 4,
+            RandomTreeMaxDepth = 8,
+            SelectionStyle = SelectionStyle.Ranked,
         };
 
         // each callback adds a progress string here 
@@ -70,11 +70,6 @@ namespace BlackjackStrategy
                 //SaveSolutionToDisk("single-solution.txt", solutionFinder.Solution.ToString());
             }),
             DispatcherPriority.Background);
-        }
-
-        private void SaveSolutionToDisk(string fileName, string solution)
-        {
-            File.WriteAllText(fileName, solution);
         }
 
         private void DisplayCurrentStatus(string status)

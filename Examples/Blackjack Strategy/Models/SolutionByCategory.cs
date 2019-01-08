@@ -1,6 +1,7 @@
 ﻿using Evolutionary;
 using System;
 using System.Diagnostics;
+using System.IO;
 
 namespace BlackjackStrategy.Models
 {
@@ -34,6 +35,15 @@ namespace BlackjackStrategy.Models
 
             // combine the three to create a strategy object
             FinalStrategy = new OverallStrategy(BestSolutionForPairs, BestSolutionForSoftHands, BestSolutionForHardHands);
+
+            SaveSolutionToDisk("pairssolution.txt", BestSolutionForPairs.ToString());
+            SaveSolutionToDisk("softsolution.txt", BestSolutionForSoftHands.ToString());
+            SaveSolutionToDisk("hardsolution.txt", BestSolutionForHardHands.ToString());
+        }
+
+        private void SaveSolutionToDisk(string fileName, string solution)
+        {
+            File.WriteAllText(fileName, solution);
         }
 
         private void FindStrategyForPairs()
@@ -70,16 +80,16 @@ namespace BlackjackStrategy.Models
             engine.AddTerminalFunction(HasPairAces, "HasPairA");
 
             // upcards
-            engine.AddTerminalFunction(DealerShows2, "Dlr2");
-            engine.AddTerminalFunction(DealerShows3, "Dlr3");
-            engine.AddTerminalFunction(DealerShows4, "Dlr4");
-            engine.AddTerminalFunction(DealerShows5, "Dlr5");
-            engine.AddTerminalFunction(DealerShows6, "Dlr6");
-            engine.AddTerminalFunction(DealerShows7, "Dlr7");
-            engine.AddTerminalFunction(DealerShows8, "Dlr8");
-            engine.AddTerminalFunction(DealerShows9, "Dlr9");
-            engine.AddTerminalFunction(DealerShows10, "Dlr10");
-            engine.AddTerminalFunction(DealerShowsA, "DlrA");
+            //engine.AddTerminalFunction(DealerShows2, "Dlr2");
+            //engine.AddTerminalFunction(DealerShows3, "Dlr3");
+            //engine.AddTerminalFunction(DealerShows4, "Dlr4");
+            //engine.AddTerminalFunction(DealerShows5, "Dlr5");
+            //engine.AddTerminalFunction(DealerShows6, "Dlr6");
+            //engine.AddTerminalFunction(DealerShows7, "Dlr7");
+            //engine.AddTerminalFunction(DealerShows8, "Dlr8");
+            //engine.AddTerminalFunction(DealerShows9, "Dlr9");
+            //engine.AddTerminalFunction(DealerShows10, "Dlr10");
+            //engine.AddTerminalFunction(DealerShowsA, "DlrA");
 
             // pass a fitness evaluation function and run
             engine.AddFitnessFunction((t) => EvaluateCandidate(t));
@@ -121,16 +131,16 @@ namespace BlackjackStrategy.Models
             engine.AddTerminalFunction(AcePlus9, "AcePlus9");
 
             // upcards
-            engine.AddTerminalFunction(DealerShows2, "Dlr2");
-            engine.AddTerminalFunction(DealerShows3, "Dlr3");
-            engine.AddTerminalFunction(DealerShows4, "Dlr4");
-            engine.AddTerminalFunction(DealerShows5, "Dlr5");
-            engine.AddTerminalFunction(DealerShows6, "Dlr6");
-            engine.AddTerminalFunction(DealerShows7, "Dlr7");
-            engine.AddTerminalFunction(DealerShows8, "Dlr8");
-            engine.AddTerminalFunction(DealerShows9, "Dlr9");
-            engine.AddTerminalFunction(DealerShows10, "Dlr10");
-            engine.AddTerminalFunction(DealerShowsA, "DlrA");
+            //engine.AddTerminalFunction(DealerShows2, "Dlr2");
+            //engine.AddTerminalFunction(DealerShows3, "Dlr3");
+            //engine.AddTerminalFunction(DealerShows4, "Dlr4");
+            //engine.AddTerminalFunction(DealerShows5, "Dlr5");
+            //engine.AddTerminalFunction(DealerShows6, "Dlr6");
+            //engine.AddTerminalFunction(DealerShows7, "Dlr7");
+            //engine.AddTerminalFunction(DealerShows8, "Dlr8");
+            //engine.AddTerminalFunction(DealerShows9, "Dlr9");
+            //engine.AddTerminalFunction(DealerShows10, "Dlr10");
+            //engine.AddTerminalFunction(DealerShowsA, "DlrA");
 
             // pass a fitness evaluation function and run
             engine.AddFitnessFunction((t) => EvaluateCandidate(t));
@@ -473,7 +483,9 @@ namespace BlackjackStrategy.Models
         //-------------------------------------------------------------------------
         private bool PerGenerationCallback(EngineProgress progress)
         {
-            string summary = "Generation " + progress.GenerationNumber +
+            string summary = 
+                this.startingHandStyle.ToString() +
+                " gen: " + progress.GenerationNumber +
                 " best: " + progress.BestFitnessThisGen.ToString("0") +
                 " avg: " + progress.AvgFitnessThisGen.ToString("0");
 
