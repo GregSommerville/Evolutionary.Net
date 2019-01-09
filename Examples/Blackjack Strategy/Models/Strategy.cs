@@ -21,7 +21,10 @@ namespace BlackjackStrategy.Models
             // cycle over all of the possible upcards
             for (int upcardRank = 2; upcardRank < 12; upcardRank++)
             {
-                string upcardRankName = (upcardRank == 11) ? "A" : upcardRank.ToString();
+                string upcardRankName = upcardRank.ToString();
+                if (upcardRank == 10) upcardRankName = "T";
+                if (upcardRank == 11) upcardRankName = "A";
+
                 Card dealerCard = new Card(upcardRankName, "D");
 
                 var solution = solutionsByUpcards[upcardRankName];

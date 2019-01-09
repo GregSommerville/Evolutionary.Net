@@ -14,17 +14,8 @@ namespace BlackjackStrategy.Models
         RestartPlayerHand
     }
 
-    public enum StartingHandStyle
-    {
-        Random, Pairs, SoftAces, HardHands
-        //Pair2,Pair3,Pair4,Pair5,Pair6,Pair7,Pair8,Pair9,Pair10,PairA,
-        //Ace2,Ace3,Ace4,Ace5,Ace6,Ace7,Ace8,Ace9,
-        //Hard5, Hard6, Hard7, Hard8, Hard9, Hard10, Hard11, Hard12, Hard13, Hard14, Hard15, Hard16, Hard17, Hard18, Hard19, Hard20
-    }
-
     class StrategyTester
     {
-        public StartingHandStyle PlayerStartingHandType { get; set; } = StartingHandStyle.Random;
         public string DealerUpcardRank { get; set; } = "";
 
         private OverallStrategy strategy;
@@ -53,46 +44,8 @@ namespace BlackjackStrategy.Models
                     dealerHand.AddCard(deck.DealCard());
                 dealerHand.AddCard(deck.DealCard());
 
-                bool isPair = PlayerStartingHandType == StartingHandStyle.Pairs;
-                bool isSoftAce = PlayerStartingHandType == StartingHandStyle.SoftAces;
-                bool isHardHand = PlayerStartingHandType == StartingHandStyle.HardHands;
-
-                switch (PlayerStartingHandType)
-                {
-                    case StartingHandStyle.Random:
-                        playerHand.AddCard(deck.DealCard());
-                        playerHand.AddCard(deck.DealCard());
-                        break;
-
-                    case StartingHandStyle.Pairs:
-                        playerHand.AddCard(deck.DealCard());
-                        playerHand.AddCard(deck.DealNextOfRank(playerHand.Cards[0].Rank));
-                        break;
-
-                    case StartingHandStyle.SoftAces:
-                        playerHand.AddCard(deck.DealNextOfRank("A"));
-                        playerHand.AddCard(deck.DealNextNotOfRank("A"));
-                        break;
-
-                    case StartingHandStyle.HardHands:
-                        // deal two cards that total (that aren't a pair)
-                        int hardTotal = Randomizer.IntBetween(5, 20);   // hard 4 is actually 2 twos, and 21 is a win
-
-                        // divide by 2 if it's even, else add one and divide by two
-                        int firstCardRank = ((hardTotal % 2) != 0) ? (hardTotal + 1) / 2 : hardTotal / 2;
-                        int secondCardRank = hardTotal - firstCardRank;
-
-                        if (firstCardRank == 11)
-                        {
-                            // hard 20 needs to be three cards, so in this case 9, 4, 7
-                            firstCardRank = 4;
-                            playerHand.AddCard(new Card("7D"));
-                        }
-
-                        playerHand.AddCard(new Card(firstCardRank, "D"));
-                        playerHand.AddCard(new Card(secondCardRank, "S"));
-                        break;
-                }
+                playerHand.AddCard(deck.DealCard());
+                playerHand.AddCard(deck.DealCard());
 
                 // save the cards in state, and reset the votes for this hand
                 List<Hand> playerHands = new List<Hand>();

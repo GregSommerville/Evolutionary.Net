@@ -26,14 +26,16 @@ namespace BlackjackStrategy.Models
             this.engineParameters = engineParams;
             this.perGenerationCallback = callback;
 
-            for (int upcardRank = 2; upcardRank < 12; upcardRank++)
+            for (int upcardRank = 14; upcardRank > 1; upcardRank--)
             {
-                string upcardRankName = (upcardRank == 11) ? "A" : upcardRank.ToString();
-                Card dealerCard = new Card(upcardRankName, "D");
+                // skip K, Q, J
+                if (upcardRank <= 13 && upcardRank >= 11)
+                    continue;
 
-                solutions[upcardRankName] = FindStrategyForUpcard(dealerCard);
-                SaveSolutionToDisk(upcardRankName + "_upcard_solution.txt", solutions[upcardRankName].ToString());
+                Card dealerCard = new Card(upcardRank, "D");
 
+                solutions[dealerCard.Rank] = FindStrategyForUpcard(dealerCard);
+                SaveSolutionToDisk(dealerCard.Rank + "_upcard_solution.txt", solutions[dealerCard.Rank].ToString());
             }
 
             // combine the three to create a strategy object
@@ -295,47 +297,6 @@ namespace BlackjackStrategy.Models
             return stateData.PlayerHand.HandValue() == 20;
         }
 
-        private bool DealerShows2(ProblemState stateData)
-        {
-            return stateData.DealerUpcard.Rank == "2";
-        }
-        private bool DealerShows3(ProblemState stateData)
-        {
-            return stateData.DealerUpcard.Rank == "3";
-        }
-        private bool DealerShows4(ProblemState stateData)
-        {
-            return stateData.DealerUpcard.Rank == "4";
-        }
-        private bool DealerShows5(ProblemState stateData)
-        {
-            return stateData.DealerUpcard.Rank == "5";
-        }
-        private bool DealerShows6(ProblemState stateData)
-        {
-            return stateData.DealerUpcard.Rank == "6";
-        }
-        private bool DealerShows7(ProblemState stateData)
-        {
-            return stateData.DealerUpcard.Rank == "7";
-        }
-        private bool DealerShows8(ProblemState stateData)
-        {
-            return stateData.DealerUpcard.Rank == "8";
-        }
-        private bool DealerShows9(ProblemState stateData)
-        {
-            return stateData.DealerUpcard.Rank == "9";
-        }
-        private bool DealerShows10(ProblemState stateData)
-        {
-            return stateData.DealerUpcard.RankValueHigh == 10;
-        }
-        private bool DealerShowsA(ProblemState stateData)
-        {
-            return stateData.DealerUpcard.Rank == "A";
-        }
-
         //-------------------------------------------------------------------------
         // then functions to steer the strategy via storing to state
         //-------------------------------------------------------------------------
@@ -376,8 +337,10 @@ namespace BlackjackStrategy.Models
             OverallStrategy strategy = new OverallStrategy(candidate);
 
             // then test that strategy and return the total money lost/made
-            var strategyTester = new StrategyTester(strategy);
-            strategyTester.DealerUpcardRank = currentDealerUpcardRank;
+            var strategyTester = new StrategyTester(strategy)
+            {
+                DealerUpcardRank = currentDealerUpcardRank
+            };
 
             return strategyTester.GetStrategyScore(TestConditions.NumHandsToPlay);
         }
