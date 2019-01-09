@@ -21,18 +21,18 @@ namespace BlackjackStrategy
         // This parameters object is bound to the UI, for editing
         public EngineParameters EngineParameters { get; set; } = new EngineParameters()
         {
-            TourneySize = 4,
+            PopulationSize = 150,
             MinGenerations = 25,
             MaxGenerations = 100,
             StagnantGenerationLimit = 9,
             ElitismRate = 0.15,
-            PopulationSize = 100,
             IsLowerFitnessBetter = false,
-            CrossoverRate = 0.99,
-            MutationRate = 0.10,
+            CrossoverRate = 0.9,
+            MutationRate = 0.01,
             RandomTreeMinDepth = 4,
             RandomTreeMaxDepth = 8,
-            SelectionStyle = SelectionStyle.Ranked,
+            SelectionStyle = SelectionStyle.Tourney,
+            TourneySize = 4
         };
 
         // each callback adds a progress string here 
@@ -57,7 +57,7 @@ namespace BlackjackStrategy
             progressSoFar = new List<string>();
 
             // one overall solution
-            var solutionFinder = new SolutionByCategory();  // new SolutionSingle();
+            var solutionFinder = new SolutionByUpcard();  // new SolutionSingle();
             solutionFinder.BuildProgram(EngineParameters, DisplayCurrentStatus);
 
             // then display the final results
@@ -67,7 +67,6 @@ namespace BlackjackStrategy
 
                 var strategy = solutionFinder.GetStrategy();
                 ShowPlayableHands(strategy);
-                //SaveSolutionToDisk("single-solution.txt", solutionFinder.Solution.ToString());
             }),
             DispatcherPriority.Background);
         }

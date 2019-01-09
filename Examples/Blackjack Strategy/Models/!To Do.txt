@@ -5,16 +5,19 @@ TO DO
 --------------------------
 Blackjack Example
 --------------------------
+- Why doesn't it use Split?
+- Group dealer upcards: A, 10, 9876, 5432
 - Implement a solution per holding (34)
 - Implement a solution per holding/upcard combo
+	- and a variant of this that isn't AI, it just runs simulations on each of the choices and takes the best results for each cell
+
 - Each solution should run a set of tests on the final result, and report on performance numbers
 - Write resulting times to text file for comparisons
 
 - for looping while constructing strategy from candidate, use rank enums when possible
-- Solution.LoadFromFile() .SaveToFile(), .LoadFromString()
-- Increase height of display (or make dynamic)
 
 - Engine.AddAutoDefinedFunction(numParams)
+- The Stagnant parameter should stop if *neither* the overall best nor the best generation average has improved
 
 
 --------------------------
@@ -30,5 +33,6 @@ Engine
 	<T> functionName (List<Node<T,S> parameterNodes, S state) - good for boolean shortcircuiting
 
 - WPF app to load and display any expression tree 
+- Solution.LoadFromFile() .SaveToFile(), .LoadFromString()
 
 

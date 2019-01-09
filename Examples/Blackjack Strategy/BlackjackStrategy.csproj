@@ -89,7 +89,7 @@
   <ItemGroup>
     <Compile Include="Models\CardUtils.cs" />
     <Compile Include="Models\Randomizer.cs" />
-    <Compile Include="Models\SolutionByCategory.cs" />
+    <Compile Include="Models\SolutionByUpcard.cs" />
     <Compile Include="Models\SolutionSingle.cs" />
     <Compile Include="Models\CandidateStateData.cs" />
     <Compile Include="Models\SolutionBase.cs" />

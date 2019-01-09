@@ -15,16 +15,16 @@ namespace BlackjackStrategy.Models
         private Dictionary<string, ActionToTake> softStrategy = new Dictionary<string, ActionToTake>();
         private Dictionary<string, ActionToTake> hardStrategy = new Dictionary<string, ActionToTake>();
 
-        public OverallStrategy(
-            CandidateSolution<bool, ProblemState> pairsCandidate,
-            CandidateSolution<bool, ProblemState> softHandsCandidate,
-            CandidateSolution<bool, ProblemState> hardHandsCandidate)
+        // given a dictionary of candidates keyed by a string that is the dealer upcard rank
+        public OverallStrategy(Dictionary<string, CandidateSolution<bool, ProblemState>> solutionsByUpcards)
         {
             // cycle over all of the possible upcards
             for (int upcardRank = 2; upcardRank < 12; upcardRank++)
             {
                 string upcardRankName = (upcardRank == 11) ? "A" : upcardRank.ToString();
                 Card dealerCard = new Card(upcardRankName, "D");
+
+                var solution = solutionsByUpcards[upcardRankName];
 
                 // do pairs
                 for (int pairedCard = 11; pairedCard > 1; pairedCard--)
@@ -37,11 +37,11 @@ namespace BlackjackStrategy.Models
                     playerHand.AddCard(new Card(pairedCardRank, "S")); // X of spades
 
                     // find strategy 
-                    SetupStateData(pairsCandidate.StateData, playerHand, dealerCard);
-                    pairsCandidate.Evaluate();
+                    SetupStateData(solution.StateData, playerHand, dealerCard);
+                    solution.Evaluate();
 
                     // get the decision and store in the strategy object
-                    var action = GetActionFromCandidate(pairsCandidate.StateData);
+                    var action = GetActionFromCandidate(solution.StateData);
                     AddPairStrategy(pairedCardRank, action, dealerCard);
                 }
 
@@ -59,11 +59,11 @@ namespace BlackjackStrategy.Models
                     playerHand.AddCard(new Card(otherCardRank, "S"));
 
                     // find strategy 
-                    SetupStateData(softHandsCandidate.StateData, playerHand, dealerCard);
-                    softHandsCandidate.Evaluate();
+                    SetupStateData(solution.StateData, playerHand, dealerCard);
+                    solution.Evaluate();
 
                     // get the decision and store in the strategy object
-                    var action = GetActionFromCandidate(softHandsCandidate.StateData);
+                    var action = GetActionFromCandidate(solution.StateData);
                     AddSoftStrategy(otherCardRank, action, dealerCard);
                 }
 
@@ -96,16 +96,17 @@ namespace BlackjackStrategy.Models
                     playerHand.AddCard(new Card(secondCardRank, "S"));
 
                     // find strategy 
-                    SetupStateData(hardHandsCandidate.StateData, playerHand, dealerCard);
-                    hardHandsCandidate.Evaluate();
+                    SetupStateData(solution.StateData, playerHand, dealerCard);
+                    solution.Evaluate();
 
                     // get the decision and store in the strategy object
-                    var action = GetActionFromCandidate(hardHandsCandidate.StateData);
+                    var action = GetActionFromCandidate(solution.StateData);
                     AddHardStrategy(hardTotal, action, dealerCard);
                 }
             }
         }
 
+        // given a single candidate
         public OverallStrategy(CandidateSolution<bool, ProblemState> candidate)
         {
             // cycle over all of the possible upcards

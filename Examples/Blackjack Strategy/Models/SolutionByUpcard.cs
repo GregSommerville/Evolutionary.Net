@@ -1,21 +1,20 @@
-﻿using Evolutionary;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using Evolutionary;
 
 namespace BlackjackStrategy.Models
 {
-    class SolutionByCategory : SolutionBase
+    class SolutionByUpcard : SolutionBase
     {
-        private CandidateSolution<bool, ProblemState> BestSolutionForPairs;
-        private CandidateSolution<bool, ProblemState> BestSolutionForSoftHands;
-        private CandidateSolution<bool, ProblemState> BestSolutionForHardHands;
+        private Dictionary<string, CandidateSolution<bool, ProblemState>> solutions = new Dictionary<string, CandidateSolution<bool, ProblemState>>();
         private OverallStrategy FinalStrategy;
 
         private int NumGenerationsNeeded = 0;
         private Action<string> perGenerationCallback;
         private EngineParameters engineParameters;
-        private StartingHandStyle startingHandStyle;
+        private string currentDealerUpcardRank;
 
         public override OverallStrategy GetStrategy()
         {
@@ -27,18 +26,19 @@ namespace BlackjackStrategy.Models
             this.engineParameters = engineParams;
             this.perGenerationCallback = callback;
 
-            FindStrategyForPairs();
-            FindStrategyForSoftHands();
-            FindStrategyForHardHands();
+            for (int upcardRank = 2; upcardRank < 12; upcardRank++)
+            {
+                string upcardRankName = (upcardRank == 11) ? "A" : upcardRank.ToString();
+                Card dealerCard = new Card(upcardRankName, "D");
 
-            FinalStatus = "Generations needed to find: " + NumGenerationsNeeded;
+                solutions[upcardRankName] = FindStrategyForUpcard(dealerCard);
+                SaveSolutionToDisk(upcardRankName + "_upcard_solution.txt", solutions[upcardRankName].ToString());
+
+            }
 
             // combine the three to create a strategy object
-            FinalStrategy = new OverallStrategy(BestSolutionForPairs, BestSolutionForSoftHands, BestSolutionForHardHands);
-
-            SaveSolutionToDisk("pairssolution.txt", BestSolutionForPairs.ToString());
-            SaveSolutionToDisk("softsolution.txt", BestSolutionForSoftHands.ToString());
-            SaveSolutionToDisk("hardsolution.txt", BestSolutionForHardHands.ToString());
+            FinalStrategy = new OverallStrategy(solutions);
+            FinalStatus = "Generations needed to find: " + NumGenerationsNeeded;
         }
 
         private void SaveSolutionToDisk(string fileName, string solution)
@@ -46,9 +46,9 @@ namespace BlackjackStrategy.Models
             File.WriteAllText(fileName, solution);
         }
 
-        private void FindStrategyForPairs()
+        private CandidateSolution<bool, ProblemState> FindStrategyForUpcard(Card dealerCard)
         {
-            startingHandStyle = StartingHandStyle.Pairs;
+            currentDealerUpcardRank = dealerCard.Rank;
 
             // create the engine.  each tree (and node within the tree) will return a bool.
             // we also indicate the type of our problem state data (used by terminal functions and stateful functions)
@@ -62,10 +62,10 @@ namespace BlackjackStrategy.Models
             engine.AddFunction((a) => !a, "Not");
 
             // then add functions to indicate a strategy
+            engine.AddStatefulFunction(SplitIf, "SplitIf");
             engine.AddStatefulFunction(HitIf, "HitIf");
             engine.AddStatefulFunction(StandIf, "StandIf");
             engine.AddStatefulFunction(DoubleIf, "DoubleIf");
-            engine.AddStatefulFunction(SplitIf, "SplitIf");
 
             // details of pair
             engine.AddTerminalFunction(HasPairTwos, "HasPair2");
@@ -79,47 +79,6 @@ namespace BlackjackStrategy.Models
             engine.AddTerminalFunction(HasPairTens, "HasPairT");
             engine.AddTerminalFunction(HasPairAces, "HasPairA");
 
-            // upcards
-            //engine.AddTerminalFunction(DealerShows2, "Dlr2");
-            //engine.AddTerminalFunction(DealerShows3, "Dlr3");
-            //engine.AddTerminalFunction(DealerShows4, "Dlr4");
-            //engine.AddTerminalFunction(DealerShows5, "Dlr5");
-            //engine.AddTerminalFunction(DealerShows6, "Dlr6");
-            //engine.AddTerminalFunction(DealerShows7, "Dlr7");
-            //engine.AddTerminalFunction(DealerShows8, "Dlr8");
-            //engine.AddTerminalFunction(DealerShows9, "Dlr9");
-            //engine.AddTerminalFunction(DealerShows10, "Dlr10");
-            //engine.AddTerminalFunction(DealerShowsA, "DlrA");
-
-            // pass a fitness evaluation function and run
-            engine.AddFitnessFunction((t) => EvaluateCandidate(t));
-
-            // and add something so we can track the progress
-            engine.AddProgressFunction((t) => PerGenerationCallback(t));
-
-            BestSolutionForPairs = engine.FindBestSolution();
-        }
-
-        private void FindStrategyForSoftHands()
-        {
-            startingHandStyle = StartingHandStyle.SoftAces;
-
-            var engine = new Engine<bool, ProblemState>(engineParameters);
-
-            engine.AddFunction((a, b) => a || b, "Or");
-            engine.AddFunction((a, b, c) => a || b || c, "Or3");
-            engine.AddFunction((a, b) => a && b, "And");
-            engine.AddFunction((a, b, c) => a && b && c, "And3");
-            engine.AddFunction((a) => !a, "Not");
-
-            engine.AddStatefulFunction(HitIf, "HitIf");
-            engine.AddStatefulFunction(StandIf, "StandIf");
-            engine.AddStatefulFunction(DoubleIf, "DoubleIf");
-
-            //----------------------------------------------
-            // terminal functions to look at game state
-            //----------------------------------------------
-
             // terminal functions to indicate the other card's rank
             engine.AddTerminalFunction(AcePlus2, "AcePlus2");
             engine.AddTerminalFunction(AcePlus3, "AcePlus3");
@@ -129,49 +88,6 @@ namespace BlackjackStrategy.Models
             engine.AddTerminalFunction(AcePlus7, "AcePlus7");
             engine.AddTerminalFunction(AcePlus8, "AcePlus8");
             engine.AddTerminalFunction(AcePlus9, "AcePlus9");
-
-            // upcards
-            //engine.AddTerminalFunction(DealerShows2, "Dlr2");
-            //engine.AddTerminalFunction(DealerShows3, "Dlr3");
-            //engine.AddTerminalFunction(DealerShows4, "Dlr4");
-            //engine.AddTerminalFunction(DealerShows5, "Dlr5");
-            //engine.AddTerminalFunction(DealerShows6, "Dlr6");
-            //engine.AddTerminalFunction(DealerShows7, "Dlr7");
-            //engine.AddTerminalFunction(DealerShows8, "Dlr8");
-            //engine.AddTerminalFunction(DealerShows9, "Dlr9");
-            //engine.AddTerminalFunction(DealerShows10, "Dlr10");
-            //engine.AddTerminalFunction(DealerShowsA, "DlrA");
-
-            // pass a fitness evaluation function and run
-            engine.AddFitnessFunction((t) => EvaluateCandidate(t));
-
-            // and add something so we can track the progress
-            engine.AddProgressFunction((t) => PerGenerationCallback(t));
-
-            BestSolutionForSoftHands = engine.FindBestSolution();
-        }
-
-        private void FindStrategyForHardHands()
-        {
-            startingHandStyle = StartingHandStyle.HardHands;
-
-            var engine = new Engine<bool, ProblemState>(engineParameters);
-
-            engine.AddFunction((a, b) => a || b, "Or");
-            engine.AddFunction((a, b, c) => a || b || c, "Or3");
-            engine.AddFunction((a, b) => a && b, "And");
-            engine.AddFunction((a, b, c) => a && b && c, "And3");
-            engine.AddFunction((a) => !a, "Not");
-
-
-            // then add functions to indicate a strategy
-            engine.AddStatefulFunction(HitIf, "HitIf");
-            engine.AddStatefulFunction(StandIf, "StandIf");
-            engine.AddStatefulFunction(DoubleIf, "DoubleIf");
-
-            //----------------------------------------------
-            // terminal functions to look at game state
-            //----------------------------------------------
 
             // hard hand totals
             engine.AddTerminalFunction(HandVal5, "Hard5");
@@ -191,25 +107,13 @@ namespace BlackjackStrategy.Models
             engine.AddTerminalFunction(HandVal19, "Hard19");
             engine.AddTerminalFunction(HandVal20, "Hard20");
 
-            // upcards
-            engine.AddTerminalFunction(DealerShows2, "Dlr2");
-            engine.AddTerminalFunction(DealerShows3, "Dlr3");
-            engine.AddTerminalFunction(DealerShows4, "Dlr4");
-            engine.AddTerminalFunction(DealerShows5, "Dlr5");
-            engine.AddTerminalFunction(DealerShows6, "Dlr6");
-            engine.AddTerminalFunction(DealerShows7, "Dlr7");
-            engine.AddTerminalFunction(DealerShows8, "Dlr8");
-            engine.AddTerminalFunction(DealerShows9, "Dlr9");
-            engine.AddTerminalFunction(DealerShows10, "Dlr10");
-            engine.AddTerminalFunction(DealerShowsA, "DlrA");
-
             // pass a fitness evaluation function and run
             engine.AddFitnessFunction((t) => EvaluateCandidate(t));
 
             // and add something so we can track the progress
             engine.AddProgressFunction((t) => PerGenerationCallback(t));
 
-            BestSolutionForHardHands = engine.FindBestSolution();
+            return engine.FindBestSolution();
         }
 
         //-------------------------------------------------------------------------
@@ -473,7 +377,7 @@ namespace BlackjackStrategy.Models
 
             // then test that strategy and return the total money lost/made
             var strategyTester = new StrategyTester(strategy);
-            strategyTester.PlayerStartingHandType = startingHandStyle;
+            strategyTester.DealerUpcardRank = currentDealerUpcardRank;
 
             return strategyTester.GetStrategyScore(TestConditions.NumHandsToPlay);
         }
@@ -483,8 +387,8 @@ namespace BlackjackStrategy.Models
         //-------------------------------------------------------------------------
         private bool PerGenerationCallback(EngineProgress progress)
         {
-            string summary = 
-                this.startingHandStyle.ToString() +
+            string summary =
+                "Upcard " + currentDealerUpcardRank  +
                 " gen: " + progress.GenerationNumber +
                 " best: " + progress.BestFitnessThisGen.ToString("0") +
                 " avg: " + progress.AvgFitnessThisGen.ToString("0");
