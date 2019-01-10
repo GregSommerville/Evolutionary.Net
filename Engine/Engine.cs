@@ -171,9 +171,9 @@ namespace Evolutionary
                 // termination conditions
                 if (currentGenerationNumber >= MinGenerations)
                 {
-                    // exit the loop if we're not making any progress in our average fitness score
-                    if ((currentGenerationNumber - bestAverageFitnessGenerationNumber)
-                        >= StagnantGenerationLimit)
+                    // exit the loop if we're not making any progress in our average fitness score or our overall best score
+                    if (((currentGenerationNumber - bestAverageFitnessGenerationNumber) >= StagnantGenerationLimit) &&
+                        ((currentGenerationNumber - bestSolutionGenerationNumber) >= StagnantGenerationLimit))
                         break;
 
                     // maxed out?
