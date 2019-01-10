@@ -21,18 +21,18 @@ namespace BlackjackStrategy
         // This parameters object is bound to the UI, for editing
         public EngineParameters EngineParameters { get; set; } = new EngineParameters()
         {
-            PopulationSize = 150,
+            PopulationSize = 250,
             MinGenerations = 25,
             MaxGenerations = 100,
-            StagnantGenerationLimit = 9,
-            ElitismRate = 0.15,
+            StagnantGenerationLimit = 10,
+            ElitismRate = 0.1,
             IsLowerFitnessBetter = false,
-            CrossoverRate = 0.9,
-            MutationRate = 0.01,
+            CrossoverRate = 0.95,
+            MutationRate = 0.03,
             RandomTreeMinDepth = 4,
             RandomTreeMaxDepth = 8,
             SelectionStyle = SelectionStyle.Tourney,
-            TourneySize = 4
+            TourneySize = 5
         };
 
         // each callback adds a progress string here 
@@ -63,10 +63,22 @@ namespace BlackjackStrategy
             // then display the final results
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                gaResultTB.Text = "Solution found.\n" + solutionFinder.FinalStatus;
-
                 var strategy = solutionFinder.GetStrategy();
                 ShowPlayableHands(strategy);
+
+                // test it 
+                string scoreResults = "";
+                var tester = new StrategyTester(strategy);
+                int totalScore = 0;
+                for (int i = 0; i < TestConditions.NumFinalTests; i++)
+                {
+                    int score = tester.GetStrategyScore(TestConditions.NumHandsPerFinalTest);
+                    totalScore += score;
+                    scoreResults += score + "\n";
+                }
+                scoreResults += "\nAverage score: " + (totalScore / TestConditions.NumFinalTests).ToString("0") + "\n";
+
+                gaResultTB.Text = "Solution found.\n" + solutionFinder.FinalStatus + "\n" + scoreResults;
             }),
             DispatcherPriority.Background);
         }

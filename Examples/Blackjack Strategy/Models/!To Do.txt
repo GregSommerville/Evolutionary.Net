@@ -5,10 +5,7 @@ TO DO
 --------------------------
 Blackjack Example
 --------------------------
-- Group dealer upcards: A, 10, 9876, 5432
-
-- Each solution should run a set of tests on the final result, and report on performance numbers
-- Write resulting times to text file for comparisons
+- write stats per generation into CSV file.  columns: generation #, best, avg.  First line of file should be summary of settings and date/time.
 
 - for looping while constructing strategy from candidate, use rank enums when possible
 
