@@ -21,16 +21,16 @@ namespace BlackjackStrategy
         // This parameters object is bound to the UI, for editing
         public EngineParameters EngineParameters { get; set; } = new EngineParameters()
         {
-            PopulationSize = 250,
+            PopulationSize = 100,
             MinGenerations = 25,
             MaxGenerations = 100,
-            StagnantGenerationLimit = 10,
+            StagnantGenerationLimit = 16,
             ElitismRate = 0.1,
             IsLowerFitnessBetter = false,
             CrossoverRate = 0.95,
             MutationRate = 0.03,
-            RandomTreeMinDepth = 4,
-            RandomTreeMaxDepth = 8,
+            RandomTreeMinDepth = 3,
+            RandomTreeMaxDepth = 6,
             SelectionStyle = SelectionStyle.Tourney,
             TourneySize = 5
         };
@@ -72,13 +72,13 @@ namespace BlackjackStrategy
                 int totalScore = 0;
                 for (int i = 0; i < TestConditions.NumFinalTests; i++)
                 {
-                    int score = tester.GetStrategyScore(TestConditions.NumHandsPerFinalTest);
+                    int score = tester.GetStrategyScore(TestConditions.NumHandsToPlay);
                     totalScore += score;
                     scoreResults += score + "\n";
                 }
-                scoreResults += "\nAverage score: " + (totalScore / TestConditions.NumFinalTests).ToString("0") + "\n";
+                scoreResults += "\nAverage score: " + (totalScore / TestConditions.NumFinalTests).ToString("0");
 
-                gaResultTB.Text = "Solution found.\n" + solutionFinder.FinalStatus + "\n" + scoreResults;
+                gaResultTB.Text = "Solution found.\n" + solutionFinder.FinalStatus + "\nScores:\n" + scoreResults;
             }),
             DispatcherPriority.Background);
         }

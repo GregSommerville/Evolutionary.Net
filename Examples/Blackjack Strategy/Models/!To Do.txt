@@ -5,12 +5,15 @@ TO DO
 --------------------------
 Blackjack Example
 --------------------------
+- run profiler to speed up
+- default max gens = 500?
+- UI cleanup:
+	handle resize of main window.  
+	fix scrolling region for status messages (it extends beyond the visible), 
+	handle movement of vertical splitter between controls and results
 - write stats per generation into CSV file.  columns: generation #, best, avg.  First line of file should be summary of settings and date/time.
-
 - for looping while constructing strategy from candidate, use rank enums when possible
-
 - Engine.AddAutoDefinedFunction(numParams)
-- The Stagnant parameter should stop if *neither* the overall best nor the best generation average has improved
 
 
 --------------------------
