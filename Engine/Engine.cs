@@ -33,6 +33,9 @@ namespace Evolutionary
         private delegate bool ProgressFunctionPointer(EngineProgress progress);
         ProgressFunctionPointer myProgressFunction;
 
+        private delegate bool ProgressWithCandidateFunctionPointer(EngineProgress progress, CandidateSolution<T,S> bestThisGeneration);
+        ProgressWithCandidateFunctionPointer myProgressWithCandidateFunction;
+
         private List<CandidateSolution<T,S>> currentGeneration = new List<CandidateSolution<T,S>>();
         private double totalFitness = 0;
 
@@ -165,7 +168,13 @@ namespace Evolutionary
                     BestFitnessSoFar = bestFitnessScoreAllTime,
                     TimeForGeneration = timer.Elapsed
                 };
-                bool keepGoing = myProgressFunction(progress);
+
+                // there are two forms here, and if they aren't defined, this code just drops through
+                bool keepGoing = true;
+                if (myProgressFunction != null)
+                    myProgressFunction(progress);
+                if (myProgressWithCandidateFunction != null)
+                    keepGoing = myProgressWithCandidateFunction(progress, bestTreeThisGeneration);
                 if (!keepGoing) break;  // user signalled to end looping
 
                 // termination conditions
@@ -439,6 +448,11 @@ namespace Evolutionary
         public void AddProgressFunction(Func<EngineProgress, bool> progressFunction)
         {
             myProgressFunction = new ProgressFunctionPointer(progressFunction);
+        }
+
+        public void AddProgressFunction(Func<EngineProgress, CandidateSolution<T, S>, bool> progressFunction)
+        {
+            myProgressWithCandidateFunction = new ProgressWithCandidateFunctionPointer(progressFunction);
         }
     }
 }
