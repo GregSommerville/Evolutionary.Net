@@ -3,7 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         Title="Making a Decision with Genetic Programming"
-        SizeToContent="WidthAndHeight"
+        SizeToContent="Manual"
+        Height="725"
+        Width="1200"
         WindowStartupLocation="CenterScreen"
         Background="DarkGray"
         x:Name="_this"
@@ -71,114 +73,73 @@
     </Window.Resources>
     <Grid Margin="0">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="300" />
-            <ColumnDefinition Width="960" />
+            <ColumnDefinition Width="320" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Border Grid.Column="0"
                 Grid.Row="0"
-                Height="670"
-                BorderThickness="10 10 10 0"
+                BorderThickness="8 8 4 8"
                 Background="LightGray">
-            <Grid Margin="10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <Label Content="Generate Program"
-                       Grid.Column="0"
-                       Grid.Row="0"
-                       Margin="0 0 0 10"
-                       Style="{StaticResource HeadingStyle}" />
-                <xctk:PropertyGrid x:Name="_propGrid"
-                                   Grid.Row="1"
+            <DockPanel LastChildFill="True"
+                       VerticalAlignment="Stretch"
+                       Margin="8">
+                <xctk:PropertyGrid x:Name="propGrid"
                                    Padding="0"
-                                   NameColumnWidth="180"
+                                   DockPanel.Dock="Top"
+                                   NameColumnWidth="200"
                                    ShowSearchBox="False"
                                    ShowSortOptions="False"
                                    ShowTitle="False"
                                    ShowAdvancedOptions="False"
-                                   ShowPreview="False"
-                                   ShowSummary="False"
-                                   SelectedObject="{Binding ElementName=_this, Path=EngineParameters}"
+                                   ShowPreview="false"
+                                   ShowSummary="True"
+                                   IsMiscCategoryLabelHidden="True"
+                                   SelectedObject="{Binding ElementName=_this, Path=ProgramConfiguration}"
                                    Margin="0" />
-                <StackPanel Grid.Row="6"
-                            VerticalAlignment="Center"
-                            Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal"
+                            DockPanel.Dock="Top">
                     <Button HorizontalAlignment="Left"
                             x:Name="btnSolve"
                             Click="btnSolve_Click">Find Solution</Button>
+                    <Button HorizontalAlignment="Left"
+                            x:Name="btnShowKnown"
+                            Click="btnShowKnown_Click">Show Known</Button>
                 </StackPanel>
-                <ScrollViewer Height="280"
-                              Width="255"
-                              Grid.Column="0"
-                              Grid.Row="7"
-                              Margin="0 20 0 0"
-                              HorizontalAlignment="Left">
+                <ScrollViewer DockPanel.Dock="Top"
+                              VerticalAlignment="Stretch"
+                              HorizontalAlignment="Stretch">
                     <TextBlock x:Name="gaResultTB"
                                VerticalAlignment="Top"
                                Text="Configure settings,then click on the green Find Solution button to proceed"
-                               Margin="10,0,0,11"
-                               Height="Auto"
+                               Margin="10"
                                TextWrapping="Wrap"
                                FontSize="12px"
                                HorizontalAlignment="Left" />
                 </ScrollViewer>
-            </Grid>
+            </DockPanel>
         </Border>
         <Border Grid.Column="1"
                 Grid.Row="0"
-                Grid.RowSpan="3"
-                BorderThickness="5 10 10 10"
-                HorizontalAlignment="Left"
+                Grid.RowSpan="2"
+                BorderThickness="4 8 8 8"
+                VerticalAlignment="Stretch"
+                HorizontalAlignment="Stretch"
                 Background="LightGray">
-            <Grid Margin="0"
-                  Width="950"
-                  Height="660">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <Label Content="Results Shown Below"
-                       Grid.Column="0"
-                       Grid.Row="0"
-                       HorizontalAlignment="Left"
-                       Margin="0 0 0 0"
-                       Style="{StaticResource HeadingStyle}" />
-                <Border BorderThickness="2"
-                        Grid.Column="0"
-                        Grid.Row="1"
-                        Height="600"
-                        Width="915"
-                        Margin="20,10,5,11"
-                        BorderBrush="Black"
-                        Grid.ColumnSpan="2">
-                    <Canvas x:Name="canvas"
-                            Background="AntiqueWhite"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch">
-                    </Canvas>
-                </Border>
-            </Grid>
+            <Canvas x:Name="canvas"
+                    Background="AntiqueWhite"
+                    Width="auto"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch">
+                <TextBlock TextWrapping="Wrap"
+                           Margin="20"
+                           Width="500">
+                This program builds a strategy to play Blackjack using a genetic algorithm. 
+                Adjust the settings in the property grid (left) and press the Find Solution button.  
+                Each generation will display its best solution, until the final solution is displayed.</TextBlock>
+            </Canvas>
         </Border>
     </Grid>
 </Window>

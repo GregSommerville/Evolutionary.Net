@@ -7,7 +7,7 @@ namespace BlackjackStrategy.Models
     {
         public string FinalStatus { get; set; }
 
-        public abstract void BuildProgram(EngineParameters engineParams, Action<string> currentStatusCallback);
-        public abstract OverallStrategy GetStrategy();
+        public abstract void BuildProgram(ProgramSettings settings, Action<string, CandidateSolution<bool, ProblemState>> currentStatusCallback);
+        public abstract Strategy GetStrategy();
     }
 }

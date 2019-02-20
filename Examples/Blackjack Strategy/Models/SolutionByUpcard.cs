@@ -8,38 +8,42 @@ namespace BlackjackStrategy.Models
 {
     class SolutionByUpcard : SolutionBase
     {
-        private Dictionary<string, CandidateSolution<bool, ProblemState>> solutions = new Dictionary<string, CandidateSolution<bool, ProblemState>>();
-        private OverallStrategy FinalStrategy;
+        public int TotalGenerations { get; set; }
 
+        private Dictionary<Card.Ranks, CandidateSolution<bool, ProblemState>> solutions = 
+            new Dictionary<Card.Ranks, CandidateSolution<bool, ProblemState>>();
+        private Strategy FinalStrategy;
         private int NumGenerationsNeeded = 0;
-        private Action<string> perGenerationCallback;
-        private EngineParameters engineParameters;
-        private string currentDealerUpcardRank;
+        private Action<string, CandidateSolution<bool, ProblemState>> perGenerationCallback;
+        private ProgramSettings settings;
+        private Card.Ranks currentDealerUpcardRank;
 
-        public override OverallStrategy GetStrategy()
+
+        public override Strategy GetStrategy()
         {
             return FinalStrategy;
         }
 
-        public override void BuildProgram(EngineParameters engineParams, Action<string> callback)
+        public override void BuildProgram(ProgramSettings settings, Action<string, CandidateSolution<bool, ProblemState>> callback)
         {
-            this.engineParameters = engineParams;
+            this.settings = settings;
             this.perGenerationCallback = callback;
 
-            for (int upcardRank = 14; upcardRank > 1; upcardRank--)
+            //for (int upcardRank = 14; upcardRank > 1; upcardRank--)
+            foreach (var upcardRank in Card.ListOfRanks)
             {
                 // skip K, Q, J
-                if (upcardRank <= 13 && upcardRank >= 11)
+                if (upcardRank == Card.Ranks.King  || upcardRank == Card.Ranks.Queen || upcardRank == Card.Ranks.Jack)
                     continue;
 
-                Card dealerCard = new Card(upcardRank, "D");
+                Card dealerCard = new Card(upcardRank, Card.Suits.Diamonds);
 
                 solutions[dealerCard.Rank] = FindStrategyForUpcard(dealerCard);
                 SaveSolutionToDisk(dealerCard.Rank + "_upcard_solution.txt", solutions[dealerCard.Rank].ToString());
             }
 
-            // combine the three to create a strategy object
-            FinalStrategy = new OverallStrategy(solutions);
+            // convert the dictionary of GP solutions to a single strategy
+            FinalStrategy = StrategyFactory.GetStrategyForGP(solutions);
             FinalStatus = "Generations needed to find: " + NumGenerationsNeeded;
         }
 
@@ -54,7 +58,7 @@ namespace BlackjackStrategy.Models
 
             // create the engine.  each tree (and node within the tree) will return a bool.
             // we also indicate the type of our problem state data (used by terminal functions and stateful functions)
-            var engine = new Engine<bool, ProblemState>(engineParameters);
+            var engine = new Engine<bool, ProblemState>(settings.GPsettings);
 
             // for a boolean tree, we use the standard operators
             engine.AddFunction((a, b) => a || b, "Or");
@@ -113,7 +117,7 @@ namespace BlackjackStrategy.Models
             engine.AddFitnessFunction((t) => EvaluateCandidate(t));
 
             // and add something so we can track the progress
-            engine.AddProgressFunction((t) => PerGenerationCallback(t));
+            engine.AddProgressFunction((p,b) => PerGenerationCallback(p,b));
 
             return engine.FindBestSolution();
         }
@@ -156,7 +160,7 @@ namespace BlackjackStrategy.Models
             return (stateData.PlayerHand.HandValue() - 11) == 9;
         }
 
-        private bool HasPairOf(string rankNeeded, Hand hand)
+        private bool HasPairOf(Card.Ranks rankNeeded, Hand hand)
         {
             return (hand.Cards.Count == 2) &&
                 (hand.Cards[0].Rank == rankNeeded) &&
@@ -165,42 +169,42 @@ namespace BlackjackStrategy.Models
 
         private bool HasPairTwos(ProblemState stateData)
         {
-            return HasPairOf("2", stateData.PlayerHand);
+            return HasPairOf(Card.Ranks.Two, stateData.PlayerHand);
         }
 
         private bool HasPairThrees(ProblemState stateData)
         {
-            return HasPairOf("3", stateData.PlayerHand);
+            return HasPairOf(Card.Ranks.Three, stateData.PlayerHand);
         }
 
         private bool HasPairFours(ProblemState stateData)
         {
-            return HasPairOf("4", stateData.PlayerHand);
+            return HasPairOf(Card.Ranks.Four, stateData.PlayerHand);
         }
 
         private bool HasPairFives(ProblemState stateData)
         {
-            return HasPairOf("5", stateData.PlayerHand);
+            return HasPairOf(Card.Ranks.Five, stateData.PlayerHand);
         }
 
         private bool HasPairSixes(ProblemState stateData)
         {
-            return HasPairOf("6", stateData.PlayerHand);
+            return HasPairOf(Card.Ranks.Six, stateData.PlayerHand);
         }
 
         private bool HasPairSevens(ProblemState stateData)
         {
-            return HasPairOf("7", stateData.PlayerHand);
+            return HasPairOf(Card.Ranks.Seven, stateData.PlayerHand);
         }
 
         private bool HasPairEights(ProblemState stateData)
         {
-            return HasPairOf("8", stateData.PlayerHand);
+            return HasPairOf(Card.Ranks.Eight, stateData.PlayerHand);
         }
 
         private bool HasPairNines(ProblemState stateData)
         {
-            return HasPairOf("9", stateData.PlayerHand);
+            return HasPairOf(Card.Ranks.Nine, stateData.PlayerHand);
         }
 
         private bool HasPairTens(ProblemState stateData)
@@ -213,7 +217,7 @@ namespace BlackjackStrategy.Models
 
         private bool HasPairAces(ProblemState stateData)
         {
-            return HasPairOf("A", stateData.PlayerHand);
+            return HasPairOf(Card.Ranks.Ace, stateData.PlayerHand);
         }
 
         // all the ones relating to hand total value
@@ -334,21 +338,19 @@ namespace BlackjackStrategy.Models
         private float EvaluateCandidate(CandidateSolution<bool, ProblemState> candidate)
         {
             // test every possible situation and store the candidate's suggested action in the strategy object
-            OverallStrategy strategy = new OverallStrategy(candidate);
+            Strategy strategy = StrategyFactory.GetStrategyForGP(candidate);
 
             // then test that strategy and return the total money lost/made
-            var strategyTester = new StrategyTester(strategy)
-            {
-                DealerUpcardRank = currentDealerUpcardRank
-            };
+            var strategyTester = new StrategyTester(strategy, settings.TestSettings);
+            strategyTester.DealerUpcardRank = currentDealerUpcardRank;
 
-            return strategyTester.GetStrategyScore(TestConditions.NumHandsToPlay);
+            return strategyTester.GetStrategyScore(settings.TestSettings.NumHandsToPlay);
         }
 
         //-------------------------------------------------------------------------
         // For each generation, we get information about what's going on
         //-------------------------------------------------------------------------
-        private bool PerGenerationCallback(EngineProgress progress)
+        private bool PerGenerationCallback(EngineProgress progress, CandidateSolution<bool, ProblemState> bestThisGeneration)
         {
             string summary =
                 "Upcard " + currentDealerUpcardRank  +
@@ -356,7 +358,7 @@ namespace BlackjackStrategy.Models
                 " best: " + progress.BestFitnessThisGen.ToString("0") +
                 " avg: " + progress.AvgFitnessThisGen.ToString("0");
 
-            perGenerationCallback(summary);
+            perGenerationCallback(summary, bestThisGeneration);
             Debug.WriteLine(summary);
 
             // keep track of how many gens we've searched

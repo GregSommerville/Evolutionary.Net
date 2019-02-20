@@ -10,20 +10,22 @@ namespace BlackjackStrategy.Models
         private float Fitness;
         private int NumGenerationsNeeded;
         private Action<string> displayGenerationCallback;
+        private ProgramSettings settings;
 
-        public override OverallStrategy GetStrategy()
+        public override Strategy GetStrategy()
         {
-            var strategy = new OverallStrategy(Solution);
+            var strategy = StrategyFactory.GetStrategyForGP(Solution);
             return strategy;
         }
 
-        public override void BuildProgram(EngineParameters engineParams, Action<string> currentStatusCallback)
+        public override void BuildProgram(ProgramSettings settings, Action<string> currentStatusCallback)
         {
+            this.settings = settings;
             displayGenerationCallback = currentStatusCallback;
 
             // create the engine.  each tree (and node within the tree) will return a bool.
             // we also indicate the type of our problem state data (used by terminal functions and stateful functions)
-            var engine = new Engine<bool, ProblemState>(engineParams);
+            var engine = new Engine<bool, ProblemState>(settings.GPsettings);
 
             // no constants for this problem
             
@@ -163,7 +165,7 @@ namespace BlackjackStrategy.Models
         }
 
 
-        private bool HasPairOf(string rankNeeded, Hand hand)
+        private bool HasPairOf(Card.Ranks rankNeeded, Hand hand)
         {
             return (hand.Cards.Count == 2) &&
                 (hand.Cards[0].Rank == rankNeeded) &&
@@ -172,42 +174,42 @@ namespace BlackjackStrategy.Models
 
         private bool HasPairTwos(ProblemState stateData)
         {
-            return HasPairOf("2", stateData.PlayerHand);
+            return HasPairOf(Card.Ranks.Two, stateData.PlayerHand);
         }
 
         private bool HasPairThrees(ProblemState stateData)
         {
-            return HasPairOf("3", stateData.PlayerHand);
+            return HasPairOf(Card.Ranks.Three, stateData.PlayerHand);
         }
 
         private bool HasPairFours(ProblemState stateData)
         {
-            return HasPairOf("4", stateData.PlayerHand);
+            return HasPairOf(Card.Ranks.Four, stateData.PlayerHand);
         }
 
         private bool HasPairFives(ProblemState stateData)
         {
-            return HasPairOf("5", stateData.PlayerHand);
+            return HasPairOf(Card.Ranks.Five, stateData.PlayerHand);
         }
 
         private bool HasPairSixes(ProblemState stateData)
         {
-            return HasPairOf("6", stateData.PlayerHand);
+            return HasPairOf(Card.Ranks.Six, stateData.PlayerHand);
         }
 
         private bool HasPairSevens(ProblemState stateData)
         {
-            return HasPairOf("7", stateData.PlayerHand);
+            return HasPairOf(Card.Ranks.Seven, stateData.PlayerHand);
         }
 
         private bool HasPairEights(ProblemState stateData)
         {
-            return HasPairOf("8", stateData.PlayerHand);
+            return HasPairOf(Card.Ranks.Eight, stateData.PlayerHand);
         }
 
         private bool HasPairNines(ProblemState stateData)
         {
-            return HasPairOf("9", stateData.PlayerHand);
+            return HasPairOf(Card.Ranks.Nine, stateData.PlayerHand);
         }
 
         private bool HasPairTens(ProblemState stateData)
@@ -220,11 +222,10 @@ namespace BlackjackStrategy.Models
 
         private bool HasPairAces(ProblemState stateData)
         {
-            return HasPairOf("A", stateData.PlayerHand);
+            return HasPairOf(Card.Ranks.Ace, stateData.PlayerHand);
         }
-
         // all the ones relating to hand total value
-        private  bool HandVal5(ProblemState stateData)
+        private bool HandVal5(ProblemState stateData)
         {
             return stateData.PlayerHand.HandValue() == 5;
         }
@@ -306,35 +307,35 @@ namespace BlackjackStrategy.Models
 
         private bool DealerShows2(ProblemState stateData)
         {
-            return stateData.DealerUpcard.Rank == "2";
+            return stateData.DealerUpcard.Rank == Card.Ranks.Two;
         }
         private bool DealerShows3(ProblemState stateData)
         {
-            return stateData.DealerUpcard.Rank == "3";
+            return stateData.DealerUpcard.Rank == Card.Ranks.Three;
         }
         private bool DealerShows4(ProblemState stateData)
         {
-            return stateData.DealerUpcard.Rank == "4";
+            return stateData.DealerUpcard.Rank == Card.Ranks.Four;
         }
         private bool DealerShows5(ProblemState stateData)
         {
-            return stateData.DealerUpcard.Rank == "5";
+            return stateData.DealerUpcard.Rank == Card.Ranks.Five;
         }
         private bool DealerShows6(ProblemState stateData)
         {
-            return stateData.DealerUpcard.Rank == "6";
+            return stateData.DealerUpcard.Rank == Card.Ranks.Six;
         }
         private bool DealerShows7(ProblemState stateData)
         {
-            return stateData.DealerUpcard.Rank == "7";
+            return stateData.DealerUpcard.Rank == Card.Ranks.Seven;
         }
         private bool DealerShows8(ProblemState stateData)
         {
-            return stateData.DealerUpcard.Rank == "8";
+            return stateData.DealerUpcard.Rank == Card.Ranks.Eight;
         }
         private bool DealerShows9(ProblemState stateData)
         {
-            return stateData.DealerUpcard.Rank == "9";
+            return stateData.DealerUpcard.Rank == Card.Ranks.Nine;
         }
         private bool DealerShows10(ProblemState stateData)
         {
@@ -342,7 +343,7 @@ namespace BlackjackStrategy.Models
         }
         private bool DealerShowsA(ProblemState stateData)
         {
-            return stateData.DealerUpcard.Rank == "A";
+            return stateData.DealerUpcard.Rank == Card.Ranks.Ace;
         }
 
         //-------------------------------------------------------------------------
@@ -382,11 +383,11 @@ namespace BlackjackStrategy.Models
         private float EvaluateCandidate(CandidateSolution<bool, ProblemState> candidate)
         {
             // test every possible situation and store the candidate's suggested action in the strategy object
-            OverallStrategy strategy = new OverallStrategy(candidate);
+            Strategy strategy = StrategyFactory.GetStrategyForGP(candidate);
 
             // then test that strategy and return the total money lost/made
-            var strategyTester = new StrategyTester(strategy);
-            return strategyTester.GetStrategyScore(TestConditions.NumHandsToPlay);
+            var strategyTester = new StrategyTester(strategy, settings.TestSettings);
+            return strategyTester.GetStrategyScore(settings.TestSettings.NumHandsToPlay);
         }
 
         //-------------------------------------------------------------------------

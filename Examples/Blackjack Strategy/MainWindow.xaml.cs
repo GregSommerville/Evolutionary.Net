@@ -3,12 +3,8 @@ using Evolutionary;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace BlackjackStrategy
@@ -19,74 +15,77 @@ namespace BlackjackStrategy
     public partial class MainWindow : Window
     {
         // This parameters object is bound to the UI, for editing
-        public EngineParameters EngineParameters { get; set; } = new EngineParameters()
-        {
-            PopulationSize = 100,
-            MinGenerations = 25,
-            MaxGenerations = 100,
-            StagnantGenerationLimit = 16,
-            ElitismRate = 0.1,
-            IsLowerFitnessBetter = false,
-            CrossoverRate = 0.95,
-            MutationRate = 0.03,
-            RandomTreeMinDepth = 3,
-            RandomTreeMaxDepth = 6,
-            SelectionStyle = SelectionStyle.Tourney,
-            TourneySize = 5
-        };
+        public ProgramSettings ProgramConfiguration { get; set; } = new ProgramSettings();
 
-        // each callback adds a progress string here 
-        private List<string> progressSoFar = new List<string>();
+        private List<string> progressMsg = new List<string>();
+        private Stopwatch stopwatch = new Stopwatch();
 
         public MainWindow()
         {
             InitializeComponent();
+            propGrid.ExpandAllProperties();
         }
 
         private void btnSolve_Click(object sender, RoutedEventArgs e)
         {
             gaResultTB.Text = "Creating solution, please wait...";
+            stopwatch.Restart();
+
+            SetButtonsEnabled(false);
 
             // Finding the solution takes a while, so kick off a thread for it
-            Task.Factory.StartNew(() => AsyncCall());
+            Task.Factory.StartNew(() => AsyncFindAndDisplaySolution());
         }
 
-        private void AsyncCall()
+        private void btnShowKnown_Click(object sender, RoutedEventArgs e)
+        {
+            var strategy = new HandCodedStrategy();
+            strategy.LoadStandardStrategy();
+            DisplayStrategyGrids(strategy, "Classic Baseline Blackjack Strategy");
+            DisplayStatistics(strategy);
+        }
+
+        private void AsyncFindAndDisplaySolution()
         {
             // reset the progress messages
-            progressSoFar = new List<string>();
+            progressMsg = new List<string>();
 
             // one overall solution
             var solutionFinder = new SolutionByUpcard();  // new SolutionSingle();
-            solutionFinder.BuildProgram(EngineParameters, DisplayCurrentStatus);
+            solutionFinder.BuildProgram(ProgramConfiguration, PerGenerationCallback);
+            var strategy = solutionFinder.GetStrategy();
 
-            // then display the final results
+            int numGens = solutionFinder.TotalGenerations;
+            DisplayStrategyGrids(strategy, "Best from " + numGens + " generations", numGens);
+            DisplayStatistics(strategy, numGens);
+
+            SetButtonsEnabled(true);
+        }
+
+        private void PerGenerationCallback(string status, CandidateSolution<bool, ProblemState> bestThisGeneration)
+        {
+            var strategy = StrategyFactory.GetStrategyForGP(bestThisGeneration);
+            DisplayStrategyGrids(strategy, "");
+            DisplayCurrentStatus(status);
+        }
+
+        private void DisplayStrategyGrids(StrategyBase strategy, string caption, int generationNumber = 0)
+        {
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                var strategy = solutionFinder.GetStrategy();
-                ShowPlayableHands(strategy);
+                string imgFilename = "";
+                if (ProgramConfiguration.TestSettings.SaveImagePerGeneration && (generationNumber > 0))
+                    imgFilename = "gen" + generationNumber;
 
-                // test it 
-                string scoreResults = "";
-                var tester = new StrategyTester(strategy);
-                int totalScore = 0;
-                for (int i = 0; i < TestConditions.NumFinalTests; i++)
-                {
-                    int score = tester.GetStrategyScore(TestConditions.NumHandsToPlay);
-                    totalScore += score;
-                    scoreResults += score + "\n";
-                }
-                scoreResults += "\nAverage score: " + (totalScore / TestConditions.NumFinalTests).ToString("0");
-
-                gaResultTB.Text = "Solution found.\n" + solutionFinder.FinalStatus + "\nScores:\n" + scoreResults;
+                StrategyView.ShowPlayableHands(strategy, canvas, imgFilename, caption);
             }),
             DispatcherPriority.Background);
         }
 
         private void DisplayCurrentStatus(string status)
         {
-            progressSoFar.Insert(0, status);
-            string allStatuses = String.Join("\n", progressSoFar);
+            progressMsg.Insert(0, status);
+            string allStatuses = String.Join("\n", progressMsg);
 
             Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -95,196 +94,45 @@ namespace BlackjackStrategy
             DispatcherPriority.Background);
         }
 
-        private void ShowPlayableHands(OverallStrategy strategy)
+
+        private void SetButtonsEnabled(bool enable)
         {
-            // clear the screen
-            canvas.Children.Clear();
-
-            // display a grid for non-paired hands without an ace.  One column for each possible dealer upcard
-            AddColorBox(Colors.White, "", 0, 0);
-            int x = 1, y = 0;
-            for (int upcardRank = 2; upcardRank < 12; upcardRank++)
+            Dispatcher.BeginInvoke(new Action(() =>
             {
-                string upcardRankName = (upcardRank == 11) ? "A" : upcardRank.ToString();
-                Card dealerUpcard = new Card(upcardRankName, "D");
-
-                AddColorBox(Colors.White, upcardRankName, x, 0);
-                y = 1;
-
-                for (int hardTotal = 20; hardTotal > 4; hardTotal--)
-                {
-                    // add a white box with the total
-                    AddColorBox(Colors.White, hardTotal.ToString(), 0, y);
-
-                    // build player hand
-                    Hand playerHand = new Hand();
-
-                    // divide by 2 if it's even, else add one and divide by two
-                    int firstCardRank = ((hardTotal % 2) != 0) ? (hardTotal + 1) / 2 : hardTotal / 2;
-                    int secondCardRank = hardTotal - firstCardRank;
-                    if (firstCardRank == secondCardRank)
-                    {
-                        firstCardRank++;
-                        secondCardRank--;
-
-                        if (firstCardRank == 11)
-                        {
-                            // hard 20 needs to be three cards, so in this case 9, 4, 7
-                            firstCardRank = 4;
-                            playerHand.AddCard(new Card("7D"));
-                        }
-                    }
-
-                    playerHand.AddCard(new Card(firstCardRank, "D"));
-                    playerHand.AddCard(new Card(secondCardRank, "S"));
-
-                    // get strategy and display
-                    var action = strategy.GetActionForHand(playerHand, dealerUpcard);
-                    switch (action)
-                    {
-                        case ActionToTake.Hit:
-                            AddColorBox(Colors.Green, "H", x, y);
-                            break;
-
-                        case ActionToTake.Stand:
-                            AddColorBox(Colors.Red, "S", x, y);
-                            break;
-
-                        case ActionToTake.Double:
-                            AddColorBox(Colors.Yellow, "D", x, y);
-                            break;
-                    }
-                    y++;
-                }
-                x++;
-            }
-
-            // and another for hands with an ace
-            // display a grid for hands without an ace.  One column for each possible dealer upcard
-            const int leftColumnForAces = 12;
-            AddColorBox(Colors.White, "", leftColumnForAces, 0);
-            x = leftColumnForAces + 1;
-            for (int upcardRank = 2; upcardRank < 12; upcardRank++)
-            {
-                string upcardRankName = (upcardRank == 11) ? "A" : upcardRank.ToString();
-                Card dealerUpcard = new Card(upcardRankName, "D");
-
-                AddColorBox(Colors.White, upcardRankName, x, 0);
-                y = 1;
-
-                // we don't start with Ace, because that would be AA, which is handled in the pair zone
-                // we also don't start with 10, since that's blackjack.  So 9 is our starting point
-                for (int otherCard = 9; otherCard > 1; otherCard--)
-                {
-                    string otherCardRank = (otherCard == 11) ? "A" : otherCard.ToString();
-
-                    // add a white box with the player hand: "A-x"
-                    AddColorBox(Colors.White, "A-" + otherCardRank, leftColumnForAces, y);
-
-                    // build player hand
-                    Hand playerHand = new Hand();
-                    // first card is an ace, second card is looped over
-                    playerHand.AddCard(new Card("AH")); // ace of hearts
-                    playerHand.AddCard(new Card(otherCardRank, "S"));
-
-                    // get strategy and display
-                    var action = strategy.GetActionForHand(playerHand, dealerUpcard);
-                    switch (action)
-                    {
-                        case ActionToTake.Hit:
-                            AddColorBox(Colors.Green, "H", x, y);
-                            break;
-
-                        case ActionToTake.Stand:
-                            AddColorBox(Colors.Red, "S", x, y);
-                            break;
-
-                        case ActionToTake.Double:
-                            AddColorBox(Colors.Yellow, "D", x, y);
-                            break;
-                    }
-                    y++;
-                }
-                x++;
-            }
-
-            // finally, a grid for pairs
-            int startY = y + 1;
-            AddColorBox(Colors.White, "", leftColumnForAces, 0);
-            x = leftColumnForAces + 1;
-            for (int upcardRank = 2; upcardRank < 12; upcardRank++)
-            {
-                string upcardRankName = (upcardRank == 11) ? "A" : upcardRank.ToString();
-                Card dealerUpcard = new Card(upcardRankName, "D");
-
-                AddColorBox(Colors.White, upcardRankName, x, 0);
-                y = startY;
-
-                for (int pairedCard = 11; pairedCard > 1; pairedCard--)
-                {
-                    string pairedCardRank = (pairedCard == 11) ? "A" : pairedCard.ToString();
-
-                    // add a white box with the player hand: "x-x"
-                    AddColorBox(Colors.White, pairedCardRank + "-" + pairedCardRank, leftColumnForAces, y);
-
-                    // build player hand
-                    Hand playerHand = new Hand();
-                    playerHand.AddCard(new Card(pairedCardRank, "H")); // X of hearts
-                    playerHand.AddCard(new Card(pairedCardRank, "S")); // X of spades
-
-                    // get strategy and display
-                    var action = strategy.GetActionForHand(playerHand, dealerUpcard);
-                    switch (action)
-                    {
-                        case ActionToTake.Hit:
-                            AddColorBox(Colors.Green, "H", x, y);
-                            break;
-
-                        case ActionToTake.Stand:
-                            AddColorBox(Colors.Red, "S", x, y);
-                            break;
-
-                        case ActionToTake.Double:
-                            AddColorBox(Colors.Yellow, "D", x, y);
-                            break;
-
-                        case ActionToTake.Split:
-                            AddColorBox(Colors.LightBlue, "P", x, y);
-                            break;
-                    }
-                    y++;
-                }
-                x++;
-            }
+                btnSolve.IsEnabled = enable;
+                btnShowKnown.IsEnabled = enable;
+            }),
+            DispatcherPriority.Background);
         }
 
-        private void AddColorBox(Color color, string label, int x, int y)
+        private void DisplayStatistics(StrategyBase strategy, int totalGenerations = 0)
         {
-            // easy to do constants when the screen isn't meant to resize
-            const int 
-                columnWidth = 38, 
-                rowHeight = 28,
-                startX = 20,
-                startY = 20;
+            // then display the final results
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                stopwatch.Stop();
 
-            // the element is a border
-            var box = new Border();
-            box.BorderBrush = Brushes.Black;
-            box.BorderThickness = new System.Windows.Thickness(1);
-            box.Background = new SolidColorBrush(color);
-            box.Width = columnWidth;
-            box.Height = rowHeight;
+                // test it and display scores
+                var tester = new StrategyTester(strategy, ProgramConfiguration.TestSettings);
 
-            // and a label as a child
-            var itemText = new TextBlock();
-            itemText.HorizontalAlignment = HorizontalAlignment.Center;
-            itemText.VerticalAlignment = VerticalAlignment.Center;
-            itemText.Text = label;
-            box.Child = itemText;
+                double average, stdDev, coeffVariation;
+                tester.GetStatistics(out average, out stdDev, out coeffVariation);
 
-            canvas.Children.Add(box);
-            Canvas.SetTop(box, startY + y * rowHeight);
-            Canvas.SetLeft(box, startX + x * columnWidth);
+                string scoreResults =
+                    "\nAverage score: " + average.ToString("0") +
+                    "\nStandard Deviation: " + stdDev.ToString("0") +
+                    "\nCoeff. of Variation: " + coeffVariation.ToString("0.0000");
+
+                string output = (totalGenerations > 0) ? "Solution found in " + totalGenerations + " generations\n" : "" + 
+                    "Elapsed: " +
+                        stopwatch.Elapsed.Hours + "h " +
+                        stopwatch.Elapsed.Minutes + "m " +
+                        stopwatch.Elapsed.Seconds + "s " +
+                        "\n\nTest Results:" + scoreResults;
+
+                gaResultTB.Text = output;
+            }),
+            DispatcherPriority.Background);
         }
     }
 }

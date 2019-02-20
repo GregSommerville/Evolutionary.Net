@@ -1,291 +1,150 @@
-﻿using Evolutionary;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System;
 
 namespace BlackjackStrategy.Models
 {
-    enum ActionToTake { Stand, Hit, Double, Split };
-
     // encapsulates one complete strategy to play Blackjack
-    class OverallStrategy
+    class Strategy : StrategyBase
     {
-        private Dictionary<string, ActionToTake> pairsStrategy = new Dictionary<string, ActionToTake>();
-        private Dictionary<string, ActionToTake> softStrategy = new Dictionary<string, ActionToTake>();
-        private Dictionary<string, ActionToTake> hardStrategy = new Dictionary<string, ActionToTake>();
+        private Randomizer randomizer = new Randomizer();
 
-        // given a dictionary of candidates keyed by a string that is the dealer upcard rank
-        public OverallStrategy(Dictionary<string, CandidateSolution<bool, ProblemState>> solutionsByUpcards)
+        public Strategy Clone()
         {
-            // cycle over all of the possible upcards
-            for (int upcardRank = 2; upcardRank < 12; upcardRank++)
-            {
-                string upcardRankName = upcardRank.ToString();
-                if (upcardRank == 10) upcardRankName = "T";
-                if (upcardRank == 11) upcardRankName = "A";
+            var result = new Strategy();
+            result.DeepCopy(this);
 
-                Card dealerCard = new Card(upcardRankName, "D");
-
-                var solution = solutionsByUpcards[upcardRankName];
-
-                // do pairs
-                for (int pairedCard = 11; pairedCard > 1; pairedCard--)
-                {
-                    string pairedCardRank = (pairedCard == 11) ? "A" : pairedCard.ToString();
-
-                    // build player hand
-                    Hand playerHand = new Hand();
-                    playerHand.AddCard(new Card(pairedCardRank, "H")); // X of hearts
-                    playerHand.AddCard(new Card(pairedCardRank, "S")); // X of spades
-
-                    // find strategy 
-                    SetupStateData(solution.StateData, playerHand, dealerCard);
-                    solution.Evaluate();
-
-                    // get the decision and store in the strategy object
-                    var action = GetActionFromCandidate(solution.StateData);
-                    AddPairStrategy(pairedCardRank, action, dealerCard);
-                }
-
-                // then soft hands
-                // we don't start with Ace, because that would be AA, which is handled in the pair zone
-                // we also don't start with 10, since that's blackjack.  So 9 is our starting point
-                for (int otherCard = 9; otherCard > 1; otherCard--)
-                {
-                    string otherCardRank = (otherCard == 11) ? "A" : otherCard.ToString();
-
-                    // build player hand
-                    Hand playerHand = new Hand();
-                    // first card is an ace, second card is looped over
-                    playerHand.AddCard(new Card("AH")); // ace of hearts
-                    playerHand.AddCard(new Card(otherCardRank, "S"));
-
-                    // find strategy 
-                    SetupStateData(solution.StateData, playerHand, dealerCard);
-                    solution.Evaluate();
-
-                    // get the decision and store in the strategy object
-                    var action = GetActionFromCandidate(solution.StateData);
-                    AddSoftStrategy(otherCardRank, action, dealerCard);
-                }
-
-                // hard hands.  
-                for (int hardTotal = 20; hardTotal > 4; hardTotal--)
-                {
-                    // build player hand
-                    Hand playerHand = new Hand();
-
-                    // divide by 2 if it's even, else add one and divide by two
-                    int firstCardRank = ((hardTotal % 2) != 0) ? (hardTotal + 1) / 2 : hardTotal / 2;
-                    int secondCardRank = hardTotal - firstCardRank;
-
-                    // 20 is always TT, which is a pair, so we handle that by building a 3 card hand
-                    if (hardTotal == 20)
-                    {
-                        playerHand.AddCard(new Card("TD")); // ten of diamonds
-                        firstCardRank = 6;
-                        secondCardRank = 4;
-                    }
-
-                    // we don't want pairs, so check for that
-                    if (firstCardRank == secondCardRank)
-                    {
-                        firstCardRank++;
-                        secondCardRank--;
-                    }
-
-                    playerHand.AddCard(new Card(firstCardRank, "D"));
-                    playerHand.AddCard(new Card(secondCardRank, "S"));
-
-                    // find strategy 
-                    SetupStateData(solution.StateData, playerHand, dealerCard);
-                    solution.Evaluate();
-
-                    // get the decision and store in the strategy object
-                    var action = GetActionFromCandidate(solution.StateData);
-                    AddHardStrategy(hardTotal, action, dealerCard);
-                }
-            }
-        }
-
-        // given a single candidate
-        public OverallStrategy(CandidateSolution<bool, ProblemState> candidate)
-        {
-            // cycle over all of the possible upcards
-            for (int upcardRank = 2; upcardRank < 12; upcardRank++)
-            {
-                string upcardRankName = (upcardRank == 11) ? "A" : upcardRank.ToString();
-                Card dealerCard = new Card(upcardRankName, "D");
-
-                    // do pairs
-                for (int pairedCard = 11; pairedCard > 1; pairedCard--)
-                {
-                    string pairedCardRank = (pairedCard == 11) ? "A" : pairedCard.ToString();
-
-                    // build player hand
-                    Hand playerHand = new Hand();
-                    playerHand.AddCard(new Card(pairedCardRank, "H")); // X of hearts
-                    playerHand.AddCard(new Card(pairedCardRank, "S")); // X of spades
-
-                    // find strategy 
-                    SetupStateData(candidate.StateData, playerHand, dealerCard);
-                    candidate.Evaluate();
-
-                    // get the decision and store in the strategy object
-                    var action = GetActionFromCandidate(candidate.StateData);
-                    AddPairStrategy(pairedCardRank, action, dealerCard);
-                }
-
-                // then soft hands
-                // we don't start with Ace, because that would be AA, which is handled in the pair zone
-                // we also don't start with 10, since that's blackjack.  So 9 is our starting point
-                for (int otherCard = 9; otherCard > 1; otherCard--)
-                {
-                    string otherCardRank = (otherCard == 11) ? "A" : otherCard.ToString();
-
-                    // build player hand
-                    Hand playerHand = new Hand();
-                    // first card is an ace, second card is looped over
-                    playerHand.AddCard(new Card("AH")); // ace of hearts
-                    playerHand.AddCard(new Card(otherCardRank, "S"));
-
-                    // find strategy 
-                    SetupStateData(candidate.StateData, playerHand, dealerCard);
-                    candidate.Evaluate();
-
-                    // get the decision and store in the strategy object
-                    var action = GetActionFromCandidate(candidate.StateData);
-                    AddSoftStrategy(otherCardRank, action, dealerCard);
-                }
-
-                // hard hands.  
-                for (int hardTotal = 20; hardTotal > 4; hardTotal--)
-                {
-                    // build player hand
-                    Hand playerHand = new Hand();
-
-                    // divide by 2 if it's even, else add one and divide by two
-                    int firstCardRank = ((hardTotal % 2) != 0) ? (hardTotal + 1) / 2 : hardTotal / 2;
-                    int secondCardRank = hardTotal - firstCardRank;
-
-                    // 20 is always TT, which is a pair, so we handle that by building a 3 card hand
-                    if (hardTotal == 20)
-                    {
-                        playerHand.AddCard(new Card("TD")); // ten of diamonds
-                        firstCardRank = 6;
-                        secondCardRank = 4;
-                    }
-
-                    // we don't want pairs, so check for that
-                    if (firstCardRank == secondCardRank)
-                    {
-                        firstCardRank++;
-                        secondCardRank--;
-                    }
-
-                    playerHand.AddCard(new Card(firstCardRank, "D"));
-                    playerHand.AddCard(new Card(secondCardRank, "S"));
-
-                    // find strategy 
-                    SetupStateData(candidate.StateData, playerHand, dealerCard);
-                    candidate.Evaluate();
-
-                    // get the decision and store in the strategy object
-                    var action = GetActionFromCandidate(candidate.StateData);
-                    AddHardStrategy(hardTotal, action, dealerCard);
-                }
-            }
-        }
-
-        private void SetupStateData(ProblemState stateData, Hand hand, Card dealerUpcard)
-        {
-            // prepare for testing
-            stateData.PlayerHand = hand;
-            stateData.DealerUpcard = dealerUpcard;
-
-            stateData.VotesForDoubleDown = 0;
-            stateData.VotesForHit = 0;
-            stateData.VotesForStand = 0;
-            stateData.VotesForSplit = 0;
-        }
-
-        private ActionToTake GetActionFromCandidate(ProblemState stateData)
-        {
-            int votesForStand = stateData.VotesForStand;
-            int votesForHit = stateData.VotesForHit;
-            int votesForDouble = stateData.VotesForDoubleDown;
-            int votesForSplit = stateData.VotesForSplit;
-
-            // there are times when all votes = 0, in which case double or split could be erroneously selected.
-            // this code handles that situation so they never get selected
-            if (stateData.PlayerHand.IsPair() == false) votesForSplit = int.MinValue;
-            if (stateData.PlayerHand.Cards.Count > 2) votesForDouble = int.MinValue;
-
-            List<Tuple<int, ActionToTake>> votes = new List<Tuple<int, ActionToTake>>();
-            votes.Add(new Tuple<int, ActionToTake>(votesForDouble, ActionToTake.Double));
-            votes.Add(new Tuple<int, ActionToTake>(votesForStand, ActionToTake.Stand));
-            votes.Add(new Tuple<int, ActionToTake>(votesForHit, ActionToTake.Hit));
-            votes.Add(new Tuple<int, ActionToTake>(votesForSplit, ActionToTake.Split));
-
-            var result = votes.OrderByDescending(v => v.Item1).First().Item2;
             return result;
         }
 
-        //-------------------------------------------------------------------------------------------
-
-        public void AddPairStrategy(string pairRank, ActionToTake action, Card dealerUpcard)
+        public void Randomize()
         {
-            pairsStrategy[CleanRank(pairRank) + CleanRank(dealerUpcard.Rank)] = action;
-        }
-
-        public void AddSoftStrategy(string secondaryCardRank, ActionToTake action, Card dealerUpcard)
-        {
-            // secondary rank is the non-Ace
-            softStrategy[CleanRank(secondaryCardRank) + CleanRank(dealerUpcard.Rank)] = action;
-        }
-
-        public void AddHardStrategy(int handTotal, ActionToTake action, Card dealerUpcard)
-        {
-            // handTotal goes from 5 (since a total of 4 means a pair of 2s) to 20
-            hardStrategy[handTotal + CleanRank(dealerUpcard.Rank)] = action;
-        }
-
-        private string CleanRank(string rank)
-        {
-            if (rank == "10" || rank == "J" || rank == "Q" || rank == "K")
-                rank = "T";  // we only stored one value for the tens
-            return rank;
-        }
-
-        //-------------------------------------------------------------------------------------------
-
-        public ActionToTake GetActionForHand(Hand hand, Card dealerUpcard)
-        {
-            if (hand.HandValue() >= 21) return ActionToTake.Stand;
-
-            string upcardRank = CleanRank(dealerUpcard.Rank);
-
-            if (hand.IsPair())
+            for (int upcardRank = 0; upcardRank <= Card.HighestRankIndex; upcardRank++)
             {
-                string rank = CleanRank(hand.Cards[0].Rank);
-                return pairsStrategy[rank + upcardRank];
+                // randomize pairs
+                for (int pairRank = 0; pairRank <= Card.HighestRankIndex; pairRank++)
+                    SetActionForPair(upcardRank, pairRank, GetRandomAction(true));
+
+                // and soft hands
+                for (int softRemainder = 2; softRemainder <= HighestSoftHandRemainder; softRemainder++)
+                    SetActionForSoftHand(upcardRank, softRemainder, GetRandomAction(false));
+
+                // and hard hands
+                for (int hardValue = 5; hardValue <= HighestHardHandValue; hardValue++)
+                    SetActionForHardHand(upcardRank, hardValue, GetRandomAction(false));
+            }
+        }
+
+        public void Mutate(double impact)
+        {
+            // impact is the % of cells that should be mutated
+
+            // randomly set cells in each of the arrays
+            int NumPairMutations = (int) (100F * impact);     // 10 possible holdings x 10 upcards
+            int NumSoftMutations = (int) (80F * impact);     // 8 possible holdings
+            int NumHardMutations = (int) (160F * impact);     // 16 possible holdings
+
+            // pairs
+            for (int i = 0; i < NumPairMutations; i++)
+            {
+                var upcardRank = GetRandomRankIndex();
+                var randomPairRank = GetRandomRankIndex();
+                SetActionForPair(upcardRank, randomPairRank, GetRandomAction(true));
             }
 
-            if (hand.HasSoftAce())
+            // soft hands
+            for (int i = 0; i < NumSoftMutations; i++)
             {
-                // we want the total other than the high ace
-                int howManyAces = hand.Cards.Count(c => c.Rank == "A");
-                int total = hand.Cards
-                    .Where(c => c.Rank != "A")
-                    .Sum(c => c.RankValueHigh) + 
-                    (howManyAces - 1);
-
-                string rank = (total == 10) ? "T" : total.ToString();
-                return softStrategy[rank + upcardRank];
+                var upcardRank = GetRandomRankIndex();
+                var randomRemainder = randomizer.IntBetween(LowestSoftHandRemainder, HighestSoftHandRemainder);
+                SetActionForSoftHand(upcardRank, randomRemainder, GetRandomAction(false));
             }
 
-            return hardStrategy[hand.HandValue() + upcardRank];
+            // hard hands
+            for (int i = 0; i < NumHardMutations; i++)
+            {
+                var upcardRank = GetRandomRankIndex();
+                var hardTotal = randomizer.IntBetween(LowestHardHandValue, HighestHardHandValue);
+                SetActionForHardHand(upcardRank, hardTotal, GetRandomAction(false));
+            }
+        }
+
+        private int GetRandomRankIndex()
+        {
+            return randomizer.IntLessThan(Card.HighestRankIndex);
+        }
+
+        private ActionToTake GetRandomAction(bool includeSplit)
+        {
+            return includeSplit ? 
+                (ActionToTake)randomizer.IntLessThan(NumActionsWithSplit) :
+                (ActionToTake)randomizer.IntLessThan(NumActionsNoSplit);
+        }
+
+        public void CrossOverWith(Strategy otherParent, Strategy child)
+        {
+            // here we create one child, with genetic information from each parent 
+            // in proportion to their relative fitness scores
+            float myScore = this.Fitness;
+            float theirScore = otherParent.Fitness;
+            float percentageChanceOfMine = 0;
+
+            // it depends on whether the numbers are positive or negative
+            if (myScore >= 0 && theirScore >= 0)
+            {
+                float totalScore = (myScore + theirScore);
+                // safety check (avoiding / 0)
+                if (totalScore < 0.001) totalScore = 1;
+                percentageChanceOfMine = (myScore / totalScore);
+            }
+            else if (myScore >= 0 && theirScore < 0)
+            {
+                // hard to compare a positive and a negative, so let's tip the hat to Mr. Pareto
+                percentageChanceOfMine = 0.8F;
+            }
+            else if (myScore < 0 && theirScore >= 0)
+            {
+                // hard to compare a positive and a negative, so let's tip the hat to Mr. Pareto
+                percentageChanceOfMine = 0.2F;
+            }
+            else
+            {
+                // both negative, so use abs value and 1-(x)
+                myScore = Math.Abs(myScore);
+                theirScore = Math.Abs(theirScore);
+                percentageChanceOfMine = 1 - (myScore / (myScore + theirScore));
+            }
+
+            for (int upcardRank = 0; upcardRank <= Card.HighestRankIndex; upcardRank++)
+            {
+                // populate the pairs
+                for (int pairRank = 0; pairRank <= Card.HighestRankIndex; pairRank++)
+                {
+                    bool useMyAction = randomizer.GetFloatFromZeroToOne() < percentageChanceOfMine;
+                    child.SetActionForPair(upcardRank, pairRank, 
+                        useMyAction ?
+                            this.GetActionForPair(upcardRank, pairRank) :
+                            otherParent.GetActionForPair(upcardRank, pairRank));
+                }
+
+                // populate the soft hands
+                for (int softRemainder = LowestSoftHandRemainder; softRemainder <= HighestSoftHandRemainder; softRemainder++)
+                {
+                    bool useMyAction = randomizer.GetFloatFromZeroToOne() < percentageChanceOfMine;
+                    child.SetActionForSoftHand(upcardRank, softRemainder, 
+                        useMyAction ?
+                        this.GetActionForSoftHand(upcardRank, softRemainder) :
+                        otherParent.GetActionForSoftHand(upcardRank, softRemainder));
+                }
+
+                // populate the hard hands
+                for (int hardValue = LowestHardHandValue; hardValue <= HighestHardHandValue; hardValue++)
+                {
+                    bool useMyAction = randomizer.GetFloatFromZeroToOne() < percentageChanceOfMine;
+                    child.SetActionForHardHand(upcardRank, hardValue, 
+                        useMyAction ?
+                        this.GetActionForHardHand(upcardRank, hardValue) :
+                        otherParent.GetActionForHardHand(upcardRank, hardValue));
+                }
+            }
         }
     }
 }

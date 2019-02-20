@@ -7,11 +7,54 @@ namespace BlackjackStrategy.Models
 {
     class Card
     {
-        public string Rank { get; set; }
-        public string Suit { get; set; }
+        // the card attribute enums
+        public enum Suits { Hearts, Spades, Clubs, Diamonds };
+        public enum Ranks { Two = 2, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, Ace };
+        public static int HighestRankIndex = 9;    
 
-        public enum Suits {  Hearts, Spades, Clubs, Diamonds};
-        public enum Ranks {  Two = 2, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, Ace};
+        // this card
+        public Ranks Rank { get; set; }
+        public Suits Suit { get; set; }
+
+        private static List<Ranks> rankList;
+        private static List<Suits> suitList;
+
+        public Card(Ranks rankValue, Suits suit)
+        {
+            Rank = rankValue;
+            Suit = suit;
+        }
+
+        // helper properties, for when it's easier to use a list vs. enumerating
+        public static List<Ranks> ListOfRanks
+        {
+            get
+            {
+                if (rankList != null) return rankList;
+
+                var result = new List<Ranks>();
+                var ranks = Enum.GetValues(typeof(Ranks));
+                foreach (var rank in ranks)
+                    result.Add((Ranks)rank);
+                rankList = result;
+                return result;
+            }
+        }
+
+        public static List<Suits> ListOfSuits
+        {
+            get
+            {
+                if (suitList != null) return suitList;
+
+                var suits = Enum.GetValues(typeof(Suits));
+                var result = new List<Suits>();
+                foreach (var suit in suits)
+                    result.Add((Suits)suit);
+                suitList = result;
+                return result;
+            }
+        }
 
         public int RankValueHigh
         {
@@ -19,129 +62,51 @@ namespace BlackjackStrategy.Models
             {
                 switch (Rank)
                 {
-                    case "A":
+                    case Ranks.Ace:
                         return 11;
-                    case "K":
+
+                    case Ranks.King:
+                    case Ranks.Queen:
+                    case Ranks.Jack:
+                    case Ranks.Ten:
                         return 10;
-                    case "Q":
-                        return 10;
-                    case "J":
-                        return 10;
-                    case "T":
-                        return 10;
+
                     default:
-                        return Convert.ToInt32(Rank);
+                        return (int)Rank;
                 }
             }
         }
 
         public int RankValueLow
         {
-            // For straights where A is treated as below the 2
             get
             {
                 switch (Rank)
                 {
-                    case "A":
+                    case Ranks.Ace:
                         return 1;
-                    case "K":
+
+                    case Ranks.King:
+                    case Ranks.Queen:
+                    case Ranks.Jack:
+                    case Ranks.Ten:
                         return 10;
-                    case "Q":
-                        return 10;
-                    case "J":
-                        return 10;
-                    case "T":
-                        return 10;
+
                     default:
-                        return Convert.ToInt32(Rank);
+                        return (int)Rank;
                 }
             }
         }
 
-        public Card(string rank, string suit)
-        {
-            Rank = rank;
-            Suit = suit;
-        }
-
-        public Card(string combined)
-        {
-            Rank = combined[0].ToString();
-            Suit = combined[1].ToString();
-        }
-
-        public Card(int rankValue, string suit)
+        public static string RankText(Ranks rank)
         {
             var rankChars = "  23456789TJQKA".ToCharArray();
-            Rank = rankChars[rankValue].ToString();
-            Suit = suit;
-        }
-
-        public Card(Ranks rankValue, string suit)
-        {
-            var rankChars = "  23456789TJQKA".ToCharArray();
-            Rank = rankChars[(int)rankValue].ToString();
-            Suit = suit;
-        }
-
-        public Card(Ranks rankValue, Suits suit)
-        {
-            var rankChars = "  23456789TJQKA".ToCharArray();
-            var suitChars = "HSCD";
-            Rank = rankChars[(int)rankValue].ToString();
-            Suit = suitChars[(int)suit].ToString();
-        }
-
-        public static string RankText(int rank)
-        {
-            var rankChars = "  23456789TJQKA".ToCharArray();
-            return rankChars[rank].ToString();
-        }
-
-        public static string RankDescription(int rank, bool pluralForm = true)
-        {
-            string suffix = "";
-            if (pluralForm)
-            {
-                suffix = "s";
-                if (rank == 6) suffix = "es";
-            }
-
-            switch (rank)
-            {
-                case 14:
-                    return "Ace" + suffix;
-                case 13:
-                    return "King" + suffix;
-                case 12:
-                    return "Queen" + suffix;
-                case 11:
-                    return "Jack" + suffix;
-                case 10:
-                    return "Ten" + suffix;
-                case 9:
-                    return "Nine" + suffix;
-                case 8:
-                    return "Eight" + suffix;
-                case 7:
-                    return "Seven" + suffix;
-                case 6:
-                    return "Six" + suffix;
-                case 5:
-                    return "Five" + suffix;
-                case 4:
-                    return "Four" + suffix;
-                case 3:
-                    return "Three" + suffix;
-                case 2:
-                    return "Two" + suffix;
-            }
-            return "";
+            return rankChars[(int)rank].ToString();
         }
 
         public override string ToString()
         {
-            return Rank + Suit;
+            return RankText(Rank) + Suit;
         }
     }
 
@@ -149,12 +114,12 @@ namespace BlackjackStrategy.Models
 
     class Hand
     {
+        public List<Card> Cards { get; set; }
+
         public Hand()
         {
             Cards = new List<Card>();
         }
-
-        public List<Card> Cards { get; set; }
 
         public void AddCard(Card card)
         {
@@ -180,11 +145,17 @@ namespace BlackjackStrategy.Models
         public bool HasSoftAce()
         {
             // first, we need to have an ace
-            if (!Cards.Any(c => c.Rank == "A")) return false;
+            int numAces = Cards.Count(c => c.Rank == Card.Ranks.Ace);
+            if (numAces == 0) return false;
 
-            // and if it counts as 11 and we have a valid hand, then we have a soft ace
-            int highTotal = Cards.Sum(c => c.RankValueHigh);
-            return (highTotal <= 21);
+            // if we have more than one Ace, we try one as high and the rest as low
+            int total = 11 + 
+                Cards
+                    .Where(c => c.Rank != Card.Ranks.Ace)
+                    .Sum(c => c.RankValueLow) + 
+                (numAces - 1);
+
+            return (total <= 21);
         }
 
         public int HandValue()
@@ -194,7 +165,7 @@ namespace BlackjackStrategy.Models
             bool aceWasUsedAsHigh = false;
             foreach (var card in Cards)
             {
-                if (card.Rank == "A")
+                if (card.Rank == Card.Ranks.Ace)
                 {
                     if (!aceWasUsedAsHigh)
                     {
@@ -212,7 +183,7 @@ namespace BlackjackStrategy.Models
                 }
                 else
                 {
-                    highValue += card.RankValueHigh;
+                    highValue += card.RankValueLow; // for non-Aces, RankValueLow == RankValueHigh
                     lowValue += card.RankValueLow;
                 }
             }
@@ -222,6 +193,7 @@ namespace BlackjackStrategy.Models
 
             // if the high value > 21, return the low
             if (highValue > 21) return lowValue;
+
             // else the high, which will be the same value as the low except when there's an Ace in the hand
             return highValue;
         }
@@ -229,52 +201,79 @@ namespace BlackjackStrategy.Models
 
     //=======================================================================
 
-    class MultiDeck
+    class Deck
     {
-        public List<Card> Cards { get; set; }
         private int currentCard = 0;
+        private List<Card> Cards;
+        private int numDecks;
 
-        public MultiDeck(int numDecks)
+        public Deck(int numDecksToUse)
         {
-            Cards = new List<Card>();
-            for (int deckNum = 0; deckNum < numDecks; deckNum++)
-            {
-                Cards.AddRange(CardUtils.GetRandomDeck());
-            }
+            numDecks = numDecksToUse;
+            CreateRandomDeck();
+        }
+
+        private void CreateRandomDeck()
+        {
+            Cards = new List<Card>(52 * numDecks);
+
+            for (int i = 0; i < numDecks; i++)
+                foreach (var rank in Card.ListOfRanks)
+                    foreach (var suit in Card.ListOfSuits)
+                    {
+                        var card = new Card(rank, suit);
+                        Cards.Add(card);
+                    }
+
+            Shuffle();
         }
 
         public Card DealCard()
         {
-            //Debug.WriteLine("Dealing card from " + this.ToString());
-            Debug.Assert(currentCard < Cards.Count, "Ran out of cards to deal");
-
-            // bad code - it doesn't deal with running out of cards
+            ShuffleIfNeeded();
             return Cards[currentCard++];
         }
 
-        internal Card DealNextOfRank(string rank)
+        public void ForceNextCardToBe(Card.Ranks rank)
         {
-            int index = currentCard;
-            while (Cards[index].Rank != rank) index++;
-            var card = Cards[index];
-            Cards.Remove(card);
-            return card;
+            // this function used when stacking the deck
+            // it compensates for the fact that pairs and soft hands don't happen that often,
+            // we may wish to force a card to be dealt next
+
+            // first, look for the rank in the remaining cards
+            int foundAt = -1;
+            for (int i = currentCard; i < Cards.Count; i++)
+                if (Cards[i].Rank == rank)
+                {
+                    foundAt = i;
+                    break;
+                }
+
+            // if not found, start over from the start of the deck
+            if (foundAt == -1)
+            {
+                for (int i = 0; i < currentCard; i++)
+                    if (Cards[i].Rank == rank)
+                    {
+                        foundAt = i;
+                        break;
+                    }
+            }
+
+            // now swap that card with the next-to-be-dealt
+            Card temp = Cards[foundAt];
+            Cards[foundAt] = Cards[currentCard];
+            Cards[currentCard] = temp;
         }
 
-        internal Card DealNextNotOfRank(string rank)
+        public void EnsureNextCardIsnt(Card.Ranks rank)
         {
-            int index = currentCard;
-            while (Cards[index].Rank == rank) index++;
-            var card = Cards[index];
-            Cards.Remove(card);
-            return card;
-        }
-
-        internal void RemoveCard(string rank, string suit)
-        {
-            if (rank == "10") rank = "T";
-            var foundCard = Cards.First(c => c.Rank == rank && c.Suit == suit);
-            Cards.Remove(foundCard);
+            // similar to ForceNextCardToBe, this is used for stacking the deck
+            while (Cards[currentCard].Rank == rank)
+            {
+                currentCard++;
+                ShuffleIfNeeded();
+            }
         }
 
         public int CardsRemaining {
@@ -284,67 +283,26 @@ namespace BlackjackStrategy.Models
             }
         }
 
-        public override string ToString()
+        public void Shuffle()
         {
-            return CardsRemaining + " remaining, first cards are " +
-                Cards[0].ToString() + " " + Cards[1].ToString() + " " + Cards[2].ToString();
-        }
-
-    }
-
-    //=======================================================================
-
-    class CardUtils
-    {
-        static public List<Card> GetRandomDeck()
-        {
-            // initially populate
-            List<Card> deck = new List<Card>(52);
-            foreach (Card.Ranks rank in Enum.GetValues(typeof(Card.Ranks)))
-                foreach (Card.Suits suit in Enum.GetValues(typeof(Card.Suits)))
-                {
-                    var card = new Card(rank, suit);
-                    deck.Add(card);
-                }
-
             // then shuffle using Fisher-Yates: one pass through, swapping the current card with a random one below it
-            for (int i = 51; i > 1; i--)
+            int start = Cards.Count - 1;
+            var randomizer = new Randomizer();
+            for (int i = start; i > 1; i--)
             {
-                int swapWith = Randomizer.IntLessThan(i);
+                int swapWith = randomizer.IntLessThan(i);
 
-                Card hold = deck[i];
-                deck[i] = deck[swapWith];
-                deck[swapWith] = hold;
+                Card hold = Cards[i];
+                Cards[i] = Cards[swapWith];
+                Cards[swapWith] = hold;
             }
-
-            return deck;
+            currentCard = 0;
         }
 
-        static public List<Card> GetRandomCards(int numCards)
+        public void ShuffleIfNeeded()
         {
-            // optimized way of getting a full deck
-            if (numCards == 52)
-                return GetRandomDeck();
-
-            string suits = "HSCD";
-            string ranks = "23456789TJQKA";
-
-            List<Card> cards = new List<Card>(numCards);
-            string suit, rank;
-            while (cards.Count < numCards)
-            {
-                // Generate a card and make sure we don't already have it 
-                do
-                {
-                    suit = suits[Randomizer.IntLessThan(4)].ToString();
-                    rank = ranks[Randomizer.IntLessThan(13)].ToString();
-                } while (cards.Any(c => c.Rank == rank && c.Suit == suit));
-
-                cards.Add(new Card(rank, suit));
-            }
-            return cards;
+            if (CardsRemaining < 20)
+                Shuffle();
         }
     }
-
-    //=======================================================================
 }
