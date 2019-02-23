@@ -21,15 +21,20 @@ namespace WineQuality
         static void Main(string[] args)
         {
             // create the engine with params set for this problem
-            var x = new EngineParameters()
+            var engineParams = new EngineParameters()
             {
                 IsLowerFitnessBetter = true,
                 PopulationSize = 500,
-                MaxGenerations = 150,
+                MinGenerations = 100,
+                MaxGenerations = 250,
+                StagnantGenerationLimit = 15,
                 SelectionStyle = SelectionStyle.Tourney,
-                TourneySize = 3
+                TourneySize = 3,
+                ElitismRate = 0,
+                CrossoverRate = 1,
+                MutationRate = 0
             };
-            var e = new Engine<double, StateData>(x);
+            var e = new Engine<double, StateData>(engineParams);
 
             // give the engine a fitness function and a per-gen callback (so we can see the progress)
             e.AddFitnessFunction((c) => EvaluateCandidate(c));
@@ -54,12 +59,15 @@ namespace WineQuality
             e.AddFunction((a, b) => a * b, "Mult");                    // multiplication
             e.AddFunction((a, b) => (b == 0) ? 1 : a / b, "Div");     // safe division 
             e.AddFunction((a) => -1 * a, "Neg");                      // negate
-            e.AddFunction((a, b) => Math.Min(a, b), "Min");
-            e.AddFunction((a, b) => Math.Max(a, b), "Max");
+            e.AddFunction((a) => Math.Abs(a), "Abs");
+            e.AddFunction((a, b) => (a < b) ? a : b, "Min");
+            e.AddFunction((a, b) => (a > b) ? a : b, "Max");
 
-            // -1 to 12 by 1 seems like a nice range of constants
-            for (int i = -1; i < 13; i++)
-                e.AddConstant(i);
+            e.AddConstant(-1);
+            e.AddConstant(1);
+            e.AddConstant(10);
+            e.AddConstant(100);
+            e.AddConstant(1000);
 
             // find the solution
             var solution = e.FindBestSolution();
@@ -70,6 +78,8 @@ namespace WineQuality
             Console.WriteLine();
             Console.WriteLine("Final score: " + finalScore.ToString("0.0000"));
             Console.WriteLine();
+            Console.WriteLine(solution.ToString());
+            Console.WriteLine();
             Console.WriteLine("Hit any key to exit");
             Console.ReadKey();
         }
@@ -78,7 +88,7 @@ namespace WineQuality
         {
             Console.WriteLine("Gen " + p.GenerationNumber.ToString("000") + 
                 " avg: " + p.AvgFitnessThisGen.ToString("0.0000") + 
-                " t: " + p.TimeForGeneration.TotalSeconds);
+                " t: " + p.TimeForGeneration.TotalSeconds.ToString("0.00"));
 
             // write out HTML row showing progress?
 
@@ -119,13 +129,19 @@ namespace WineQuality
                 var result = candidate.Evaluate();
 
                 // now figure the difference between the calculated value and the training data
-                var diff = Math.Abs(result - actualAnswer);
+                var diff = (result - actualAnswer) * (result - actualAnswer);
                 totalDifference += diff;
+
+                if (!useTrainingData)
+                    Console.WriteLine("Ans: " + actualAnswer.ToString(" 0") + " AI: " + result.ToString("0.00"));
             }
 
-            // since the genetic engine doesn't stop as long as the fitness scores are improving,
-            // speed things up by truncating the precision to 4 digits after the decimal
-            totalDifference = Math.Truncate(totalDifference * 10000F) / 10000F;
+            totalDifference = Math.Sqrt(totalDifference);
+            if (double.IsNaN(totalDifference)) totalDifference = 0;
+
+            // fitness function returns a float, so make sure we're within the valid range
+            if (totalDifference > float.MaxValue) totalDifference = float.MaxValue;
+            if (totalDifference < float.MinValue) totalDifference = float.MinValue;
             return (float)totalDifference;
         }
     }

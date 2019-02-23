@@ -63,7 +63,7 @@ namespace WineQuality
             if (currentTestingIndex >= numTestingItems)
                 return null;
 
-            return sampleData[indexesForTesting[numTrainingItems + currentTestingIndex++]];
+            return sampleData[indexesForTesting[currentTestingIndex++]];
         }
 
         static void LoadDataForTrainingAndTesting()

@@ -351,6 +351,8 @@ namespace Evolutionary
                     bestFitness = fitness;
                 }
             }
+
+            Debug.Assert(result != null);
             return result;
         }
 
