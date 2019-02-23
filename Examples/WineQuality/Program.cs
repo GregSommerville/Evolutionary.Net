@@ -1,8 +1,6 @@
-﻿using System;
-using System.IO;
+﻿using Evolutionary;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using Evolutionary;
 
 namespace RealEstatePrices
 {
@@ -55,6 +53,9 @@ namespace RealEstatePrices
             e.AddFunction((a, b) => a - b, "Sub");                    // subtraction
             e.AddFunction((a, b) => a * b, "Mult");                    // multiplication
             e.AddFunction((a, b) => (b == 0) ? 1 : a / b, "Div");     // safe division 
+            e.AddFunction((a) => -1 * a, "Neg");                      // negate
+            e.AddFunction((a, b) => Math.Min(a, b), "Min");
+            e.AddFunction((a, b) => Math.Max(a, b), "Max");
 
             // -1 to 12 by 1 seems like a nice range of constants
             for (int i = -1; i < 13; i++)
@@ -62,14 +63,29 @@ namespace RealEstatePrices
 
             // find the solution
             var solution = e.FindBestSolution();
+
+            // then test how well it does
+            var finalScore = EvaluateCandidate(solution, false);
+
+            Console.WriteLine();
+            Console.WriteLine("Final score: " + finalScore.ToString("0.0000"));
+            Console.WriteLine();
+            Console.WriteLine("Hit any key to exit");
+            Console.ReadKey();
         }
 
         private static bool PerGenerationCallback(EngineProgress p, object b)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Gen " + p.GenerationNumber.ToString("000") + 
+                " avg: " + p.AvgFitnessThisGen.ToString("0.0000") + 
+                " t: " + p.TimeForGeneration.TotalSeconds);
+
+            // write out HTML row showing progress?
+
+            return true;    // keep going
         }
 
-        private static float EvaluateCandidate(CandidateSolution<double, StateData> candidate)
+        private static float EvaluateCandidate(CandidateSolution<double, StateData> candidate, bool useTrainingData = true)
         {
             var sampleData = new Dataset();
 
@@ -78,7 +94,11 @@ namespace RealEstatePrices
             double totalDifference = 0;
             while (true)
             {
-                var row = sampleData.GetRowOfTrainingData();
+                List<double> row;
+                if (useTrainingData)
+                    row = sampleData.GetRowOfTrainingData();
+                else
+                    row = sampleData.GetRowOfTestingData();
                 if (row == null) break;
 
                 // populate vars
