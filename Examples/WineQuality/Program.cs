@@ -1,6 +1,8 @@
 ﻿using Evolutionary;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 
 namespace WineQuality
 {
@@ -18,6 +20,8 @@ namespace WineQuality
         const string VarnameSulfates = "Sulfates";
         const string VarnameAlc = "Alc";
 
+        static string printableSettings = "";
+
         static void Main(string[] args)
         {
             // create the engine with params set for this problem
@@ -26,19 +30,30 @@ namespace WineQuality
                 IsLowerFitnessBetter = true,
                 PopulationSize = 500,
                 MinGenerations = 100,
-                MaxGenerations = 250,
-                StagnantGenerationLimit = 15,
+                MaxGenerations = 350,
+                StagnantGenerationLimit = 50,
                 SelectionStyle = SelectionStyle.Tourney,
                 TourneySize = 3,
                 ElitismRate = 0,
                 CrossoverRate = 1,
-                MutationRate = 0
+                MutationRate = 0.0
             };
+
+            // all settings in one column
+            printableSettings =
+                "P: " + engineParams.PopulationSize + " " +
+                "G: " + engineParams.MinGenerations + " - " + engineParams.MaxGenerations + " " +
+                "Stgn: " + engineParams.StagnantGenerationLimit + " " +
+                "Sel: " + engineParams.SelectionStyle + " " +
+                "Trny: " + engineParams.TourneySize + " " +
+                "Mut: " + engineParams.MutationRate + " " +
+                "Elit: " + engineParams.ElitismRate + " ";
+
             var e = new Engine<double, StateData>(engineParams);
 
             // give the engine a fitness function and a per-gen callback (so we can see the progress)
             e.AddFitnessFunction((c) => EvaluateCandidate(c));
-            e.AddProgressFunction((p,b) => PerGenerationCallback(p, b));
+            e.AddProgressFunction((p) => PerGenerationCallback(p));
 
             // one variable per value on a row of the training data 
             e.AddVariable(VarnameFixAcidity);
@@ -58,12 +73,14 @@ namespace WineQuality
             e.AddFunction((a, b) => a - b, "Sub");                    // subtraction
             e.AddFunction((a, b) => a * b, "Mult");                    // multiplication
             e.AddFunction((a, b) => (b == 0) ? 1 : a / b, "Div");     // safe division 
-            e.AddFunction((a) => -1 * a, "Neg");                      // negate
+            e.AddFunction((a) => -1 * a, "Neg");                      // -1 * a
+            e.AddFunction((a) => (a > 0) ? 1 / a : 0, "Inv");         // 1 / a
             e.AddFunction((a) => Math.Abs(a), "Abs");
+            e.AddFunction((a) => a * a, "Sqr");
+            e.AddFunction((a) => a * a * a, "Cube");
             e.AddFunction((a, b) => (a < b) ? a : b, "Min");
             e.AddFunction((a, b) => (a > b) ? a : b, "Max");
 
-            e.AddConstant(-1);
             e.AddConstant(1);
             e.AddConstant(10);
             e.AddConstant(100);
@@ -84,13 +101,22 @@ namespace WineQuality
             Console.ReadKey();
         }
 
-        private static bool PerGenerationCallback(EngineProgress p, object b)
+        private static bool PerGenerationCallback(EngineProgress p)
         {
             Console.WriteLine("Gen " + p.GenerationNumber.ToString("000") + 
-                " avg: " + p.AvgFitnessThisGen.ToString("0.0000") + 
+                " avg: " + p.AvgFitnessThisGen.ToString("0.0000") +
+                " best: " + p.BestFitnessThisGen.ToString("0.0000") +
                 " t: " + p.TimeForGeneration.TotalSeconds.ToString("0.00"));
 
-            // write out HTML row showing progress?
+            // save stats: date, gen#, best-this-gen, avg-this-gen, settings
+            var writer = File.AppendText("per-gen-stats.csv");
+            writer.WriteLine(
+                "\"" + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString() + "\"," +
+                p.GenerationNumber + "," +
+                p.BestFitnessThisGen.ToString("0") + "," +
+                p.AvgFitnessThisGen.ToString("0") + "," +
+                printableSettings);
+            writer.Close();
 
             return true;    // keep going
         }
@@ -129,15 +155,15 @@ namespace WineQuality
                 var result = candidate.Evaluate();
 
                 // now figure the difference between the calculated value and the training data
-                var diff = (result - actualAnswer) * (result - actualAnswer);
-                totalDifference += diff;
+                var diff = result - actualAnswer;
+                totalDifference += diff * diff;
 
                 if (!useTrainingData)
                     Console.WriteLine("Ans: " + actualAnswer.ToString(" 0") + " AI: " + result.ToString("0.00"));
             }
 
             totalDifference = Math.Sqrt(totalDifference);
-            if (double.IsNaN(totalDifference)) totalDifference = 0;
+            Debug.Assert(!double.IsNaN(totalDifference));
 
             // fitness function returns a float, so make sure we're within the valid range
             if (totalDifference > float.MaxValue) totalDifference = float.MaxValue;

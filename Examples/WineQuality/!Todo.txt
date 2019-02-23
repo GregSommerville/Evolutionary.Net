@@ -1,6 +1,2 @@
-﻿
-- Dump comparisons of scores to CSV file for charting
-
-- Cartesian diff: sqrt((x - x1)^2 + (y - y1)^2 ...)	
-
-- Results.html
+﻿-new functions
+	Clamp(a) => ensures it's between X and Y
