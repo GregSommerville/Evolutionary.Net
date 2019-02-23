@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace RealEstatePrices
+namespace WineQuality
 {
     using DataRow = List<double>;
 
@@ -13,38 +13,41 @@ namespace RealEstatePrices
         const string FileName = "wine-quality.csv";
 
         static List<DataRow> sampleData;
-        static int numItems, numTrainingItems, numTestingItems;
 
         List<int> indexesForTraining, indexesForTesting;
-        int currentTrainingIndex, currentTestingIndex;
+        int currentTrainingIndex, currentTestingIndex, numTrainingItems, numTestingItems;
+
+        static Dataset()
+        {
+            // this static constructor gets called once to initialize before any instances are created
+            LoadDataForTrainingAndTesting();
+        }
 
         public Dataset()
         {
-            if (sampleData == null)
-                LoadDataForTrainingAndTesting();
-
+            // instance constructor gives each caller a unique split of training/testing data
             SplitData();
         }
 
         void SplitData()
         {
-            currentTrainingIndex = 0;
-            currentTestingIndex = 0;
-
             indexesForTraining = new List<int>();
             indexesForTesting = new List<int>();
 
             // thread-safe random object, since the seed value is not the default (time-based)
             var random = new Random(Guid.NewGuid().GetHashCode());
 
+            var numItems = sampleData.Count;
             for (int i = 0; i < numItems; i++)
-                if (random.NextDouble() >= PercentageForTraining)
+                if (random.NextDouble() < PercentageForTraining)
                     indexesForTraining.Add(i);
                 else
                     indexesForTesting.Add(i);
 
             numTrainingItems = indexesForTraining.Count;
             numTestingItems = numItems - numTrainingItems;
+            currentTrainingIndex = 0;
+            currentTestingIndex = 0;
         }
 
         public DataRow GetRowOfTrainingData()
@@ -63,7 +66,7 @@ namespace RealEstatePrices
             return sampleData[indexesForTesting[numTrainingItems + currentTestingIndex++]];
         }
 
-        void LoadDataForTrainingAndTesting()
+        static void LoadDataForTrainingAndTesting()
         {
             /*  Dataset is from:
               P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis. 
@@ -86,9 +89,7 @@ namespace RealEstatePrices
                 var parts = lines[lineNum].Split(";".ToCharArray());
                 var decimalValues = parts.Select(p => double.Parse(p)).ToList();
                 sampleData.Add(decimalValues);
-            }
-
-            numItems = sampleData.Count;
+            }            
         }
     }
 }

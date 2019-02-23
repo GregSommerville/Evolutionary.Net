@@ -1,2 +1,4 @@
 ﻿
+- Dump comparisons of scores to CSV file for charting
+	
 - Results.html
