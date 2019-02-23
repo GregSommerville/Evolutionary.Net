@@ -8,6 +8,9 @@ Blackjack Example
 
 - Engine.AddAutoDefinedFunction(numParams)
 
+these are convenience functions, since you can code the same easily
+- Engine.AddRandomIntegerConstants(lowValue, highValue, numToAdd)
+- Engine.AddRandomFloatConstants(lowValue, highValue, numToAdd)
 
 --------------------------
 Engine
