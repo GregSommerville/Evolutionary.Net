@@ -9,10 +9,11 @@ namespace WineQuality
 
     class Dataset
     {
-        const double PercentageForTraining = 0.666;
+        const double PercentageForTraining = 0.75;
         const string FileName = "wine-quality.csv";
 
         static List<DataRow> sampleData;
+        static int numItems;
 
         List<int> indexesForTraining, indexesForTesting;
         int currentTrainingIndex, currentTestingIndex, numTrainingItems, numTestingItems;
@@ -33,19 +34,15 @@ namespace WineQuality
         {
             indexesForTraining = new List<int>();
             indexesForTesting = new List<int>();
-
-            // thread-safe random object, since the seed value is not the default (time-based)
-            var random = new Random(Guid.NewGuid().GetHashCode());
-
-            var numItems = sampleData.Count;
-            for (int i = 0; i < numItems; i++)
-                if (random.NextDouble() < PercentageForTraining)
-                    indexesForTraining.Add(i);
-                else
-                    indexesForTesting.Add(i);
-
-            numTrainingItems = indexesForTraining.Count;
+            
+            numTrainingItems = (int)(numItems * PercentageForTraining);
             numTestingItems = numItems - numTrainingItems;
+
+            for (int i = 0; i < numTrainingItems; i++)
+                indexesForTraining.Add(i);
+            for (int i = numTrainingItems; i < numItems; i++)
+                indexesForTesting.Add(i);
+
             currentTrainingIndex = 0;
             currentTestingIndex = 0;
         }
@@ -86,7 +83,31 @@ namespace WineQuality
                 var parts = lines[lineNum].Split(";".ToCharArray());
                 var decimalValues = parts.Select(p => double.Parse(p)).ToList();
                 sampleData.Add(decimalValues);
-            }            
+            }
+            numItems = sampleData.Count;
+
+            NormalizeData();
+        }
+
+        static void NormalizeData()
+        {
+            int numCols = sampleData.First().Count;
+            for (int col = 0; col < numCols - 2; col++)
+            {
+                // find min and max for the column
+                double minVal = double.MaxValue, maxVal = double.MinValue;
+                for (int i = 0; i < numItems; i++)
+                {
+                    double val = sampleData[i][col];
+                    if (val < minVal) minVal = val;
+                    if (val > maxVal) maxVal = val;
+                }
+                var valueRange = maxVal - minVal;
+
+                // then normalize the column
+                for (int i = 0; i < numItems; i++)
+                    sampleData[i][col] = (sampleData[i][col] - minVal) / valueRange;
+            }
         }
     }
 }

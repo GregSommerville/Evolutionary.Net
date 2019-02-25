@@ -30,17 +30,17 @@ namespace WineQuality
             var engineParams = new EngineParameters()
             {
                 IsLowerFitnessBetter = true,
-                PopulationSize = 500,
+                PopulationSize = 750,
                 MinGenerations = 100,
-                MaxGenerations = 350,
+                MaxGenerations = 200,
                 StagnantGenerationLimit = 50,
                 SelectionStyle = SelectionStyle.Tourney,
                 TourneySize = 3,
                 ElitismRate = 0,
                 CrossoverRate = 1,
                 MutationRate = 0.0,
-                RandomTreeMinDepth = 5,
-                RandomTreeMaxDepth = 10
+                RandomTreeMinDepth = 3,
+                RandomTreeMaxDepth = 6
             };
 
             printableParams =
@@ -77,17 +77,26 @@ namespace WineQuality
             e.AddFunction((a, b) => a - b, "Sub");                    // subtraction
             e.AddFunction((a, b) => a * b, "Mult");                    // multiplication
             e.AddFunction((a, b) => (b == 0) ? 1 : a / b, "Div");     // safe division 
+            e.AddFunction((a, b) => (a < b) ? a : b, "Min");
+            e.AddFunction((a, b) => (a > b) ? a : b, "Max");
+            e.AddFunction((a, b) => (a + b) / 2, "Avg");
+            e.AddFunction((a, b, c) => (a + b + c) / 3, "Avg3");
             e.AddFunction((a) => -1 * a, "Neg");                      // -1 * a
             e.AddFunction((a) => (a != 0) ? 1 / a : 0, "Inv");         // 1 / a
             e.AddFunction((a) => Math.Abs(a), "Abs");
             e.AddFunction((a) => a * a, "Sqr");
             e.AddFunction((a) => a * a * a, "Cube");
-            e.AddFunction((a, b) => (a < b) ? a : b, "Min");
-            e.AddFunction((a, b) => (a > b) ? a : b, "Max");
 
-            e.AddConstant(10);
-            e.AddConstant(100);
-            e.AddConstant(1000);
+            e.AddConstant(0);
+            e.AddConstant(2);
+            e.AddConstant(3);
+            e.AddConstant(5);
+            e.AddConstant(7);
+            e.AddConstant(11);
+            e.AddConstant(13);
+            e.AddConstant(17);
+            e.AddConstant(19);
+            e.AddConstant(23);
 
             // find the solution
             var solution = e.FindBestSolution();
@@ -129,21 +138,29 @@ namespace WineQuality
             }
 
             Console.WriteLine("Gen " + p.GenerationNumber.ToString().PadLeft(3) + 
-                " avg: " + p.AvgFitnessThisGen.ToString("0.0000").PadLeft(20) + avgSuffix + 
-                " best: " + p.BestFitnessThisGen.ToString("0.0000").PadLeft(20) + bestSuffix +
-                " t: " + p.TimeForGeneration.TotalSeconds.ToString("0.00"));
+                "  avg: " + FormatNumber(p.AvgFitnessThisGen) + avgSuffix + 
+                "  best: " + FormatNumber(p.BestFitnessThisGen) + bestSuffix +
+                "  t: " + p.TimeForGeneration.TotalSeconds.ToString("0.00"));
 
             // save stats: date, gen#, best-this-gen, avg-this-gen, settings
             var writer = File.AppendText("per-gen-stats.csv");
             writer.WriteLine(
                 "\"" + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString() + "\"," +
                 p.GenerationNumber + "," +
-                p.BestFitnessThisGen.ToString("0") + "," +
-                p.AvgFitnessThisGen.ToString("0") + "," +
+                p.BestFitnessThisGen.ToString() + "," +
+                p.AvgFitnessThisGen.ToString() + "," +
                 printableParams);
             writer.Close();
 
             return true;    // keep going
+        }
+
+        static string FormatNumber(double d)
+        {
+            string result = d.ToString("0.0000").PadLeft(20);
+            if (result.Length > 20)
+                result = d.ToString("E").PadLeft(20);
+            return result;
         }
 
         static float EvaluateCandidate(CandidateSolution<double, StateData> candidate)
