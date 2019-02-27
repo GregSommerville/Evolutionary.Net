@@ -9,8 +9,10 @@ namespace WineQuality
 
     class Dataset
     {
+        public static int LabelColumnIndex { get; set; }
+        public static int NumColumns { get; set;  }
+
         const double PercentageForTraining = 0.75;
-        const string FileName = "wine-quality.csv";
 
         static List<DataRow> sampleData;
         static int numItems;
@@ -18,15 +20,14 @@ namespace WineQuality
         List<int> indexesForTraining, indexesForTesting;
         int currentTrainingIndex, currentTestingIndex, numTrainingItems, numTestingItems;
 
-        static Dataset()
+        public static void LoadFromFile(string filename, int colIndexForLabel, int[] ignoreColumns, string delimiter = ",")
         {
-            // this static constructor gets called once to initialize before any instances are created
-            LoadDataForTrainingAndTesting();
+            LoadDataForTrainingAndTesting(filename, delimiter, ignoreColumns);
+            LabelColumnIndex = colIndexForLabel;
         }
 
         public Dataset()
         {
-            // instance constructor gives each caller a unique split of training/testing data
             SplitData();
         }
 
@@ -63,28 +64,25 @@ namespace WineQuality
             return sampleData[indexesForTesting[currentTestingIndex++]];
         }
 
-        static void LoadDataForTrainingAndTesting()
+        static void LoadDataForTrainingAndTesting(string fileName, string delimiter, int[] ignoreColumns)
         {
-            /*  Dataset is from:
-              P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis. 
-              Modeling wine preferences by data mining from physicochemical properties.
-              In Decision Support Systems, Elsevier, 47(4):547-553. ISSN: 0167-9236.
-              Available at: [@Elsevier] http://dx.doi.org/10.1016/j.dss.2009.05.016
-            */
-
-            sampleData = new List<DataRow>();
-
-            // the CSV file is actually semi-colon delimited (not comma), and fields are the following:
-            // "fixed acidity";"volatile acidity";"citric acid";"residual sugar";"chlorides";"free sulfur dioxide";"total sulfur dioxide";"density";"pH";"sulphates";"alcohol";"quality"
-            var lines = File.ReadAllLines(FileName);
+            sampleData = new List<DataRow>();            
+            var splitOn = delimiter.ToCharArray();
+            var lines = File.ReadAllLines(fileName);
             for (int lineNum = 1; lineNum < lines.Length; lineNum++)
             {
                 // skipping line 0 (the header), parse all numbers and store
-                var parts = lines[lineNum].Split(";".ToCharArray());
+                var parts = lines[lineNum].Split(splitOn);
                 var decimalValues = parts.Select(p => double.Parse(p)).ToList();
+
+                // get rid of ignore columns
+                foreach (int colIndex in ignoreColumns.OrderByDescending(i => i))
+                    decimalValues.RemoveAt(colIndex);
+
                 sampleData.Add(decimalValues);
             }
             numItems = sampleData.Count;
+            NumColumns = sampleData.First().Count;
 
             NormalizeData();
         }

@@ -9,24 +9,23 @@ namespace WineQuality
 {
     class Program
     {
-        const string VarnameFixAcidity = "FixAcid";
-        const string VarnameVolAcidity = "VolAcid";
-        const string VarnameCitric = "CitAcid";
-        const string VarnameResSug = "ResSug";
-        const string VarnameChlor = "Chlor";
-        const string VarnameFreeSO2 = "FreeSO2";
-        const string VarnameTotSO2 = "TotSO2";
-        const string VarnameDensity = "Dens";
-        const string VarnamepH = "pH";
-        const string VarnameSulfates = "Sulfates";
-        const string VarnameAlc = "Alc";
-
         static string printableParams = "";
         static double bestOverallScoreSoFar = double.MaxValue,
                       bestAverageScoreSoFar = double.MaxValue;
 
         static void Main(string[] args)
         {
+            /*  Dataset is from:
+              P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis. 
+              Modeling wine preferences by data mining from physicochemical properties.
+              In Decision Support Systems, Elsevier, 47(4):547-553. ISSN: 0167-9236.
+              Available at: [@Elsevier] http://dx.doi.org/10.1016/j.dss.2009.05.016
+
+              Attributes: "fixed acidity";"volatile acidity";"citric acid";"residual sugar";"chlorides";"free sulfur dioxide";"total sulfur dioxide";"density";"pH";"sulphates";"alcohol";"quality"
+            */
+            var ignoreColumns = new int[] { 6, 7 };
+            Dataset.LoadFromFile("wine-quality.csv", 9,  ignoreColumns, ";");
+
             var engineParams = new EngineParameters()
             {
                 IsLowerFitnessBetter = true,
@@ -60,17 +59,11 @@ namespace WineQuality
             e.AddProgressFunction((p) => PerGenerationCallback(p));
 
             // one variable per value on a row of the training data 
-            e.AddVariable(VarnameFixAcidity);
-            e.AddVariable(VarnameVolAcidity);
-            e.AddVariable(VarnameCitric);
-            e.AddVariable(VarnameResSug);
-            e.AddVariable(VarnameChlor);
-            e.AddVariable(VarnameFreeSO2);
-            e.AddVariable(VarnameTotSO2);
-            e.AddVariable(VarnameDensity);
-            e.AddVariable(VarnamepH);
-            e.AddVariable(VarnameSulfates);
-            e.AddVariable(VarnameAlc);
+            for (int i = 0; i < Dataset.NumColumns; i++)
+            {
+                if (i != Dataset.LabelColumnIndex)
+                    e.AddVariable("v" + i);
+            }
 
             // some basic arithmatic building blocks
             e.AddFunction((a, b) => a + b, "Add");                    // addition
@@ -175,19 +168,13 @@ namespace WineQuality
                 var row = sampleData.GetRowOfTrainingData();
                 if (row == null) break;
 
-                // populate vars
-                candidate.SetVariableValue(VarnameFixAcidity, row[0]);
-                candidate.SetVariableValue(VarnameVolAcidity, row[1]);
-                candidate.SetVariableValue(VarnameCitric, row[2]);
-                candidate.SetVariableValue(VarnameResSug, row[3]);
-                candidate.SetVariableValue(VarnameChlor, row[4]);
-                candidate.SetVariableValue(VarnameFreeSO2, row[5]);
-                candidate.SetVariableValue(VarnameTotSO2, row[6]);
-                candidate.SetVariableValue(VarnameDensity, row[7]);
-                candidate.SetVariableValue(VarnamepH, row[8]);
-                candidate.SetVariableValue(VarnameSulfates, row[9]);
-                candidate.SetVariableValue(VarnameAlc, row[10]);
-                var actualAnswer = row[11];
+                // populate vars with values from row of the training data 
+                for (int i = 0; i < Dataset.NumColumns; i++)
+                {
+                    if (i != Dataset.LabelColumnIndex)
+                        candidate.SetVariableValue("v" + i, row[i]);
+                }
+                var actualAnswer = row[Dataset.LabelColumnIndex];
 
                 // and evaluate
                 var result = candidate.Evaluate();
@@ -220,19 +207,13 @@ namespace WineQuality
                 var row = sampleData.GetRowOfTestingData();
                 if (row == null) break;
 
-                // populate vars
-                candidate.SetVariableValue(VarnameFixAcidity, row[0]);
-                candidate.SetVariableValue(VarnameVolAcidity, row[1]);
-                candidate.SetVariableValue(VarnameCitric, row[2]);
-                candidate.SetVariableValue(VarnameResSug, row[3]);
-                candidate.SetVariableValue(VarnameChlor, row[4]);
-                candidate.SetVariableValue(VarnameFreeSO2, row[5]);
-                candidate.SetVariableValue(VarnameTotSO2, row[6]);
-                candidate.SetVariableValue(VarnameDensity, row[7]);
-                candidate.SetVariableValue(VarnamepH, row[8]);
-                candidate.SetVariableValue(VarnameSulfates, row[9]);
-                candidate.SetVariableValue(VarnameAlc, row[10]);
-                var actualAnswer = row[11];
+                // populate vars with values from row of the training data 
+                for (int i = 0; i < Dataset.NumColumns; i++)
+                {
+                    if (i != Dataset.LabelColumnIndex)
+                        candidate.SetVariableValue("v" + i, row[i]);
+                }
+                var actualAnswer = row[Dataset.LabelColumnIndex];
 
                 // now figure the difference between the calculated value and the training data
                 var result = candidate.Evaluate();
