@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{440DC8F6-B08E-431E-BD60-2B9751507B9B}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>WineQuality</RootNamespace>
-    <AssemblyName>WineQuality</AssemblyName>
+    <RootNamespace>PredictionRegression</RootNamespace>
+    <AssemblyName>PredictionRegression</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

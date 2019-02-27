@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.102
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WineQuality", "WineQuality.csproj", "{440DC8F6-B08E-431E-BD60-2B9751507B9B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PredictionRegression", "PredictionRegression.csproj", "{440DC8F6-B08E-431E-BD60-2B9751507B9B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Evolutionary", "..\..\Engine\Evolutionary.csproj", "{35FCC8F1-EB99-4415-8D66-6A9C17171D1A}"
 EndProject
