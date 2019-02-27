@@ -69,16 +69,17 @@ namespace PredictionRegression
             sampleData = new List<DataRow>();            
             var splitOn = delimiter.ToCharArray();
             var lines = File.ReadAllLines(fileName);
+
+            // skipping line 0 (the header)
             for (int lineNum = 1; lineNum < lines.Length; lineNum++)
             {
-                // skipping line 0 (the header), parse all numbers and store
-                var parts = lines[lineNum].Split(splitOn);
-                var decimalValues = parts.Select(p => double.Parse(p)).ToList();
-
-                // get rid of ignore columns
+                // break line into parts and discard ignoreColumns
+                var parts = lines[lineNum].Split(splitOn).ToList();
                 foreach (int colIndex in ignoreColumns.OrderByDescending(i => i))
-                    decimalValues.RemoveAt(colIndex);
+                    parts.RemoveAt(colIndex);
 
+                // parse and save
+                var decimalValues = parts.Select(p => double.Parse(p)).ToList();
                 sampleData.Add(decimalValues);
             }
             numItems = sampleData.Count;

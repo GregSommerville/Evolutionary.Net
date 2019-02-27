@@ -23,8 +23,12 @@ namespace PredictionRegression
 
               Attributes: "fixed acidity";"volatile acidity";"citric acid";"residual sugar";"chlorides";"free sulfur dioxide";"total sulfur dioxide";"density";"pH";"sulphates";"alcohol";"quality"
             */
-            var ignoreColumns = new int[] { 6, 7 };
-            Dataset.LoadFromFile("wine-quality.csv", 9,  ignoreColumns, ";");
+            //var ignoreColumns = new int[] { 6, 7 };
+            //Dataset.LoadFromFile("wine-quality.csv", 9,  ignoreColumns, ";");
+
+            var ignoreColumns = new int[] { 0, 1, 13, 14 };
+            int labelColumnIndex = 15 - ignoreColumns.Length;
+            Dataset.LoadFromFile("bike-sharing-by-day.csv", labelColumnIndex , ignoreColumns);
 
             var engineParams = new EngineParameters()
             {
