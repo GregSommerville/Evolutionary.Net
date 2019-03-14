@@ -1,7 +1,5 @@
 ﻿using Evolutionary;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -15,17 +13,6 @@ namespace PredictionRegression
 
         static void Main(string[] args)
         {
-            /*  Dataset is from:
-              P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis. 
-              Modeling wine preferences by data mining from physicochemical properties.
-              In Decision Support Systems, Elsevier, 47(4):547-553. ISSN: 0167-9236.
-              Available at: [@Elsevier] http://dx.doi.org/10.1016/j.dss.2009.05.016
-
-              Attributes: "fixed acidity";"volatile acidity";"citric acid";"residual sugar";"chlorides";"free sulfur dioxide";"total sulfur dioxide";"density";"pH";"sulphates";"alcohol";"quality"
-            */
-            //var ignoreColumns = new int[] { 6, 7 };
-            //Dataset.LoadFromFile("wine-quality.csv", 9,  ignoreColumns, ";");
-
             var ignoreColumns = new int[] { 0, 1, 13, 14 };
             int labelColumnIndex = 15 - ignoreColumns.Length;
             Dataset.LoadFromFile("bike-sharing-by-day.csv", labelColumnIndex , ignoreColumns);
@@ -34,16 +21,16 @@ namespace PredictionRegression
             {
                 IsLowerFitnessBetter = true,
                 PopulationSize = 750,
-                MinGenerations = 100,
-                MaxGenerations = 200,
-                StagnantGenerationLimit = 50,
+                MinGenerations = 25,
+                MaxGenerations = 2500,
+                StagnantGenerationLimit = 25,
                 SelectionStyle = SelectionStyle.Tourney,
                 TourneySize = 3,
                 ElitismRate = 0,
                 CrossoverRate = 1,
                 MutationRate = 0.0,
-                RandomTreeMinDepth = 3,
-                RandomTreeMaxDepth = 6
+                RandomTreeMinDepth = 1,
+                RandomTreeMaxDepth = 3
             };
 
             printableParams =
@@ -172,28 +159,22 @@ namespace PredictionRegression
                 var row = sampleData.GetRowOfTrainingData();
                 if (row == null) break;
 
-                // populate vars with values from row of the training data 
+                // populate vars with values from row of the training data, and then get the calculated value
                 for (int i = 0; i < Dataset.NumColumns; i++)
-                {
                     if (i != Dataset.LabelColumnIndex)
                         candidate.SetVariableValue("v" + i, row[i]);
-                }
-                var actualAnswer = row[Dataset.LabelColumnIndex];
-
-                // and evaluate
                 var result = candidate.Evaluate();
 
                 // now figure the difference between the calculated value and the training data
+                var actualAnswer = row[Dataset.LabelColumnIndex];
                 var diff = result - actualAnswer;
                 totalDifference += diff * diff;
             }
 
+            // sqrt of the summed squared diffences
             totalDifference = Math.Sqrt(totalDifference);
-            Debug.Assert(!double.IsNaN(totalDifference));
 
-            // fitness function returns a float, so make sure we're within the valid range
-            if (totalDifference > float.MaxValue) totalDifference = float.MaxValue;
-            if (totalDifference < float.MinValue) totalDifference = float.MinValue;
+            // fitness function returns a float
             return (float)totalDifference;
         }
 
@@ -213,14 +194,12 @@ namespace PredictionRegression
 
                 // populate vars with values from row of the training data 
                 for (int i = 0; i < Dataset.NumColumns; i++)
-                {
                     if (i != Dataset.LabelColumnIndex)
                         candidate.SetVariableValue("v" + i, row[i]);
-                }
-                var actualAnswer = row[Dataset.LabelColumnIndex];
+                var result = candidate.Evaluate();
 
                 // now figure the difference between the calculated value and the training data
-                var result = candidate.Evaluate();
+                var actualAnswer = row[Dataset.LabelColumnIndex];
                 var diff = result - actualAnswer;
                 totalDifference += diff * diff;
                 Console.WriteLine("Ans: " + actualAnswer.ToString(" 0") + " AI: " + result.ToString("0.00"));
@@ -228,12 +207,7 @@ namespace PredictionRegression
             }
 
             totalDifference = Math.Sqrt(totalDifference);
-
-            // fitness function returns a float, so make sure we're within the valid range
-            if (totalDifference > float.MaxValue) totalDifference = float.MaxValue;
-            if (totalDifference < float.MinValue) totalDifference = float.MinValue;
             finalScore = (float)totalDifference;
-
             sb.AppendLine("\"Final score\", " + finalScore.ToString("0.000"));
             testDetails = sb.ToString();
         }

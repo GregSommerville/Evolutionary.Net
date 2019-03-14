@@ -1,5 +1,8 @@
 ﻿- make engine.randomizer be thread-safe without locks
 
+- limit maximum tree depth?
+- pool for nodes?
+
 - have loop that tries different settings like pop size, etc
 	- SettingsController.GetSettingToTest()
 	- automatically stop changing one setting if results are getting worse (two times in a row of worse)

@@ -6,7 +6,7 @@ Genetic programs are a form of *evolutionary computing*, where the computer evol
 
 ## Genetic Programming Basic Concepts
 
-The ideas behind genetic programming originally came from a book called “Genetic Programming” by John Koza.  It described how populations of automatically generated programs could compete against each other, with the fittest programs selected for reproduction via genetic crossover.  Ultimately, after a number of generations, the best solution found is executable code that can be used like any other function.
+The ideas behind genetic programming originally came from a book called ï¿½Genetic Programmingï¿½ by John Koza.  It described how populations of automatically generated programs could compete against each other, with the fittest programs selected for reproduction via genetic crossover.  Ultimately, after a number of generations, the best solution found is executable code that can be used like any other function.
  
 To learn more about genetic programming, you have a few options.  
 
@@ -172,6 +172,7 @@ class ProblemState
 
 ## Examples
 
+### **Blackjack Strategy Finder**
 The Blackjack example available for download shows how to use state information in conjunction with terminal functions like PlayerHolds16() to develop a strategy for Blackjack.  A genetic program is developed for each distinct dealer upcard.
 
 Here's a screenshot of the resulting strategy for a run of the Blackjack program:
@@ -186,7 +187,18 @@ The bottom table on the right side shows how to play a paired hand.
 
 For all of the tables, the values along the top (the column headers) are the dealer's upcard.  The cells in the tables contain "H" when you should Hit, "D" when you should Double-Down (only valid when holding two cards), "S" when you should Stand, and "P" when you should split (only valid when holding a pair). 
  
- 
+To be honest, using Genetic Programming isn't really the best approach to find a good Blackjack strategy.  Because the problem is a combinatorial one, a genetic algorithmis really a much better fit.  
+
+Please see my repo [Blackjack Solution Finder Genetic Algorithm](https://github.com/GregSommerville/machine-learning-blackjack-solution) for a better approach (and better results).
+
+### **Prediction Regression**
+Regression is a common activity in machine learning.  It's essentially finding or creating a formula that takes in a number of variables and returns a result.  By training on existing data that have known results, the result is a formula that can be used with data when the result is desired.  It's very useful for predictions.
+
+The GP example here (a console app) loads in a set of sample data, uses 75% of it for training, and then once a final solution has been found, the remaining 25% for validation and testing.
+
+Results are written to two files: per-gen-stats.csv and test-results.csv.
+
+
 ## Contributing
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
