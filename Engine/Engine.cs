@@ -416,6 +416,12 @@ namespace Evolutionary
         {
             primitiveSet.Functions.Add(new FunctionMetaData<T>(function, 3, functionName));
         }
+        
+        // four parameter functions
+        public void AddFunction(Func<T, T, T, T, T> function, string functionName)
+        {
+            primitiveSet.Functions.Add(new FunctionMetaData<T>(function, 4, functionName));
+        }
 
         //--------------------------------------------------------------------------------
 
